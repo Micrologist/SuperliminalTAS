@@ -41,22 +41,7 @@ namespace SuperliminalTAS
 
 			if(statusText == null && GameObject.Find("UI_PAUSE_MENU") != null)
 			{
-				GameObject gameObject = new GameObject("TASMod_UI");
-				gameObject.transform.parent = GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas");
-				gameObject.AddComponent<CanvasGroup>().interactable = false;
-
-				statusText = gameObject.AddComponent<Text>();
-				statusText.fontSize = 40;
-				foreach (Font font in Resources.FindObjectsOfTypeAll<Font>())
-					if (font.name == "BebasNeue Bold")
-						statusText.font = font;
-
-				var rect = statusText.GetComponent<RectTransform>();
-				rect.sizeDelta = new Vector2((float)(Screen.currentResolution.width / 4), (float)(Screen.currentResolution.height / 5));
-				rect.pivot = new Vector2(0f, 1f);
-				rect.anchorMin = new Vector2(0f, 1f);
-				rect.anchorMax = new Vector2(0f, 1f);
-				rect.anchoredPosition = new Vector2(25f, -25f);
+				GenerateStatusText();
 			}
 
 			if (statusText != null)
@@ -68,11 +53,8 @@ namespace SuperliminalTAS
 				else
 					statusText.text = "idle";
 			}
-
-			Application.targetFrameRate = 50;
-			QualitySettings.vSyncCount = -1;
-
 		}
+
 
 		private void HandleInput()
 		{
@@ -105,26 +87,34 @@ namespace SuperliminalTAS
 
 		private void StartRecording()
 		{
-			button = new();
-			button["Jump"] = new();
-			button["Grab"] = new();
-			button["Rotate"] = new();
+			button = new()
+			{
+				["Jump"] = new(),
+				["Grab"] = new(),
+				["Rotate"] = new()
+			};
 
-			buttonUp = new();
-			buttonUp["Jump"] = new();
-			buttonUp["Grab"] = new();
-			buttonUp["Rotate"] = new();
+			buttonUp = new()
+			{
+				["Jump"] = new(),
+				["Grab"] = new(),
+				["Rotate"] = new()
+			};
 
-			buttonDown = new();
-			buttonDown["Jump"] = new();
-			buttonDown["Grab"] = new();
-			buttonDown["Rotate"] = new();
+			buttonDown = new()
+			{
+				["Jump"] = new(),
+				["Grab"] = new(),
+				["Rotate"] = new()
+			};
 
-			axis = new();
-			axis["Move Horizontal"] = new();
-			axis["Move Vertical"] = new();
-			axis["Look Horizontal"] = new();
-			axis["Look Vertical"] = new();
+			axis = new()
+			{
+				["Move Horizontal"] = new(),
+				["Move Vertical"] = new(),
+				["Look Horizontal"] = new(),
+				["Look Vertical"] = new()
+			};
 
 			recording = true;
 			TASInput.StopPlayback();
@@ -194,5 +184,26 @@ namespace SuperliminalTAS
 		{
 			return axis[actionName][frame];
 		}
+
+		private void GenerateStatusText()
+		{
+			GameObject gameObject = new GameObject("TASMod_UI");
+			gameObject.transform.parent = GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas");
+			gameObject.AddComponent<CanvasGroup>().interactable = false;
+
+			statusText = gameObject.AddComponent<Text>();
+			statusText.fontSize = 40;
+			foreach (Font font in Resources.FindObjectsOfTypeAll<Font>())
+				if (font.name == "BebasNeue Bold")
+					statusText.font = font;
+
+			var rect = statusText.GetComponent<RectTransform>();
+			rect.sizeDelta = new Vector2((float)(Screen.currentResolution.width / 4), (float)(Screen.currentResolution.height / 5));
+			rect.pivot = new Vector2(0f, 1f);
+			rect.anchorMin = new Vector2(0f, 1f);
+			rect.anchorMax = new Vector2(0f, 1f);
+			rect.anchoredPosition = new Vector2(25f, -25f);
+		}
+
 	}
 }

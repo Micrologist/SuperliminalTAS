@@ -8,7 +8,7 @@ using UnityEngine.PlayerLoop;
 namespace SuperliminalTAS;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
-public class SuperliminalTAS : BaseUnityPlugin
+public class SuperliminalTASPlugin : BaseUnityPlugin
 {
     private void Awake()
     {
@@ -18,15 +18,6 @@ public class SuperliminalTAS : BaseUnityPlugin
 		this.gameObject.AddComponent<DemoRecording>();
     }
 
-	private void Update()
-	{
-		Debug.Log("UPDATE");
-	}
-
-	private void FixedUpdate()
-	{
-		Debug.Log("FIXEDUPDATE");
-	}
 }
 
 [HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetButton))]
