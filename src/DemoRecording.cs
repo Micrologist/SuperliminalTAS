@@ -22,6 +22,18 @@ namespace SuperliminalTAS
 
         private Text statusText;
 
+		private int fixedUpdates, updates;
+
+		void Update()
+		{
+			updates++;
+		}
+
+		void FixedUpdate()
+		{
+			fixedUpdates++;
+		}
+
         private void LateUpdate()
         {
             HandleInput();
@@ -52,7 +64,13 @@ namespace SuperliminalTAS
                     statusText.text = "recording: " + frame + " / ?";
                 else
                     statusText.text = "idle";
-            }
+
+				if (GameManager.GM.player != null)
+				{
+					var playerPos = GameManager.GM.player.transform.position;
+					statusText.text += $"\nx: {playerPos.x:0.00} \ny: {playerPos.y:0.00} \nz: {playerPos.z:0.00}";
+				}
+			}
         }
 
 
@@ -119,13 +137,15 @@ namespace SuperliminalTAS
             recording = true;
             TASInput.StopPlayback();
             frame = 0;
-        }
+			fixedUpdates = updates = 0;
+		}
 
         private void StopRecording()
         {
             recording = false;
             frame = 0;
-        }
+			fixedUpdates = updates = 0;
+		}
 
         private void RecordInputs()
         {
@@ -155,6 +175,7 @@ namespace SuperliminalTAS
             playingBack = true;
             TASInput.StartPlayback(this);
             frame = 0;
+			fixedUpdates = updates = 0;
         }
 
         private void StopPlayback()
@@ -163,6 +184,7 @@ namespace SuperliminalTAS
             playingBack = false;
             TASInput.StopPlayback();
             frame = 0;
+			fixedUpdates = updates = 0;
         }
 
         internal bool GetRecordedButton(string actionName)

@@ -61,7 +61,7 @@ namespace SuperliminalTAS
         static void Postfix(ref float __result)
         {
             //__result = __result == 0.02f ? 0.02f : 0.0166f;
-            __result = 0.02f;
+            //__result = 0.02f;
         }
     }
 
