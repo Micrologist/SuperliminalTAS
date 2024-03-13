@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SuperliminalTAS
 {
-    public class DemoRecording : MonoBehaviour
+    public class DemoRecorder : MonoBehaviour
     {
         public int frame;
 
@@ -74,6 +74,8 @@ namespace SuperliminalTAS
 					var hVel = Mathf.Sqrt((playerVel.x * playerVel.x) + (playerVel.z * playerVel.z));
 					statusText.text += $"\nh: {hVel:0.000}\nv: {playerVel.y:0.000}";
 				}
+
+				statusText.text += $"\nUpdates: {updates}\nFixedUpdates: {fixedUpdates}";
 			}
         }
 

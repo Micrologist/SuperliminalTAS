@@ -3,7 +3,7 @@
 	internal static class TASInput
 	{
 		public static bool passthrough = true;
-		private static DemoRecording recording;
+		private static DemoRecorder recording;
 
 		internal static bool GetButton(string actionName, bool originalResult)
 		{
@@ -41,7 +41,7 @@
 			return recording.GetRecordedAxis(actionName);
 		}
 
-		public static void StartPlayback(DemoRecording recordingToPlay)
+		public static void StartPlayback(DemoRecorder recordingToPlay)
 		{
 			recording = recordingToPlay;
 			passthrough = false;
