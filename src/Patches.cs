@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace SuperliminalTAS
 {
-
     [HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetButton))]
     [HarmonyPatch(new Type[] { typeof(string) })]
     public class GetButtonPatch
@@ -94,8 +93,4 @@ namespace SuperliminalTAS
             __result = (min + max) / 2f;
         }
     }
-
-
-
-
 }
