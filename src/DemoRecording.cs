@@ -69,6 +69,10 @@ namespace SuperliminalTAS
 				{
 					var playerPos = GameManager.GM.player.transform.position;
 					statusText.text += $"\nx: {playerPos.x:0.00} \ny: {playerPos.y:0.00} \nz: {playerPos.z:0.00}";
+
+					var playerVel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
+					var hVel = Mathf.Sqrt((playerVel.x * playerVel.x) + (playerVel.z * playerVel.z));
+					statusText.text += $"\nh: {hVel:0.000}\nv: {playerVel.y:0.000}";
 				}
 			}
         }
@@ -211,16 +215,16 @@ namespace SuperliminalTAS
         {
             GameObject gameObject = new GameObject("TASMod_UI");
             gameObject.transform.parent = GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas");
-            gameObject.AddComponent<CanvasGroup>().interactable = false;
+            gameObject.AddComponent<CanvasGroup>().blocksRaycasts = false;
 
             statusText = gameObject.AddComponent<Text>();
             statusText.fontSize = 40;
             foreach (Font font in Resources.FindObjectsOfTypeAll<Font>())
-                if (font.name == "BebasNeue Bold")
+                if (font.name == "NotoSans-CondensedSemiBold")
                     statusText.font = font;
 
             var rect = statusText.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(Screen.currentResolution.width / 4, Screen.currentResolution.height / 5);
+            rect.sizeDelta = new Vector2(Screen.currentResolution.width / 4, Screen.currentResolution.height / 2);
             rect.pivot = new Vector2(0f, 1f);
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);

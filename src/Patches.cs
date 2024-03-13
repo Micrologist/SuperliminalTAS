@@ -82,7 +82,6 @@ namespace SuperliminalTAS
         static void Postfix(int min, int max, ref int __result)
         {
             __result = Mathf.FloorToInt((min + max) / 2f);
-            Debug.Log($"Random.Range({min},{max}) = {__result}");
         }
     }
 
@@ -93,7 +92,6 @@ namespace SuperliminalTAS
         static void Postfix(float min, float max, ref float __result)
         {
             __result = (min + max) / 2f;
-            Debug.Log($"Random.Range({min},{max}) = {__result}");
         }
     }
 
