@@ -68,14 +68,8 @@ namespace SuperliminalTAS
 				if (GameManager.GM.player != null)
 				{
 					var playerPos = GameManager.GM.player.transform.position;
-					statusText.text += $"\nx: {playerPos.x:0.00} \ny: {playerPos.y:0.00} \nz: {playerPos.z:0.00}";
-
-					var playerVel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
-					var hVel = Mathf.Sqrt((playerVel.x * playerVel.x) + (playerVel.z * playerVel.z));
-					statusText.text += $"\nh: {hVel:0.000}\nv: {playerVel.y:0.000}";
+					statusText.text += $"\nx: {playerPos.x:0.0000} \ny: {playerPos.y:0.0000} \nz: {playerPos.z:0.0000}";
 				}
-
-				statusText.text += $"\nUpdates: {updates}\nFixedUpdates: {fixedUpdates}";
 			}
         }
 
