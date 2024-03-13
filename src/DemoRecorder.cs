@@ -63,7 +63,7 @@ namespace SuperliminalTAS
                 else if (recording)
                     statusText.text = "recording: " + frame + " / ?";
                 else
-                    statusText.text = "idle";
+                    statusText.text = "F5 - Play\nF6 - Stop\nF7 - Record\n";
 
 				if (GameManager.GM.player != null)
 				{
