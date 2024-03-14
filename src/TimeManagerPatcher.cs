@@ -2,7 +2,7 @@
 using System;
 using System.Diagnostics;
 
-namespace SuperliminalTAS.src.MemUtil
+namespace SuperliminalTAS
 {
 	internal static class TimeManagerPatcher
 	{
