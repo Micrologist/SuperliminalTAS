@@ -1,35 +1,28 @@
-﻿using Rewired;
+﻿using SFB;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Windows.Speech;
-using UnityEngine.UI;
-using System.Threading.Tasks;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization;
-using System.Text;
-using Steamworks;
-using SFB;
-using System.Windows.Forms;
-using Screen = UnityEngine.Screen;
 using System.Linq;
+using System.Text;
+using UnityEngine;
+using UnityEngine.UI;
+using Screen = UnityEngine.Screen;
 
 namespace SuperliminalTAS
 {
-    public class DemoRecorder : MonoBehaviour
-    {
-        public int frame;
+	public class DemoRecorder : MonoBehaviour
+	{
+		public int frame;
 
-        private bool recording, playingBack = false;
+		private bool recording, playingBack = false;
 
-        private Dictionary<string, List<bool>> button;
-        private Dictionary<string, List<bool>> buttonDown;
-        private Dictionary<string, List<bool>> buttonUp;
+		private Dictionary<string, List<bool>> button;
+		private Dictionary<string, List<bool>> buttonDown;
+		private Dictionary<string, List<bool>> buttonUp;
 
-        private Dictionary<string, List<float>> axis;
+		private Dictionary<string, List<float>> axis;
 
-        private Text statusText;
+		private Text statusText;
 
 		private int fixedUpdates, updates;
 
@@ -61,36 +54,36 @@ namespace SuperliminalTAS
 			fixedUpdates++;
 		}
 
-        private void LateUpdate()
-        {
-            HandleInput();
-            if (recording)
-            {
-                RecordInputs();
-                frame++;
-            }
-            else if (playingBack)
-            {
-                frame++;
-                if (frame >= button["Jump"].Count)
-                {
-                    StopPlayback();
-                }
-            }
+		private void LateUpdate()
+		{
+			HandleInput();
+			if (recording)
+			{
+				RecordInputs();
+				frame++;
+			}
+			else if (playingBack)
+			{
+				frame++;
+				if (frame >= button["Jump"].Count)
+				{
+					StopPlayback();
+				}
+			}
 
-            if (statusText == null && GameObject.Find("UI_PAUSE_MENU") != null)
-            {
-                GenerateStatusText();
-            }
+			if (statusText == null && GameObject.Find("UI_PAUSE_MENU") != null)
+			{
+				GenerateStatusText();
+			}
 
-            if (statusText != null)
-            {
+			if (statusText != null)
+			{
 				if (playingBack)
 					statusText.text = "playback: " + frame + " / " + button["Jump"].Count;
 				else if (recording)
 					statusText.text = "recording: " + frame + " / ?";
 				else
-					statusText.text = "stopped: 0 / " + button["Jump"].Count; 
+					statusText.text = "stopped: 0 / " + button["Jump"].Count;
 
 				if (GameManager.GM.player != null)
 				{
@@ -100,52 +93,52 @@ namespace SuperliminalTAS
 
 				statusText.text += "\n\nF5 - Play\nF6 - Stop\nF7 - Record\nF11 - Open\nF12 - Save";
 			}
-        }
+		}
 
 
-        private void HandleInput()
-        {
-            if (recording)
-            {
-                if (Input.GetKeyDown(KeyCode.F6))
-                {
-                    StopRecording();
-                }
-            }
-            else if (playingBack)
-            {
-                if (Input.GetKeyDown(KeyCode.F6))
-                {
-                    StopPlayback();
-                }
-            }
-            else
-            {
-                if (Input.GetKeyDown(KeyCode.F5))
-                {
-                    StartPlayback();
-                }
-                else if (Input.GetKeyDown(KeyCode.F7))
-                {
-                    StartRecording();
-                }
-            }
+		private void HandleInput()
+		{
+			if (recording)
+			{
+				if (Input.GetKeyDown(KeyCode.F6))
+				{
+					StopRecording();
+				}
+			}
+			else if (playingBack)
+			{
+				if (Input.GetKeyDown(KeyCode.F6))
+				{
+					StopPlayback();
+				}
+			}
+			else
+			{
+				if (Input.GetKeyDown(KeyCode.F5))
+				{
+					StartPlayback();
+				}
+				else if (Input.GetKeyDown(KeyCode.F7))
+				{
+					StartRecording();
+				}
+			}
 
-			if(Input.GetKeyDown(KeyCode.F12))
+			if (Input.GetKeyDown(KeyCode.F12))
 			{
 				UnityEngine.Cursor.lockState = CursorLockMode.None;
 				UnityEngine.Cursor.visible = true;
 				SaveDemo();
 				UnityEngine.Cursor.visible = false;
 			}
-			if(Input.GetKeyDown(KeyCode.F11))
+			if (Input.GetKeyDown(KeyCode.F11))
 			{
 				UnityEngine.Cursor.lockState = CursorLockMode.None;
 				UnityEngine.Cursor.visible = true;
 				OpenDemo();
 				UnityEngine.Cursor.visible = false;
 			}
-        }
+		}
 
 		private void OpenDemo()
 		{
@@ -175,11 +168,11 @@ namespace SuperliminalTAS
 		}
 
 		private void StartRecording()
-        {
+		{
 			ResetLists();
-            recording = true;
-            TASInput.StopPlayback();
-            frame = 0;
+			recording = true;
+			TASInput.StopPlayback();
+			frame = 0;
 			fixedUpdates = updates = 0;
 		}
 
@@ -215,96 +208,96 @@ namespace SuperliminalTAS
 			};
 		}
 
-        private void StopRecording()
-        {
-            recording = false;
-            frame = 0;
+		private void StopRecording()
+		{
+			recording = false;
+			frame = 0;
 			fixedUpdates = updates = 0;
 		}
 
-        private void RecordInputs()
-        {
-            button["Jump"].Add(GameManager.GM.playerInput.GetButton("Jump"));
-            button["Grab"].Add(GameManager.GM.playerInput.GetButton("Grab"));
-            button["Rotate"].Add(GameManager.GM.playerInput.GetButton("Rotate"));
+		private void RecordInputs()
+		{
+			button["Jump"].Add(GameManager.GM.playerInput.GetButton("Jump"));
+			button["Grab"].Add(GameManager.GM.playerInput.GetButton("Grab"));
+			button["Rotate"].Add(GameManager.GM.playerInput.GetButton("Rotate"));
 
-            buttonUp["Jump"].Add(GameManager.GM.playerInput.GetButtonUp("Jump"));
-            buttonUp["Grab"].Add(GameManager.GM.playerInput.GetButtonUp("Grab"));
-            buttonUp["Rotate"].Add(GameManager.GM.playerInput.GetButtonUp("Rotate"));
+			buttonUp["Jump"].Add(GameManager.GM.playerInput.GetButtonUp("Jump"));
+			buttonUp["Grab"].Add(GameManager.GM.playerInput.GetButtonUp("Grab"));
+			buttonUp["Rotate"].Add(GameManager.GM.playerInput.GetButtonUp("Rotate"));
 
-            buttonDown["Jump"].Add(GameManager.GM.playerInput.GetButtonDown("Jump"));
-            buttonDown["Grab"].Add(GameManager.GM.playerInput.GetButtonDown("Grab"));
-            buttonDown["Rotate"].Add(GameManager.GM.playerInput.GetButtonDown("Rotate"));
+			buttonDown["Jump"].Add(GameManager.GM.playerInput.GetButtonDown("Jump"));
+			buttonDown["Grab"].Add(GameManager.GM.playerInput.GetButtonDown("Grab"));
+			buttonDown["Rotate"].Add(GameManager.GM.playerInput.GetButtonDown("Rotate"));
 
-            axis["Move Horizontal"].Add(GameManager.GM.playerInput.GetAxis("Move Horizontal"));
-            axis["Move Vertical"].Add(GameManager.GM.playerInput.GetAxis("Move Vertical"));
-            axis["Look Horizontal"].Add(GameManager.GM.playerInput.GetAxis("Look Horizontal"));
-            axis["Look Vertical"].Add(GameManager.GM.playerInput.GetAxis("Look Vertical"));
-        }
+			axis["Move Horizontal"].Add(GameManager.GM.playerInput.GetAxis("Move Horizontal"));
+			axis["Move Vertical"].Add(GameManager.GM.playerInput.GetAxis("Move Vertical"));
+			axis["Look Horizontal"].Add(GameManager.GM.playerInput.GetAxis("Look Horizontal"));
+			axis["Look Vertical"].Add(GameManager.GM.playerInput.GetAxis("Look Vertical"));
+		}
 
-        private void StartPlayback()
-        {
-            if (button["Jump"].Count < 1)
-                return;
-            recording = false;
-            playingBack = true;
-            TASInput.StartPlayback(this);
-            frame = 0;
+		private void StartPlayback()
+		{
+			if (button["Jump"].Count < 1)
+				return;
+			recording = false;
+			playingBack = true;
+			TASInput.StartPlayback(this);
+			frame = 0;
 			fixedUpdates = updates = 0;
-        }
+		}
 
-        private void StopPlayback()
-        {
-            recording = false;
-            playingBack = false;
-            TASInput.StopPlayback();
-            frame = 0;
+		private void StopPlayback()
+		{
+			recording = false;
+			playingBack = false;
+			TASInput.StopPlayback();
+			frame = 0;
 			fixedUpdates = updates = 0;
-        }
+		}
 
-        internal bool GetRecordedButton(string actionName)
-        {
-            return button[actionName][frame];
-        }
+		internal bool GetRecordedButton(string actionName)
+		{
+			return button[actionName][frame];
+		}
 
-        internal bool GetRecordedButtonDown(string actionName)
-        {
-            return buttonDown[actionName][frame];
-        }
+		internal bool GetRecordedButtonDown(string actionName)
+		{
+			return buttonDown[actionName][frame];
+		}
 
-        internal bool GetRecordedButtonUp(string actionName)
-        {
-            return buttonUp[actionName][frame];
-        }
+		internal bool GetRecordedButtonUp(string actionName)
+		{
+			return buttonUp[actionName][frame];
+		}
 
-        internal float GetRecordedAxis(string actionName)
-        {
-            return axis[actionName][frame];
-        }
+		internal float GetRecordedAxis(string actionName)
+		{
+			return axis[actionName][frame];
+		}
 
-        private void GenerateStatusText()
-        {
-            GameObject gameObject = new GameObject("TASMod_UI");
-            gameObject.transform.parent = GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas");
-            gameObject.AddComponent<CanvasGroup>().blocksRaycasts = false;
+		private void GenerateStatusText()
+		{
+			GameObject gameObject = new GameObject("TASMod_UI");
+			gameObject.transform.parent = GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas");
+			gameObject.AddComponent<CanvasGroup>().blocksRaycasts = false;
 
-            statusText = gameObject.AddComponent<Text>();
-            statusText.fontSize = 40;
-            foreach (Font font in Resources.FindObjectsOfTypeAll<Font>())
-                if (font.name == "NotoSans-CondensedSemiBold")
-                    statusText.font = font;
+			statusText = gameObject.AddComponent<Text>();
+			statusText.fontSize = 40;
+			foreach (Font font in Resources.FindObjectsOfTypeAll<Font>())
+				if (font.name == "NotoSans-CondensedSemiBold")
+					statusText.font = font;
 
-            var rect = statusText.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(Screen.currentResolution.width / 4, Screen.currentResolution.height);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(25f, -25f);
-        }
+			var rect = statusText.GetComponent<RectTransform>();
+			rect.sizeDelta = new Vector2(Screen.currentResolution.width / 4, Screen.currentResolution.height);
+			rect.pivot = new Vector2(0f, 1f);
+			rect.anchorMin = new Vector2(0f, 1f);
+			rect.anchorMax = new Vector2(0f, 1f);
+			rect.anchoredPosition = new Vector2(25f, -25f);
+		}
 
 		private byte[] SerializeToByteArray()
 		{
-			if(button["Jump"].Count < 1)
+			if (button["Jump"].Count < 1)
 			{
 				return null;
 			}
@@ -446,7 +439,7 @@ namespace SuperliminalTAS
 		{
 			List<bool> result = new();
 
-			for(int i = 0;i < buffer.Length; i++)
+			for (int i = 0; i < buffer.Length; i++)
 			{
 				result.Add(BitConverter.ToBoolean(buffer, i));
 			}

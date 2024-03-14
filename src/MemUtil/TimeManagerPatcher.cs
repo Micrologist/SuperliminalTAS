@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using MemUtil;
+using System;
 using System.Diagnostics;
-using System.Reflection;
-using System.Text;
-using MemUtil;
-using System.Linq;
 
 namespace SuperliminalTAS.src.MemUtil
 {
@@ -16,7 +12,7 @@ namespace SuperliminalTAS.src.MemUtil
 			var unityPlayerPtr = IntPtr.Zero;
 			foreach (ProcessModule module in proc.Modules)
 			{
-				if(module.FileName.Contains("UnityPlayer"))
+				if (module.FileName.Contains("UnityPlayer"))
 				{
 					unityPlayerPtr = module.BaseAddress;
 				}

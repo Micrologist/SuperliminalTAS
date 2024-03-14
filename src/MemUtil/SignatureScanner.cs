@@ -210,7 +210,7 @@ namespace MemUtil
 						_nextIndex = index + align;
 						return true;
 
-next:
+					next:
 						;
 					}
 
@@ -241,7 +241,7 @@ next:
 						_nextIndex = index + align;
 						return true;
 
-next:
+					next:
 						;
 					}
 
