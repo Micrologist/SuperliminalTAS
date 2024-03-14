@@ -46,6 +46,7 @@ namespace SuperliminalTAS
 
 		void Update()
 		{
+			GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
 			updates++;
 		}
 
