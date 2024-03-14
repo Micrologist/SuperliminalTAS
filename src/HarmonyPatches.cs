@@ -93,4 +93,14 @@ namespace SuperliminalTAS
 			__result = (min + max) / 2f;
 		}
 	}
+
+	[HarmonyPatch(typeof(PauseMenu))]
+	[HarmonyPatch("OnApplicationFocus")]
+	public class ApplicationFocusPatch
+	{
+		static void Prefix(bool focus, PauseMenu __instance)
+		{
+			__instance.pauseWhenAltTabbed = false;
+		}
+	}
 }
