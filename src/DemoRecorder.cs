@@ -162,9 +162,14 @@ namespace SuperliminalTAS
 
 		private void SaveDemo()
 		{
+			if (button["Jump"].Count == 0)
+				return;
+
 			var selectedFile = fileBrowser.SaveFilePanel("Save Recording as", demoDirectory, $"SuperliminalTAS-{System.DateTime.Now:yyyy-MM-dd-HH-mm-ss}.slt", extensionList);
 			if (selectedFile != null)
 			{
+				if (!selectedFile.Name.EndsWith(".slt"))
+					selectedFile.Name += ".slt";
 				File.WriteAllBytes(selectedFile.Name, SerializeToByteArray());
 			}
 		}
