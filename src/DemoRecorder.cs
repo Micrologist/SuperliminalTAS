@@ -24,16 +24,15 @@ namespace SuperliminalTAS
 
 		private Text statusText;
 
-		private int fixedUpdates, updates;
 
-		private StandaloneFileBrowserWindows fileBrowser = new();
+		private readonly StandaloneFileBrowserWindows fileBrowser = new();
 
-		private ExtensionFilter[] extensionList = new[] {
+		private readonly ExtensionFilter[] extensionList = new[] {
 			new SFB.ExtensionFilter("Superliminal TAS Recording (*.slt)", "slt"),
 			new SFB.ExtensionFilter("All Files", "*")
 		};
 
-		private string demoDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\demos";
+		private readonly string demoDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\demos";
 
 		private void Awake()
 		{
@@ -42,17 +41,6 @@ namespace SuperliminalTAS
 				Directory.CreateDirectory(demoDirectory);
 			}
 			ResetLists();
-		}
-
-		void Update()
-		{
-			GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
-			updates++;
-		}
-
-		void FixedUpdate()
-		{
-			fixedUpdates++;
 		}
 
 		private void LateUpdate()
@@ -174,7 +162,7 @@ namespace SuperliminalTAS
 			recording = true;
 			TASInput.StopPlayback();
 			frame = 0;
-			fixedUpdates = updates = 0;
+			GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
 		}
 
 		private void ResetLists()
@@ -213,7 +201,6 @@ namespace SuperliminalTAS
 		{
 			recording = false;
 			frame = 0;
-			fixedUpdates = updates = 0;
 		}
 
 		private void RecordInputs()
@@ -244,7 +231,7 @@ namespace SuperliminalTAS
 			playingBack = true;
 			TASInput.StartPlayback(this);
 			frame = 0;
-			fixedUpdates = updates = 0;
+			GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
 		}
 
 		private void StopPlayback()
@@ -253,7 +240,6 @@ namespace SuperliminalTAS
 			playingBack = false;
 			TASInput.StopPlayback();
 			frame = 0;
-			fixedUpdates = updates = 0;
 		}
 
 		internal bool GetRecordedButton(string actionName)
@@ -278,7 +264,7 @@ namespace SuperliminalTAS
 
 		private void GenerateStatusText()
 		{
-			GameObject gameObject = new GameObject("TASMod_UI");
+			GameObject gameObject = new("TASMod_UI");
 			gameObject.transform.parent = GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas");
 			gameObject.AddComponent<CanvasGroup>().blocksRaycasts = false;
 

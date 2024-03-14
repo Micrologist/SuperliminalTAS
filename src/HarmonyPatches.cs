@@ -53,17 +53,6 @@ namespace SuperliminalTAS
 		}
 	}
 
-	[HarmonyPatch(typeof(Time), nameof(Time.deltaTime))]
-	[HarmonyPatch(MethodType.Getter)]
-	public class DeltaTimePatch
-	{
-		static void Postfix(ref float __result)
-		{
-			//__result = __result == 0.02f ? 0.02f : 0.0166f;
-			//__result = 0.02f;
-		}
-	}
-
 	[HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.onUnitSphere))]
 	[HarmonyPatch(MethodType.Getter)]
 	public class OnUnitSpherePatch
