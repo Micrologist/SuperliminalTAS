@@ -43,6 +43,9 @@
     <Reference Include="Rewired_Windows">
       <HintPath>lib\Rewired_Windows.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>lib\System.Windows.Forms.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>lib\UnityEngine.UI.dll</HintPath>
     </Reference>

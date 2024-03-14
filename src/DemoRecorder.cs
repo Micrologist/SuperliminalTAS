@@ -5,6 +5,15 @@ using UnityEngine;
 using UnityEngine.Windows.Speech;
 using UnityEngine.UI;
 using System.Threading.Tasks;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
+using System.Text;
+using Steamworks;
+using SFB;
+using System.Windows.Forms;
+using Screen = UnityEngine.Screen;
+using System.Linq;
 
 namespace SuperliminalTAS
 {
@@ -23,6 +32,24 @@ namespace SuperliminalTAS
         private Text statusText;
 
 		private int fixedUpdates, updates;
+
+		private StandaloneFileBrowserWindows fileBrowser = new();
+
+		private ExtensionFilter[] extensionList = new[] {
+			new SFB.ExtensionFilter("Superliminal TAS Recording (*.slt)", "slt"),
+			new SFB.ExtensionFilter("All Files", "*")
+		};
+
+		private string demoDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\demos";
+
+		private void Awake()
+		{
+			if (!Directory.Exists(demoDirectory))
+			{
+				Directory.CreateDirectory(demoDirectory);
+			}
+			ResetLists();
+		}
 
 		void Update()
 		{
@@ -58,18 +85,20 @@ namespace SuperliminalTAS
 
             if (statusText != null)
             {
-                if (playingBack)
-                    statusText.text = "playback: " + frame + " / " + button["Jump"].Count;
-                else if (recording)
-                    statusText.text = "recording: " + frame + " / ?";
-                else
-                    statusText.text = "F5 - Play\nF6 - Stop\nF7 - Record\n";
+				if (playingBack)
+					statusText.text = "playback: " + frame + " / " + button["Jump"].Count;
+				else if (recording)
+					statusText.text = "recording: " + frame + " / ?";
+				else
+					statusText.text = "stopped: 0 / " + button["Jump"].Count; 
 
 				if (GameManager.GM.player != null)
 				{
 					var playerPos = GameManager.GM.player.transform.position;
-					statusText.text += $"\nx: {playerPos.x:0.0000} \ny: {playerPos.y:0.0000} \nz: {playerPos.z:0.0000}";
+					statusText.text += $"\n\nx: {playerPos.x:0.0000} \ny: {playerPos.y:0.0000} \nz: {playerPos.z:0.0000}";
 				}
+
+				statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record\nF11 - Open\nF12 - Save";
 			}
         }
 
@@ -101,43 +130,84 @@ namespace SuperliminalTAS
                     StartRecording();
                 }
             }
+
+			if(Input.GetKeyDown(KeyCode.F12))
+			{
+				UnityEngine.Cursor.lockState = CursorLockMode.None;
+				UnityEngine.Cursor.visible = true;
+				SaveDemo();
+				UnityEngine.Cursor.visible = false;
+			}
+			if(Input.GetKeyDown(KeyCode.F11))
+			{
+				UnityEngine.Cursor.lockState = CursorLockMode.None;
+				UnityEngine.Cursor.visible = true;
+				OpenDemo();
+				UnityEngine.Cursor.visible = false;
+			}
         }
 
-        private void StartRecording()
+		private void OpenDemo()
+		{
+			var selectedFile = fileBrowser.OpenFilePanel("Open", demoDirectory, extensionList, false);
+			if (selectedFile.FirstOrDefault() != null)
+			{
+				var stream = File.OpenRead(selectedFile.FirstOrDefault()?.Name);
+				if (stream != null)
+				{
+					ReadFromFileStream(stream);
+				}
+			}
+		}
+
+		private void SaveDemo()
+		{
+			var selectedFile = fileBrowser.SaveFilePanel("Save Recording as", demoDirectory, $"SuperliminalTAS-{System.DateTime.Now:yyyy-MM-dd-HH-mm-ss}.slt", extensionList);
+			if (selectedFile != null)
+			{
+				File.WriteAllBytes(selectedFile.Name, SerializeToByteArray());
+			}
+		}
+
+		private void StartRecording()
         {
-            button = new()
-            {
-                ["Jump"] = new(),
-                ["Grab"] = new(),
-                ["Rotate"] = new()
-            };
-
-            buttonUp = new()
-            {
-                ["Jump"] = new(),
-                ["Grab"] = new(),
-                ["Rotate"] = new()
-            };
-
-            buttonDown = new()
-            {
-                ["Jump"] = new(),
-                ["Grab"] = new(),
-                ["Rotate"] = new()
-            };
-
-            axis = new()
-            {
-                ["Move Horizontal"] = new(),
-                ["Move Vertical"] = new(),
-                ["Look Horizontal"] = new(),
-                ["Look Vertical"] = new()
-            };
-
+			ResetLists();
             recording = true;
             TASInput.StopPlayback();
             frame = 0;
 			fixedUpdates = updates = 0;
+		}
+
+		private void ResetLists()
+		{
+			button = new()
+			{
+				["Jump"] = new(),
+				["Grab"] = new(),
+				["Rotate"] = new()
+			};
+
+			buttonUp = new()
+			{
+				["Jump"] = new(),
+				["Grab"] = new(),
+				["Rotate"] = new()
+			};
+
+			buttonDown = new()
+			{
+				["Jump"] = new(),
+				["Grab"] = new(),
+				["Rotate"] = new()
+			};
+
+			axis = new()
+			{
+				["Move Horizontal"] = new(),
+				["Move Vertical"] = new(),
+				["Look Horizontal"] = new(),
+				["Look Vertical"] = new()
+			};
 		}
 
         private void StopRecording()
@@ -227,5 +297,187 @@ namespace SuperliminalTAS
             rect.anchoredPosition = new Vector2(25f, -25f);
         }
 
-    }
+		private byte[] SerializeToByteArray()
+		{
+			if(button["Jump"].Count < 1)
+			{
+				return null;
+			}
+
+			string magic = "SUPERLIMINALTAS1";
+			byte[] magicBytes = Encoding.ASCII.GetBytes(magic);
+			byte[] lengthBytes = BitConverter.GetBytes(button["Jump"].Count);
+			Dictionary<string, byte[]> axisBytes = new();
+			axisBytes["Move Horizontal"] = FloatListToByteArray(axis["Move Horizontal"]);
+			axisBytes["Move Vertical"] = FloatListToByteArray(axis["Move Vertical"]);
+			axisBytes["Look Horizontal"] = FloatListToByteArray(axis["Look Horizontal"]);
+			axisBytes["Look Vertical"] = FloatListToByteArray(axis["Look Vertical"]);
+			Dictionary<string, byte[]> buttonBytes = new();
+			buttonBytes["Jump"] = BoolListToByteArray(button["Jump"]);
+			buttonBytes["Grab"] = BoolListToByteArray(button["Grab"]);
+			buttonBytes["Rotate"] = BoolListToByteArray(button["Rotate"]);
+			Dictionary<string, byte[]> buttonDownBytes = new();
+			buttonDownBytes["Jump"] = BoolListToByteArray(buttonDown["Jump"]);
+			buttonDownBytes["Grab"] = BoolListToByteArray(buttonDown["Grab"]);
+			buttonDownBytes["Rotate"] = BoolListToByteArray(buttonDown["Rotate"]);
+			Dictionary<string, byte[]> buttonUpBytes = new();
+			buttonUpBytes["Jump"] = BoolListToByteArray(buttonUp["Jump"]);
+			buttonUpBytes["Grab"] = BoolListToByteArray(buttonUp["Grab"]);
+			buttonUpBytes["Rotate"] = BoolListToByteArray(buttonUp["Rotate"]);
+
+			byte[] result;
+			using (MemoryStream memoryStream = new MemoryStream())
+			{
+				memoryStream.Write(magicBytes, 0, magicBytes.Length);
+				memoryStream.Write(lengthBytes, 0, lengthBytes.Length);
+
+				memoryStream.Write(axisBytes["Move Horizontal"], 0, axisBytes["Move Horizontal"].Length);
+				memoryStream.Write(axisBytes["Move Vertical"], 0, axisBytes["Move Vertical"].Length);
+				memoryStream.Write(axisBytes["Look Horizontal"], 0, axisBytes["Look Horizontal"].Length);
+				memoryStream.Write(axisBytes["Look Vertical"], 0, axisBytes["Look Vertical"].Length);
+
+				memoryStream.Write(buttonBytes["Jump"], 0, buttonBytes["Jump"].Length);
+				memoryStream.Write(buttonBytes["Grab"], 0, buttonBytes["Grab"].Length);
+				memoryStream.Write(buttonBytes["Rotate"], 0, buttonBytes["Rotate"].Length);
+
+				memoryStream.Write(buttonDownBytes["Jump"], 0, buttonDownBytes["Jump"].Length);
+				memoryStream.Write(buttonDownBytes["Grab"], 0, buttonDownBytes["Grab"].Length);
+				memoryStream.Write(buttonDownBytes["Rotate"], 0, buttonDownBytes["Rotate"].Length);
+
+				memoryStream.Write(buttonUpBytes["Jump"], 0, buttonUpBytes["Jump"].Length);
+				memoryStream.Write(buttonUpBytes["Grab"], 0, buttonUpBytes["Grab"].Length);
+				memoryStream.Write(buttonUpBytes["Rotate"], 0, buttonUpBytes["Rotate"].Length);
+
+				result = memoryStream.ToArray();
+			}
+
+			return result;
+		}
+
+		private bool ReadFromFileStream(FileStream stream)
+		{
+			byte[] buffer = new byte[16];
+			stream.Read(buffer, 0, buffer.Length);
+			var magic = Encoding.ASCII.GetString(buffer);
+			Debug.Log("Magic: " + magic);
+
+			if (magic != "SUPERLIMINALTAS1")
+				return false;
+
+			buffer = new byte[4];
+			stream.Read(buffer, 0, buffer.Length);
+			var length = BitConverter.ToInt32(buffer, 0);
+			Debug.Log("Length: " + length);
+
+			axis = new();
+			buffer = new byte[length * 4];
+
+			stream.Read(buffer, 0, buffer.Length);
+			axis["Move Horizontal"] = DeserializeFloatList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			axis["Move Vertical"] = DeserializeFloatList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			axis["Look Horizontal"] = DeserializeFloatList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			axis["Look Vertical"] = DeserializeFloatList(buffer);
+
+
+			button = new();
+			buffer = new byte[length];
+
+			stream.Read(buffer, 0, buffer.Length);
+			button["Jump"] = DeserializeBoolList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			button["Grab"] = DeserializeBoolList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			button["Rotate"] = DeserializeBoolList(buffer);
+
+
+			buttonDown = new();
+
+			stream.Read(buffer, 0, buffer.Length);
+			buttonDown["Jump"] = DeserializeBoolList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			buttonDown["Grab"] = DeserializeBoolList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			buttonDown["Rotate"] = DeserializeBoolList(buffer);
+
+
+			buttonUp = new();
+
+			stream.Read(buffer, 0, buffer.Length);
+			buttonUp["Jump"] = DeserializeBoolList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			buttonUp["Grab"] = DeserializeBoolList(buffer);
+
+			stream.Read(buffer, 0, buffer.Length);
+			buttonUp["Rotate"] = DeserializeBoolList(buffer);
+
+
+			return true;
+		}
+
+		private List<float> DeserializeFloatList(byte[] buffer)
+		{
+			List<float> result = new();
+
+			for (int i = 0; i < buffer.Length / 4; i++)
+			{
+				result.Add(BitConverter.ToSingle(buffer, i * 4));
+			}
+
+			return result;
+		}
+
+		private List<bool> DeserializeBoolList(byte[] buffer)
+		{
+			List<bool> result = new();
+
+			for(int i = 0;i < buffer.Length; i++)
+			{
+				result.Add(BitConverter.ToBoolean(buffer, i));
+			}
+
+			return result;
+		}
+
+		private byte[] FloatListToByteArray(List<float> list)
+		{
+			byte[] result;
+			using (MemoryStream memoryStream = new MemoryStream())
+			{
+				foreach (float value in list)
+				{
+					byte[] buffer = BitConverter.GetBytes(value);
+					memoryStream.Write(buffer, 0, buffer.Length);
+				}
+				result = memoryStream.ToArray();
+			}
+			return result;
+		}
+
+		private byte[] BoolListToByteArray(List<bool> list)
+		{
+			byte[] result;
+			using (MemoryStream memoryStream = new MemoryStream())
+			{
+				foreach (bool value in list)
+				{
+					byte[] buffer = BitConverter.GetBytes(value);
+					memoryStream.Write(buffer, 0, buffer.Length);
+				}
+				result = memoryStream.ToArray();
+			}
+			return result;
+		}
+
+	}
 }
