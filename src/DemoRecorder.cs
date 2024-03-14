@@ -98,7 +98,7 @@ namespace SuperliminalTAS
 					statusText.text += $"\n\nx: {playerPos.x:0.0000} \ny: {playerPos.y:0.0000} \nz: {playerPos.z:0.0000}";
 				}
 
-				statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record\nF11 - Open\nF12 - Save";
+				statusText.text += "\n\nF5 - Play\nF6 - Stop\nF7 - Record\nF11 - Open\nF12 - Save";
 			}
         }
 
@@ -290,7 +290,7 @@ namespace SuperliminalTAS
                     statusText.font = font;
 
             var rect = statusText.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(Screen.currentResolution.width / 4, Screen.currentResolution.height / 2);
+            rect.sizeDelta = new Vector2(Screen.currentResolution.width / 4, Screen.currentResolution.height);
             rect.pivot = new Vector2(0f, 1f);
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
