@@ -12,26 +12,20 @@ namespace SuperliminalTAS
 {
 	public class DemoRecorder : MonoBehaviour
 	{
-		public int frame;
-
+		private int frame;
 		private bool recording, playingBack = false;
 
 		private Dictionary<string, List<bool>> button;
 		private Dictionary<string, List<bool>> buttonDown;
 		private Dictionary<string, List<bool>> buttonUp;
-
 		private Dictionary<string, List<float>> axis;
-
 		private Text statusText;
 
-
 		private readonly StandaloneFileBrowserWindows fileBrowser = new();
-
 		private readonly ExtensionFilter[] extensionList = new[] {
 			new SFB.ExtensionFilter("Superliminal TAS Recording (*.slt)", "slt"),
 			new SFB.ExtensionFilter("All Files", "*")
 		};
-
 		private readonly string demoDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\demos";
 
 		private void Awake()
@@ -471,6 +465,5 @@ namespace SuperliminalTAS
 			}
 			return result;
 		}
-
 	}
 }

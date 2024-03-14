@@ -16,4 +16,3 @@ public class SuperliminalTASPlugin : BaseUnityPlugin
 		this.gameObject.AddComponent<DemoRecorder>();
 	}
 }
-

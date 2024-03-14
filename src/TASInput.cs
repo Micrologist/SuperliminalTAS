@@ -28,11 +28,6 @@
 			return recording.GetRecordedButtonUp(actionName);
 		}
 
-		internal static bool GetAnyButtonDown(bool originalResult)
-		{
-			return originalResult;
-		}
-
 		internal static float GetAxis(string actionName, float originalResult)
 		{
 			if (passthrough || (actionName != "Look Horizontal" && actionName != "Look Vertical" && actionName != "Move Horizontal" && actionName != "Move Vertical"))

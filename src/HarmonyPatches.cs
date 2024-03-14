@@ -44,15 +44,6 @@ namespace SuperliminalTAS
 		}
 	}
 
-	[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetAnyButtonDown))]
-	public class GetAnyButtonDownPatch
-	{
-		static void Postfix(ref bool __result)
-		{
-			__result = TASInput.GetAnyButtonDown(__result);
-		}
-	}
-
 	[HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.onUnitSphere))]
 	[HarmonyPatch(MethodType.Getter)]
 	public class OnUnitSpherePatch

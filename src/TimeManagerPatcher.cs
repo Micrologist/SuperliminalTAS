@@ -8,7 +8,6 @@ namespace SuperliminalTAS
 	{
 		public static void Patch(Process proc)
 		{
-
 			var unityPlayerPtr = IntPtr.Zero;
 			foreach (ProcessModule module in proc.Modules)
 			{
