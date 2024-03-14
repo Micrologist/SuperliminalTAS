@@ -292,26 +292,34 @@ namespace SuperliminalTAS
 			string magic = "SUPERLIMINALTAS1";
 			byte[] magicBytes = Encoding.ASCII.GetBytes(magic);
 			byte[] lengthBytes = BitConverter.GetBytes(button["Jump"].Count);
-			Dictionary<string, byte[]> axisBytes = new();
-			axisBytes["Move Horizontal"] = FloatListToByteArray(axis["Move Horizontal"]);
-			axisBytes["Move Vertical"] = FloatListToByteArray(axis["Move Vertical"]);
-			axisBytes["Look Horizontal"] = FloatListToByteArray(axis["Look Horizontal"]);
-			axisBytes["Look Vertical"] = FloatListToByteArray(axis["Look Vertical"]);
-			Dictionary<string, byte[]> buttonBytes = new();
-			buttonBytes["Jump"] = BoolListToByteArray(button["Jump"]);
-			buttonBytes["Grab"] = BoolListToByteArray(button["Grab"]);
-			buttonBytes["Rotate"] = BoolListToByteArray(button["Rotate"]);
-			Dictionary<string, byte[]> buttonDownBytes = new();
-			buttonDownBytes["Jump"] = BoolListToByteArray(buttonDown["Jump"]);
-			buttonDownBytes["Grab"] = BoolListToByteArray(buttonDown["Grab"]);
-			buttonDownBytes["Rotate"] = BoolListToByteArray(buttonDown["Rotate"]);
-			Dictionary<string, byte[]> buttonUpBytes = new();
-			buttonUpBytes["Jump"] = BoolListToByteArray(buttonUp["Jump"]);
-			buttonUpBytes["Grab"] = BoolListToByteArray(buttonUp["Grab"]);
-			buttonUpBytes["Rotate"] = BoolListToByteArray(buttonUp["Rotate"]);
+			Dictionary<string, byte[]> axisBytes = new()
+			{
+				["Move Horizontal"] = FloatListToByteArray(axis["Move Horizontal"]),
+				["Move Vertical"] = FloatListToByteArray(axis["Move Vertical"]),
+				["Look Horizontal"] = FloatListToByteArray(axis["Look Horizontal"]),
+				["Look Vertical"] = FloatListToByteArray(axis["Look Vertical"])
+			};
+			Dictionary<string, byte[]> buttonBytes = new()
+			{
+				["Jump"] = BoolListToByteArray(button["Jump"]),
+				["Grab"] = BoolListToByteArray(button["Grab"]),
+				["Rotate"] = BoolListToByteArray(button["Rotate"])
+			};
+			Dictionary<string, byte[]> buttonDownBytes = new()
+			{
+				["Jump"] = BoolListToByteArray(buttonDown["Jump"]),
+				["Grab"] = BoolListToByteArray(buttonDown["Grab"]),
+				["Rotate"] = BoolListToByteArray(buttonDown["Rotate"])
+			};
+			Dictionary<string, byte[]> buttonUpBytes = new()
+			{
+				["Jump"] = BoolListToByteArray(buttonUp["Jump"]),
+				["Grab"] = BoolListToByteArray(buttonUp["Grab"]),
+				["Rotate"] = BoolListToByteArray(buttonUp["Rotate"])
+			};
 
 			byte[] result;
-			using (MemoryStream memoryStream = new MemoryStream())
+			using (MemoryStream memoryStream = new())
 			{
 				memoryStream.Write(magicBytes, 0, magicBytes.Length);
 				memoryStream.Write(lengthBytes, 0, lengthBytes.Length);
@@ -437,7 +445,7 @@ namespace SuperliminalTAS
 		private byte[] FloatListToByteArray(List<float> list)
 		{
 			byte[] result;
-			using (MemoryStream memoryStream = new MemoryStream())
+			using (MemoryStream memoryStream = new())
 			{
 				foreach (float value in list)
 				{
@@ -452,7 +460,7 @@ namespace SuperliminalTAS
 		private byte[] BoolListToByteArray(List<bool> list)
 		{
 			byte[] result;
-			using (MemoryStream memoryStream = new MemoryStream())
+			using (MemoryStream memoryStream = new())
 			{
 				foreach (bool value in list)
 				{
