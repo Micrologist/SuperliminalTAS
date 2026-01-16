@@ -30,16 +30,16 @@ namespace SuperliminalTAS
 
         private void Update()
         {
-            if (!_lastUpdateWasFixed)
-                Debug.Log(Time.timeSinceLevelLoad + ": Double Update()");
+            if (!_lastUpdateWasFixed && (_recording || _playingBack))
+                Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback");
 
             _lastUpdateWasFixed = false;
         }
 
         private void FixedUpdate()
         {
-            if (_lastUpdateWasFixed)
-                Debug.Log(Time.timeSinceLevelLoad + ": Double FixedUpdate()");
+            if (_lastUpdateWasFixed && (_recording && _playingBack))
+                Debug.Log(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
 
             _lastUpdateWasFixed = true;
         }
