@@ -10,7 +10,7 @@ using System.Text;
 // Note: Please be careful when modifying this because it could break existing components!
 // http://stackoverflow.com/questions/1456785/a-definitive-guide-to-api-breaking-changes-in-net
 
-namespace MemUtil
+namespace SuperliminalTAS.MemUtil
 {
     using SizeT = UIntPtr;
 
@@ -152,7 +152,7 @@ namespace MemUtil
             var type = typeof(T);
             type = type.IsEnum ? Enum.GetUnderlyingType(type) : type;
 
-            val = default(T);
+            val = default;
             object val2;
             if (!ReadValue(process, addr, type, out val2))
                 return false;
@@ -168,7 +168,7 @@ namespace MemUtil
 
             val = null;
             int size = type == typeof(bool) ? 1 : Marshal.SizeOf(type);
-            if (!ReadBytes(process, addr, size, out bytes))
+            if (!process.ReadBytes(addr, size, out bytes))
                 return false;
 
             val = ResolveToType(bytes, type);
@@ -193,7 +193,7 @@ namespace MemUtil
 
         public static bool ReadPointer(this Process process, IntPtr addr, out IntPtr val)
         {
-            return ReadPointer(process, addr, process.Is64Bit(), out val);
+            return process.ReadPointer(addr, process.Is64Bit(), out val);
         }
 
         public static bool ReadPointer(this Process process, IntPtr addr, bool is64Bit, out IntPtr val)
@@ -213,13 +213,13 @@ namespace MemUtil
 
         public static bool ReadString(this Process process, IntPtr addr, int numBytes, out string str)
         {
-            return ReadString(process, addr, ReadStringType.AutoDetect, numBytes, out str);
+            return process.ReadString(addr, ReadStringType.AutoDetect, numBytes, out str);
         }
 
         public static bool ReadString(this Process process, IntPtr addr, ReadStringType type, int numBytes, out string str)
         {
             var sb = new StringBuilder(numBytes);
-            if (!ReadString(process, addr, type, sb))
+            if (!process.ReadString(addr, type, sb))
             {
                 str = string.Empty;
                 return false;
@@ -232,7 +232,7 @@ namespace MemUtil
 
         public static bool ReadString(this Process process, IntPtr addr, StringBuilder sb)
         {
-            return ReadString(process, addr, ReadStringType.AutoDetect, sb);
+            return process.ReadString(addr, ReadStringType.AutoDetect, sb);
         }
 
         public static bool ReadString(this Process process, IntPtr addr, ReadStringType type, StringBuilder sb)
@@ -269,7 +269,7 @@ namespace MemUtil
             return true;
         }
 
-        public static T ReadValue<T>(this Process process, IntPtr addr, T default_ = default(T)) where T : struct
+        public static T ReadValue<T>(this Process process, IntPtr addr, T default_ = default) where T : struct
         {
             T val;
             if (!process.ReadValue(addr, out val))
@@ -285,7 +285,7 @@ namespace MemUtil
             return bytes;
         }
 
-        public static IntPtr ReadPointer(this Process process, IntPtr addr, IntPtr default_ = default(IntPtr))
+        public static IntPtr ReadPointer(this Process process, IntPtr addr, IntPtr default_ = default)
         {
             IntPtr ptr;
             if (!process.ReadPointer(addr, out ptr))
@@ -454,7 +454,7 @@ namespace MemUtil
                 if (bytes == null)
                     val = false;
                 else
-                    val = (bytes[0] != 0);
+                    val = bytes[0] != 0;
             }
             else if (type == typeof(short))
             {
@@ -509,7 +509,7 @@ namespace MemUtil
 
         public static IntPtr CreateThread(this Process process, IntPtr startAddress)
         {
-            return CreateThread(process, startAddress, IntPtr.Zero);
+            return process.CreateThread(startAddress, IntPtr.Zero);
         }
 
         public static void Suspend(this Process process)
@@ -534,7 +534,7 @@ namespace MemUtil
 
         public static bool BitEquals(this float f, float o)
         {
-            return ToUInt32Bits(f) == ToUInt32Bits(o);
+            return f.ToUInt32Bits() == o.ToUInt32Bits();
         }
     }
 }

@@ -29,8 +29,7 @@ public class StartVOPatch
             VOProxy.VoicelineEndFrames.Add(__instance.name, Time.renderedFrameCount + frameDuration);
 
             Debug.Log(
-                $"{__instance.name} started at {Time.timeSinceLevelLoad} will run for {frameDuration} frames " +
-                $"(until {Time.renderedFrameCount + frameDuration} via proxy."
+                $"{__instance.name} started at {Time.timeSinceLevelLoad} will run for {frameDuration} frames via proxy."
             );
 
         }
@@ -55,7 +54,7 @@ public class VOHasEndedPatch
             __result = true;
             VOProxy.VoicelineEndFrames.Remove(__instance.name);
 
-            Debug.Log($"{__instance.name} finished at {Time.timeSinceLevelLoad} via proxy.");
+            Debug.Log($"{__instance.name} proxy finished at {Time.timeSinceLevelLoad}.");
         }
         else
         {

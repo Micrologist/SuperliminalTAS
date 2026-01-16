@@ -7,7 +7,7 @@ using System.Text;
 
 // Note: Please be careful when modifying this because it could break existing components!
 
-namespace MemUtil
+namespace SuperliminalTAS.MemUtil
 {
     using OffsetT = Int32;
 
@@ -40,7 +40,7 @@ namespace MemUtil
             InitializeOffsets(offsets);
         }
 
-        public T Deref<T>(Process process, T default_ = default(T)) where T : struct // all value types including structs
+        public T Deref<T>(Process process, T default_ = default) where T : struct // all value types including structs
         {
             T val;
             if (!Deref(process, out val))
@@ -54,7 +54,7 @@ namespace MemUtil
             if (!DerefOffsets(process, out ptr)
                 || !process.ReadValue(ptr, out value))
             {
-                value = default(T);
+                value = default;
                 return false;
             }
 
