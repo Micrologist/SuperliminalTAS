@@ -51,7 +51,4 @@
     </Reference>
   </ItemGroup>
   
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell start-process &quot;$(ProjectDir)\bin\CopyToGameAndRun.bat&quot;" />
-  </Target>
 </Project>

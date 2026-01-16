@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SuperliminalTAS
 {
 	[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetButton))]
-	[HarmonyPatch(new Type[] { typeof(string) })]
+	[HarmonyPatch([typeof(string)])]
 	public class GetButtonPatch
 	{
 		static void Postfix(string actionName, ref bool __result)
@@ -15,7 +15,7 @@ namespace SuperliminalTAS
 	}
 
 	[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetButtonDown))]
-	[HarmonyPatch(new Type[] { typeof(string) })]
+    [HarmonyPatch([typeof(string)])]
 	public class GetButtonDownPatch
 	{
 		static void Postfix(string actionName, ref bool __result)
@@ -25,7 +25,7 @@ namespace SuperliminalTAS
 	}
 
 	[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetButtonUp))]
-	[HarmonyPatch(new Type[] { typeof(string) })]
+	[HarmonyPatch([typeof(string)])]
 	public class GetButtonUpPatch
 	{
 		static void Postfix(string actionName, ref bool __result)
@@ -35,7 +35,7 @@ namespace SuperliminalTAS
 	}
 
 	[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetAxis))]
-	[HarmonyPatch(new Type[] { typeof(string) })]
+	[HarmonyPatch([typeof(string)])]
 	public class GetAxisPatch
 	{
 		static void Postfix(string actionName, ref float __result)
@@ -54,8 +54,28 @@ namespace SuperliminalTAS
 		}
 	}
 
-	[HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.Range))]
-	[HarmonyPatch(new Type[] { typeof(int), typeof(int) })]
+    [HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.insideUnitSphere))]
+    [HarmonyPatch(MethodType.Getter)]
+    public class InUnitSpherePatch
+    {
+        static void Postfix(ref Vector3 __result)
+        {
+            __result = Vector3.zero;
+        }
+    }
+
+    [HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.value))]
+    [HarmonyPatch(MethodType.Getter)]
+    public class ValuePatch
+    {
+        static void Postfix(ref float __result)
+        {
+			__result = .5f;
+        }
+    }
+
+    [HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.Range))]
+    [HarmonyPatch([typeof(int), typeof(int)])]
 	public class RandomRangeIntPatch
 	{
 		static void Postfix(int min, int max, ref int __result)
@@ -65,7 +85,7 @@ namespace SuperliminalTAS
 	}
 
 	[HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.Range))]
-	[HarmonyPatch(new Type[] { typeof(float), typeof(float) })]
+	[HarmonyPatch([typeof(float), typeof(float)])]
 	public class RandomRangeFloatPatch
 	{
 		static void Postfix(float min, float max, ref float __result)
@@ -74,13 +94,38 @@ namespace SuperliminalTAS
 		}
 	}
 
-	[HarmonyPatch(typeof(PauseMenu))]
+    [HarmonyPatch(typeof(System.Random), "InternalSample")]
+    public class InternalSamplePatch
+    {
+        static void Postfix(ref int __result)
+        {
+            __result = 0;
+        }
+    }
+
+    [HarmonyPatch(typeof(PauseMenu))]
 	[HarmonyPatch("OnApplicationFocus")]
 	public class ApplicationFocusPatch
 	{
 		static void Prefix(bool focus, PauseMenu __instance)
 		{
 			__instance.pauseWhenAltTabbed = false;
+		}
+	}
+
+	[HarmonyPatch(typeof(ResizeScript))]
+	[HarmonyPatch("DoGrabObject")]
+	public class DoGrabObjectPatch
+	{
+        static void Prefix(ResizeScript __instance)
+        {
+            Debug.Log(Time.timeSinceLevelLoad + " DoGrabObject()");
+            Debug.Log("Pre: "+__instance.transform.position.ToString("0.000000"));
+        }
+
+        static void Postfix(ResizeScript __instance)
+		{
+			Debug.Log("Post: "+__instance.transform.position.ToString("0.000000"));
 		}
 	}
 }
