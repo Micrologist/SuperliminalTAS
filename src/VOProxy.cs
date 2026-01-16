@@ -26,9 +26,13 @@ namespace SuperliminalTAS.src
         {
             if(VOProxy.VoicelineDurations.TryGetValue(__instance.name, out int frameDuration))
             {
-                Debug.Log($"{__instance.name} started at {Time.timeSinceLevelLoad} will run for {frameDuration} frames via proxy.");
-
                 VOProxy.VoicelineEndFrames.Add(__instance.name, Time.renderedFrameCount + frameDuration);
+
+                Debug.Log(
+                    $"{__instance.name} started at {Time.timeSinceLevelLoad} will run for {frameDuration} frames " +
+                    $"(until {Time.renderedFrameCount + frameDuration} via proxy."
+                );
+
             }
             else
             {
