@@ -19,7 +19,6 @@ namespace SuperliminalTAS
 
 
         private Text _statusText;
-
         private DemoData _data;
         private DemoFileDialog _fileDialog;
 
@@ -110,7 +109,7 @@ namespace SuperliminalTAS
             if (_statusText != null) return;
             if (GameObject.Find("UI_PAUSE_MENU") == null) return;
 
-            _statusText = DemoStatusUI.CreateStatusText(
+            _statusText = DemoStatusText.CreateStatusText(
                 parentCanvas: GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas"),
                 fontName: "NotoSans-CondensedSemiBold",
                 fontSize: 30,
@@ -126,8 +125,7 @@ namespace SuperliminalTAS
             var frame = CurrentDemoFrame;
 
             if (_playingBack) _statusText.text = $"playback: {frame} / {_data.FrameCount}";
-            else if (_recording) _statusText.text = $"recording: {frame} / ?";
-            else _statusText.text = $"stopped: 0 / {_data.FrameCount}";
+            else _statusText.text = _recording ? $"recording: {frame} / ?" : $"stopped: 0 / {_data.FrameCount}";
 
             if (GameManager.GM.player != null)
             {
@@ -151,7 +149,6 @@ namespace SuperliminalTAS
         #endregion
 
         #region Recording / Playback
-
 
         private void StartRecording()
         {
@@ -213,7 +210,7 @@ namespace SuperliminalTAS
 
         #endregion
 
-        #region Save / Load
+        #region Saving / Loading
 
         private void OpenDemo()
         {
@@ -251,7 +248,6 @@ namespace SuperliminalTAS
                 Debug.LogError($"Failed to save demo: {e}");
             }
         }
-
         #endregion
 
         #region Scene Reset

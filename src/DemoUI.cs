@@ -9,17 +9,14 @@ using UnityEngine.UI;
 
 namespace SuperliminalTAS
 {
-    /// <summary>
-    /// Owns SFB usage + default folder + filters.
-    /// </summary>
     public sealed class DemoFileDialog
     {
         private readonly StandaloneFileBrowserWindows _fileBrowser = new();
 
         private static readonly ExtensionFilter[] ExtensionList =
         {
-            new ExtensionFilter("Superliminal TAS Recording (*.slt)", "slt"),
-            new ExtensionFilter("All Files", "*")
+            new("Superliminal TAS Recording (*.slt)", "slt"),
+            new("All Files", "*")
         };
 
         public string DemoDirectory { get; }
@@ -45,7 +42,7 @@ namespace SuperliminalTAS
         }
     }
 
-    internal static class DemoStatusUI
+    internal static class DemoStatusText
     {
         public static Text CreateStatusText(
             Transform parentCanvas,

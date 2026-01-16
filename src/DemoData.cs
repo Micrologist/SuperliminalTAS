@@ -17,16 +17,13 @@ namespace SuperliminalTAS
         };
     }
 
-    /// <summary>
-    /// Stores all recorded frame data. Handles recording a single frame from Rewired.
-    /// </summary>
     [Serializable]
     public sealed class DemoData
     {
-        private readonly Dictionary<string, List<bool>> _button = new();
-        private readonly Dictionary<string, List<bool>> _buttonDown = new();
-        private readonly Dictionary<string, List<bool>> _buttonUp = new();
-        private readonly Dictionary<string, List<float>> _axis = new();
+        private readonly Dictionary<string, List<bool>> _button = [];
+        private readonly Dictionary<string, List<bool>> _buttonDown = [];
+        private readonly Dictionary<string, List<bool>> _buttonUp = [];
+        private readonly Dictionary<string, List<float>> _axis = [];
 
         public int FrameCount => _button.TryGetValue("Jump", out var list) ? list.Count : 0;
 

@@ -112,20 +112,4 @@ namespace SuperliminalTAS
 			__instance.pauseWhenAltTabbed = false;
 		}
 	}
-
-	[HarmonyPatch(typeof(ResizeScript))]
-	[HarmonyPatch("DoGrabObject")]
-	public class DoGrabObjectPatch
-	{
-        static void Prefix(ResizeScript __instance)
-        {
-            Debug.Log(Time.timeSinceLevelLoad + " DoGrabObject()");
-            Debug.Log("Pre: "+__instance.transform.position.ToString("0.000000"));
-        }
-
-        static void Postfix(ResizeScript __instance)
-		{
-			Debug.Log("Post: "+__instance.transform.position.ToString("0.000000"));
-		}
-	}
 }
