@@ -24,7 +24,7 @@ namespace SuperliminalTAS.src
     {
         static void Prefix(MOSTEventVOPlayer __instance)
         {
-            if(VOProxy.VoicelineDurations.TryGetValue(__instance.name, out int frameDuration))
+            if (VOProxy.VoicelineDurations.TryGetValue(__instance.name, out int frameDuration))
             {
                 VOProxy.VoicelineEndFrames.Add(__instance.name, Time.renderedFrameCount + frameDuration);
 
@@ -37,7 +37,7 @@ namespace SuperliminalTAS.src
             else
             {
                 Debug.Log($"{__instance.name} started at {Time.timeSinceLevelLoad} has no proxy and will run in real time!");
-            }    
+            }
         }
     }
 
@@ -46,9 +46,9 @@ namespace SuperliminalTAS.src
     {
         static void Postfix(MOSTEventVOPlayer __instance, ref bool __result)
         {
-            if(__instance.VOBeganPlaying && VOProxy.VoicelineEndFrames.TryGetValue(__instance.name, out int endFrame))
+            if (__instance.VOBeganPlaying && VOProxy.VoicelineEndFrames.TryGetValue(__instance.name, out int endFrame))
             {
-                if(Time.renderedFrameCount >= endFrame)
+                if (Time.renderedFrameCount >= endFrame)
                 {
                     __result = true;
                     VOProxy.VoicelineEndFrames.Remove(__instance.name);
