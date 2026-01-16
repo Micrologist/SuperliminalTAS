@@ -6,284 +6,283 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Screen = UnityEngine.Screen;
 
-namespace SuperliminalTAS
+namespace SuperliminalTAS;
+
+public sealed class DemoRecorder : MonoBehaviour
 {
-    public sealed class DemoRecorder : MonoBehaviour
+    private int _demoStartFrame;
+    private bool _recording;
+    private bool _playingBack;
+    private bool _resetting;
+    private bool _lastUpdateWasFixed;
+    private int CurrentDemoFrame => Time.renderedFrameCount - _demoStartFrame;
+
+
+    private Text _statusText;
+    private DemoData _data;
+    private DemoFileDialog _fileDialog;
+
+    private void Awake()
     {
-        private int _demoStartFrame;
-        private bool _recording;
-        private bool _playingBack;
-        private bool _resetting;
-        private bool _lastUpdateWasFixed;
-        private int CurrentDemoFrame => Time.renderedFrameCount - _demoStartFrame;
-
-
-        private Text _statusText;
-        private DemoData _data;
-        private DemoFileDialog _fileDialog;
-
-        private void Awake()
-        {
-            _fileDialog = new DemoFileDialog();
-            _data = DemoData.CreateEmpty();
-        }
-
-        private void Update()
-        {
-            if (!_lastUpdateWasFixed && (_recording || _playingBack))
-                Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback");
-
-            _lastUpdateWasFixed = false;
-        }
-
-        private void FixedUpdate()
-        {
-            if (_lastUpdateWasFixed && (_recording && _playingBack))
-                Debug.Log(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
-
-            _lastUpdateWasFixed = true;
-        }
-
-        private void LateUpdate()
-        {
-            if (_resetting) return;
-
-            HandleHotkeys();
-
-            if (_recording)
-            {
-                _data.RecordFrameFrom(GameManager.GM.playerInput);
-            }
-            else if (_playingBack)
-            {
-                if (CurrentDemoFrame + 1 >= _data.FrameCount)
-                    StopPlayback();
-            }
-
-            EnsureStatusText();
-            UpdateStatusText();
-        }
-
-        #region Hotkeys / UI
-
-        private void HandleHotkeys()
-        {
-            if (_recording)
-            {
-                if (Input.GetKeyDown(KeyCode.F6)) StopRecording();
-            }
-            else if (_playingBack)
-            {
-                if (Input.GetKeyDown(KeyCode.F6)) StopPlayback();
-            }
-            else
-            {
-                if (Input.GetKeyDown(KeyCode.F5)) StartPlayback();
-                else if (Input.GetKeyDown(KeyCode.F7)) StartRecording();
-            }
-
-            if (Input.GetKeyDown(KeyCode.F12))
-            {
-                WithUnlockedCursor(() => SaveDemo());
-            }
-
-            if (Input.GetKeyDown(KeyCode.F11))
-            {
-                WithUnlockedCursor(() => OpenDemo());
-            }
-        }
-
-        private static void WithUnlockedCursor(Action action)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-            try { action?.Invoke(); }
-            finally
-            {
-                Cursor.visible = false;
-            }
-        }
-
-        private void EnsureStatusText()
-        {
-            if (_statusText != null) return;
-            if (GameObject.Find("UI_PAUSE_MENU") == null) return;
-
-            _statusText = DemoStatusText.CreateStatusText(
-                parentCanvas: GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas"),
-                fontName: "NotoSans-CondensedSemiBold",
-                fontSize: 30,
-                anchoredPosition: new Vector2(25f, -25f),
-                size: new Vector2(Screen.currentResolution.width / 4f, Screen.currentResolution.height)
-            );
-        }
-
-        private void UpdateStatusText()
-        {
-            if (_statusText == null) return;
-
-            var frame = CurrentDemoFrame;
-
-            if (_playingBack) _statusText.text = $"playback: {frame} / {_data.FrameCount}";
-            else _statusText.text = _recording ? $"recording: {frame} / ?" : $"stopped: 0 / {_data.FrameCount}";
-
-            if (GameManager.GM.player != null)
-            {
-                var playerPos = GameManager.GM.player.transform.position;
-                _statusText.text += $"\n\nPosition: {playerPos.x:0.00000}, {playerPos.y:0.00000}, {playerPos.z:0.00000}\n";
-
-                var vel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
-                float horizontal = Mathf.Sqrt(vel.x * vel.x + vel.z * vel.z);
-                _statusText.text += $"Velocity: {horizontal:0.00000}, {vel.y:0.00000}\n";
-            }
-
-            if (_recording || _playingBack)
-            {
-                var secondsByFrames = (Time.renderedFrameCount - _demoStartFrame) * 0.02;
-                _statusText.text += $"\n{Time.timeSinceLevelLoad:0.00} / {secondsByFrames:0.00}";
-            }
-
-            _statusText.text += "\n\nF5 - Play\nF6 - Stop\nF7 - Record\nF11 - Open\nF12 - Save";
-        }
-
-        #endregion
-
-        #region Recording / Playback
-
-        private void StartRecording()
-        {
-            if (_recording || _playingBack || _resetting) return;
-
-            ResetLevelStateThen(() =>
-            {
-                _data = DemoData.CreateEmpty();
-                _recording = true;
-                _playingBack = false;
-                _demoStartFrame = Time.renderedFrameCount;
-
-                TASInput.disablePause = true;
-                TASInput.StopPlayback();
-            });
-        }
-
-        private void StopRecording()
-        {
-            TASInput.disablePause = false;
-            _recording = false;
-        }
-
-        private void StartPlayback()
-        {
-            if (_data.FrameCount < 1 || _recording || _playingBack || _resetting) return;
-
-            ResetLevelStateThen(() =>
-            {
-                _recording = false;
-                _playingBack = true;
-                _demoStartFrame = Time.renderedFrameCount;
-
-                TASInput.disablePause = true;
-                TASInput.StartPlayback(this);
-            });
-        }
-
-        private void StopPlayback()
-        {
-            _recording = false;
-            _playingBack = false;
-
-            TASInput.disablePause = false;
-            TASInput.StopPlayback();
-        }
-
-        internal bool GetRecordedButton(string actionName) =>
-            _data.GetButton(actionName, CurrentDemoFrame);
-
-        internal bool GetRecordedButtonDown(string actionName) =>
-            _data.GetButtonDown(actionName, CurrentDemoFrame);
-
-        internal bool GetRecordedButtonUp(string actionName) =>
-            _data.GetButtonUp(actionName, CurrentDemoFrame);
-
-        internal float GetRecordedAxis(string actionName) =>
-            _data.GetAxis(actionName, CurrentDemoFrame);
-
-        #endregion
-
-        #region Saving / Loading
-
-        private void OpenDemo()
-        {
-            var path = _fileDialog.OpenPath();
-            if (string.IsNullOrWhiteSpace(path)) return;
-
-            try
-            {
-                var bytes = File.ReadAllBytes(path);
-                _data = DemoSerializer.Deserialize(bytes);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to open demo: {e}");
-            }
-        }
-
-        private void SaveDemo()
-        {
-            if (_data.FrameCount == 0) return;
-
-            var path = _fileDialog.SavePath();
-            if (string.IsNullOrWhiteSpace(path)) return;
-
-            try
-            {
-                if (!path.EndsWith(".slt", StringComparison.OrdinalIgnoreCase))
-                    path += ".slt";
-
-                var bytes = DemoSerializer.Serialize(_data);
-                File.WriteAllBytes(path, bytes);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to save demo: {e}");
-            }
-        }
-        #endregion
-
-        #region Scene Reset
-        private void ResetLevelStateThen(Action afterLoaded)
-        {
-            if (_resetting) return;
-
-            _resetting = true;
-            TASInput.blockAllInput = true;
-
-            GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
-            GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
-
-            void OnLoaded(Scene scene, LoadSceneMode mode)
-            {
-                SceneManager.sceneLoaded -= OnLoaded;
-                StartCoroutine(AfterSceneLoadedPhaseLocked(afterLoaded));
-            }
-
-            SceneManager.sceneLoaded += OnLoaded;
-
-            GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
-
-            GameManager.GM.TriggerScenePreUnload();
-            GameManager.GM.GetComponent<SaveAndCheckpointManager>().RestartLevel();
-        }
-
-        private IEnumerator AfterSceneLoadedPhaseLocked(Action afterLoaded)
-        {
-            TASInput.blockAllInput = false;
-            _resetting = false;
-            afterLoaded?.Invoke();
-
-            yield break;
-        }
-
-        #endregion
+        _fileDialog = new DemoFileDialog();
+        _data = DemoData.CreateEmpty();
     }
+
+    private void Update()
+    {
+        if (!_lastUpdateWasFixed && (_recording || _playingBack))
+            Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback");
+
+        _lastUpdateWasFixed = false;
+    }
+
+    private void FixedUpdate()
+    {
+        if (_lastUpdateWasFixed && (_recording && _playingBack))
+            Debug.Log(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
+
+        _lastUpdateWasFixed = true;
+    }
+
+    private void LateUpdate()
+    {
+        if (_resetting) return;
+
+        HandleHotkeys();
+
+        if (_recording)
+        {
+            _data.RecordFrameFrom(GameManager.GM.playerInput);
+        }
+        else if (_playingBack)
+        {
+            if (CurrentDemoFrame + 1 >= _data.FrameCount)
+                StopPlayback();
+        }
+
+        EnsureStatusText();
+        UpdateStatusText();
+    }
+
+    #region Hotkeys / UI
+
+    private void HandleHotkeys()
+    {
+        if (_recording)
+        {
+            if (Input.GetKeyDown(KeyCode.F6)) StopRecording();
+        }
+        else if (_playingBack)
+        {
+            if (Input.GetKeyDown(KeyCode.F6)) StopPlayback();
+        }
+        else
+        {
+            if (Input.GetKeyDown(KeyCode.F5)) StartPlayback();
+            else if (Input.GetKeyDown(KeyCode.F7)) StartRecording();
+        }
+
+        if (Input.GetKeyDown(KeyCode.F12))
+        {
+            WithUnlockedCursor(() => SaveDemo());
+        }
+
+        if (Input.GetKeyDown(KeyCode.F11))
+        {
+            WithUnlockedCursor(() => OpenDemo());
+        }
+    }
+
+    private static void WithUnlockedCursor(Action action)
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        try { action?.Invoke(); }
+        finally
+        {
+            Cursor.visible = false;
+        }
+    }
+
+    private void EnsureStatusText()
+    {
+        if (_statusText != null) return;
+        if (GameObject.Find("UI_PAUSE_MENU") == null) return;
+
+        _statusText = DemoStatusText.CreateStatusText(
+            parentCanvas: GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas"),
+            fontName: "NotoSans-CondensedSemiBold",
+            fontSize: 30,
+            anchoredPosition: new Vector2(25f, -25f),
+            size: new Vector2(Screen.currentResolution.width / 4f, Screen.currentResolution.height)
+        );
+    }
+
+    private void UpdateStatusText()
+    {
+        if (_statusText == null) return;
+
+        var frame = CurrentDemoFrame;
+
+        if (_playingBack) _statusText.text = $"playback: {frame} / {_data.FrameCount}";
+        else _statusText.text = _recording ? $"recording: {frame} / ?" : $"stopped: 0 / {_data.FrameCount}";
+
+        if (GameManager.GM.player != null)
+        {
+            var playerPos = GameManager.GM.player.transform.position;
+            _statusText.text += $"\n\nPosition: {playerPos.x:0.00000}, {playerPos.y:0.00000}, {playerPos.z:0.00000}\n";
+
+            var vel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
+            float horizontal = Mathf.Sqrt(vel.x * vel.x + vel.z * vel.z);
+            _statusText.text += $"Velocity: {horizontal:0.00000}, {vel.y:0.00000}\n";
+        }
+
+        if (_recording || _playingBack)
+        {
+            var secondsByFrames = (Time.renderedFrameCount - _demoStartFrame) * 0.02;
+            _statusText.text += $"\n{Time.timeSinceLevelLoad:0.00} / {secondsByFrames:0.00}";
+        }
+
+        _statusText.text += "\n\nF5 - Play\nF6 - Stop\nF7 - Record\nF11 - Open\nF12 - Save";
+    }
+
+    #endregion
+
+    #region Recording / Playback
+
+    private void StartRecording()
+    {
+        if (_recording || _playingBack || _resetting) return;
+
+        ResetLevelStateThen(() =>
+        {
+            _data = DemoData.CreateEmpty();
+            _recording = true;
+            _playingBack = false;
+            _demoStartFrame = Time.renderedFrameCount;
+
+            TASInput.disablePause = true;
+            TASInput.StopPlayback();
+        });
+    }
+
+    private void StopRecording()
+    {
+        TASInput.disablePause = false;
+        _recording = false;
+    }
+
+    private void StartPlayback()
+    {
+        if (_data.FrameCount < 1 || _recording || _playingBack || _resetting) return;
+
+        ResetLevelStateThen(() =>
+        {
+            _recording = false;
+            _playingBack = true;
+            _demoStartFrame = Time.renderedFrameCount;
+
+            TASInput.disablePause = true;
+            TASInput.StartPlayback(this);
+        });
+    }
+
+    private void StopPlayback()
+    {
+        _recording = false;
+        _playingBack = false;
+
+        TASInput.disablePause = false;
+        TASInput.StopPlayback();
+    }
+
+    internal bool GetRecordedButton(string actionName) =>
+        _data.GetButton(actionName, CurrentDemoFrame);
+
+    internal bool GetRecordedButtonDown(string actionName) =>
+        _data.GetButtonDown(actionName, CurrentDemoFrame);
+
+    internal bool GetRecordedButtonUp(string actionName) =>
+        _data.GetButtonUp(actionName, CurrentDemoFrame);
+
+    internal float GetRecordedAxis(string actionName) =>
+        _data.GetAxis(actionName, CurrentDemoFrame);
+
+    #endregion
+
+    #region Saving / Loading
+
+    private void OpenDemo()
+    {
+        var path = _fileDialog.OpenPath();
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        try
+        {
+            var bytes = File.ReadAllBytes(path);
+            _data = DemoSerializer.Deserialize(bytes);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to open demo: {e}");
+        }
+    }
+
+    private void SaveDemo()
+    {
+        if (_data.FrameCount == 0) return;
+
+        var path = _fileDialog.SavePath();
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        try
+        {
+            if (!path.EndsWith(".slt", StringComparison.OrdinalIgnoreCase))
+                path += ".slt";
+
+            var bytes = DemoSerializer.Serialize(_data);
+            File.WriteAllBytes(path, bytes);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to save demo: {e}");
+        }
+    }
+    #endregion
+
+    #region Scene Reset
+    private void ResetLevelStateThen(Action afterLoaded)
+    {
+        if (_resetting) return;
+
+        _resetting = true;
+        TASInput.blockAllInput = true;
+
+        GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
+        GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
+
+        void OnLoaded(Scene scene, LoadSceneMode mode)
+        {
+            SceneManager.sceneLoaded -= OnLoaded;
+            StartCoroutine(AfterSceneLoadedPhaseLocked(afterLoaded));
+        }
+
+        SceneManager.sceneLoaded += OnLoaded;
+
+        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
+
+        GameManager.GM.TriggerScenePreUnload();
+        GameManager.GM.GetComponent<SaveAndCheckpointManager>().RestartLevel();
+    }
+
+    private IEnumerator AfterSceneLoadedPhaseLocked(Action afterLoaded)
+    {
+        TASInput.blockAllInput = false;
+        _resetting = false;
+        afterLoaded?.Invoke();
+
+        yield break;
+    }
+
+    #endregion
 }
