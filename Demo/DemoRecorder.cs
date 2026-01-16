@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SuperliminalTAS.Patches;
+using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
@@ -6,7 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Screen = UnityEngine.Screen;
 
-namespace SuperliminalTAS;
+namespace SuperliminalTAS.Demo;
 
 public sealed class DemoRecorder : MonoBehaviour
 {
@@ -38,7 +39,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (_lastUpdateWasFixed && (_recording && _playingBack))
+        if (_lastUpdateWasFixed && _recording && _playingBack)
             Debug.Log(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
 
         _lastUpdateWasFixed = true;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SuperliminalTAS;
+namespace SuperliminalTAS.Patches;
 
 internal static class VOProxy
 {

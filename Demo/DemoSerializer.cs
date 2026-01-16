@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace SuperliminalTAS;
+namespace SuperliminalTAS.Demo;
 
 /// <summary>
 /// Binary format read/write. Keeps DemoRecorder free of serialization clutter.
@@ -19,7 +19,7 @@ public static class DemoSerializer
         var magicBytes = Encoding.ASCII.GetBytes(Magic);
         var lengthBytes = BitConverter.GetBytes(data.FrameCount);
 
-        using var ms = new MemoryStream(capacity: 16 + 4 + (data.FrameCount * ((4 * DemoActions.Axes.Length) + (3 * 3)))); // rough
+        using var ms = new MemoryStream(capacity: 16 + 4 + data.FrameCount * (4 * DemoActions.Axes.Length + 3 * 3)); // rough
 
         ms.Write(magicBytes, 0, magicBytes.Length);
         ms.Write(lengthBytes, 0, lengthBytes.Length);

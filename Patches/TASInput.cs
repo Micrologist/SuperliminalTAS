@@ -1,4 +1,6 @@
-﻿namespace SuperliminalTAS;
+﻿using SuperliminalTAS.Demo;
+
+namespace SuperliminalTAS.Patches;
 
 internal static class TASInput
 {
@@ -11,7 +13,7 @@ internal static class TASInput
     {
         if (blockAllInput) return false;
 
-        if (passthrough || (actionName != "Jump" && actionName != "Grab" && actionName != "Rotate"))
+        if (passthrough || actionName != "Jump" && actionName != "Grab" && actionName != "Rotate")
             return originalResult;
 
         return recording.GetRecordedButton(actionName);
@@ -23,7 +25,7 @@ internal static class TASInput
         if (actionName == "Pause" && disablePause)
             return false;
 
-        if (passthrough || (actionName != "Jump" && actionName != "Grab" && actionName != "Rotate"))
+        if (passthrough || actionName != "Jump" && actionName != "Grab" && actionName != "Rotate")
             return originalResult;
 
         return recording.GetRecordedButtonDown(actionName);
@@ -33,7 +35,7 @@ internal static class TASInput
     {
         if (blockAllInput) return false;
 
-        if (passthrough || (actionName != "Jump" && actionName != "Grab" && actionName != "Rotate"))
+        if (passthrough || actionName != "Jump" && actionName != "Grab" && actionName != "Rotate")
             return originalResult;
 
         return recording.GetRecordedButtonUp(actionName);
@@ -43,7 +45,7 @@ internal static class TASInput
     {
         if (blockAllInput) return 0f;
 
-        if (passthrough || (actionName != "Look Horizontal" && actionName != "Look Vertical" && actionName != "Move Horizontal" && actionName != "Move Vertical"))
+        if (passthrough || actionName != "Look Horizontal" && actionName != "Look Vertical" && actionName != "Move Horizontal" && actionName != "Move Vertical")
             return originalResult;
 
         return recording.GetRecordedAxis(actionName);

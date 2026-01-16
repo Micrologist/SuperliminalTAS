@@ -1,5 +1,7 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using SuperliminalTAS.Demo;
+using SuperliminalTAS.Patches;
 using System.Diagnostics;
 using System.Reflection;
 

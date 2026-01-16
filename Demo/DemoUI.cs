@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace SuperliminalTAS;
+namespace SuperliminalTAS.Demo;
 
 public sealed class DemoFileDialog
 {

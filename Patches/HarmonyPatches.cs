@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using UnityEngine;
 
-namespace SuperliminalTAS
+namespace SuperliminalTAS.Patches
 {
     #region Rewired Input Patches
 
@@ -49,7 +49,7 @@ namespace SuperliminalTAS
 
     #region RNG Patches
 
-    [HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.onUnitSphere))]
+    [HarmonyPatch(typeof(Random), nameof(Random.onUnitSphere))]
     [HarmonyPatch(MethodType.Getter)]
     public class OnUnitSpherePatch
     {
@@ -59,7 +59,7 @@ namespace SuperliminalTAS
         }
     }
 
-    [HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.insideUnitSphere))]
+    [HarmonyPatch(typeof(Random), nameof(Random.insideUnitSphere))]
     [HarmonyPatch(MethodType.Getter)]
     public class InUnitSpherePatch
     {
@@ -69,7 +69,7 @@ namespace SuperliminalTAS
         }
     }
 
-    [HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.value))]
+    [HarmonyPatch(typeof(Random), nameof(Random.value))]
     [HarmonyPatch(MethodType.Getter)]
     public class ValuePatch
     {
@@ -79,7 +79,7 @@ namespace SuperliminalTAS
         }
     }
 
-    [HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.Range))]
+    [HarmonyPatch(typeof(Random), nameof(Random.Range))]
     [HarmonyPatch([typeof(int), typeof(int)])]
     public class RandomRangeIntPatch
     {
@@ -89,7 +89,7 @@ namespace SuperliminalTAS
         }
     }
 
-    [HarmonyPatch(typeof(UnityEngine.Random), nameof(UnityEngine.Random.Range))]
+    [HarmonyPatch(typeof(Random), nameof(Random.Range))]
     [HarmonyPatch([typeof(float), typeof(float)])]
     public class RandomRangeFloatPatch
     {
