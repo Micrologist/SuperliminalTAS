@@ -1,4 +1,5 @@
-﻿using SuperliminalTAS.Patches;
+﻿using Rewired;
+using SuperliminalTAS.Patches;
 using System;
 using System.Collections;
 using System.IO;
@@ -35,6 +36,9 @@ public sealed class DemoRecorder : MonoBehaviour
             Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback");
 
         _lastUpdateWasFixed = false;
+
+        EnsureStatusText();
+        UpdateStatusText();
     }
 
     private void FixedUpdate()
@@ -60,9 +64,6 @@ public sealed class DemoRecorder : MonoBehaviour
             if (CurrentDemoFrame + 1 >= _data.FrameCount)
                 StopPlayback();
         }
-
-        EnsureStatusText();
-        UpdateStatusText();
     }
 
     #region Hotkeys / UI
@@ -171,7 +172,7 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_recording || _playingBack || _resetting) return;
 
-        ResetLevelStateThen(() =>
+        StartCoroutine(ResetLevelStateThen(() =>
         {
             _data = DemoData.CreateEmpty();
             _recording = true;
@@ -180,7 +181,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
             TASInput.disablePause = true;
             TASInput.StopPlayback();
-        });
+        }));
     }
 
     private void StopRecording()
@@ -193,7 +194,7 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_data.FrameCount < 1 || _recording || _playingBack || _resetting) return;
 
-        ResetLevelStateThen(() =>
+        StartCoroutine(ResetLevelStateThen(() =>
         {
             _recording = false;
             _playingBack = true;
@@ -201,7 +202,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
             TASInput.disablePause = true;
             TASInput.StartPlayback(this);
-        });
+        }));
     }
 
     private void StopPlayback()
@@ -268,19 +269,31 @@ public sealed class DemoRecorder : MonoBehaviour
     #endregion
 
     #region Scene Reset
-    private void ResetLevelStateThen(Action afterLoaded)
+    private IEnumerator ResetLevelStateThen(Action afterLoaded)
     {
-        if (_resetting) return;
+        if (_resetting) yield break;
 
         _resetting = true;
         TASInput.blockAllInput = true;
 
+        Player player = ReInput.players.GetPlayer(0);
+        Player.ControllerHelper controllers = player.controllers;
+
+        controllers.maps.SetAllMapsEnabled(false);
+
         GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
         GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
+
+        yield return null;
 
         void OnLoaded(Scene scene, LoadSceneMode mode)
         {
             SceneManager.sceneLoaded -= OnLoaded;
+
+            player.controllers.maps.SetMapsEnabled(true, ControllerType.Mouse, "Default", "Default");
+            player.controllers.maps.SetMapsEnabled(true, ControllerType.Joystick, "Default", "Default");
+            player.controllers.maps.SetMapsEnabled(true, ControllerType.Keyboard, "Default");
+
             StartCoroutine(AfterSceneLoadedPhaseLocked(afterLoaded));
         }
 
