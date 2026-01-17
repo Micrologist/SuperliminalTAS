@@ -403,7 +403,17 @@ public sealed class DemoRecorder : MonoBehaviour
 
         try
         {
-            var csv = File.ReadAllText(path);
+            string csv;
+            using (var fs = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite))
+            using (var sr = new StreamReader(fs))
+            {
+                csv = sr.ReadToEnd();
+            }
+
             _data = DemoCSVSerializer.Deserialize(csv);
             Debug.Log($"Imported CSV from: {path} ({_data.FrameCount} frames)");
         }
@@ -412,6 +422,7 @@ public sealed class DemoRecorder : MonoBehaviour
             Debug.LogError($"Failed to import CSV: {e}");
         }
     }
+
     #endregion
 
     #region Scene Reset
