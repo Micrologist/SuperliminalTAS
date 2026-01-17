@@ -132,9 +132,9 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             var playerPos = GameManager.GM.player.transform.position;
             _statusText.text +=
-                $"P: {playerPos.x: 0.00000;-0.00000}, " +
-                $"{playerPos.y: 0.00000;-0.00000}, " +
-                $"{playerPos.z: 0.00000;-0.00000}\n";
+                $"P: {playerPos.x:0.00000}, " +
+                $"{playerPos.y:0.00000}, " +
+                $"{playerPos.z:0.00000}\n";
 
             var vel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
             float horizontal = Mathf.Sqrt(vel.x * vel.x + vel.z * vel.z);
