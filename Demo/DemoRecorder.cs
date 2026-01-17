@@ -112,7 +112,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         _statusText = DemoStatusText.CreateStatusText(
             parentCanvas: GameObject.Find("UI_PAUSE_MENU").transform.Find("Canvas"),
-            fontName: "NotoSans-CondensedSemiBold",
+            fontName: "NotoMono-Regular",
             fontSize: 30,
             anchoredPosition: new Vector2(25f, -25f),
             size: new Vector2(Screen.currentResolution.width / 4f, Screen.currentResolution.height)
@@ -125,17 +125,23 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var frame = CurrentDemoFrame;
 
-        if (_playingBack) _statusText.text = $"playback: {frame} / {_data.FrameCount}";
-        else _statusText.text = _recording ? $"recording: {frame} / ?" : $"stopped: 0 / {_data.FrameCount}";
+        if (_playingBack) _statusText.text = $"playback: {frame} / {_data.FrameCount}\n\n";
+        else _statusText.text = _recording ? $"recording: {frame} / ?\n\n" : $"stopped: 0 / {_data.FrameCount}\n\n";
 
         if (GameManager.GM.player != null)
         {
             var playerPos = GameManager.GM.player.transform.position;
-            _statusText.text += $"\n\nPosition: {playerPos.x:0.00000}, {playerPos.y:0.00000}, {playerPos.z:0.00000}\n";
+            _statusText.text +=
+                $"P: {playerPos.x: 0.00000;-0.00000}, " +
+                $"{playerPos.y: 0.00000;-0.00000}, " +
+                $"{playerPos.z: 0.00000;-0.00000}\n";
 
             var vel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
             float horizontal = Mathf.Sqrt(vel.x * vel.x + vel.z * vel.z);
-            _statusText.text += $"Velocity: {horizontal:0.00000}, {vel.y:0.00000}\n";
+
+            _statusText.text +=
+                $"V: {horizontal: 0.00000;-0.00000}, {vel.y: 0.00000;-0.00000}\n";
+
         }
 
         /**
@@ -146,13 +152,15 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         **/
 
-        _statusText.text += $"\nM: {TASInput.GetAxis("Move Horizontal", GameManager.GM.playerInput.GetAxis("Move Horizontal")):0.000} " +
-            $"{TASInput.GetAxis("Move Vertical", GameManager.GM.playerInput.GetAxis("Move Vertical")):0.000}";
-        _statusText.text += $"\nL: {TASInput.GetAxis("Look Horizontal", GameManager.GM.playerInput.GetAxis("Look Horizontal")):0.000} " +
-            $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")):0.000}";
+        _statusText.text +=
+            $"\nM: {TASInput.GetAxis("Move Horizontal", GameManager.GM.playerInput.GetAxis("Move Horizontal")): 0.000;-0.000} " +
+            $"{TASInput.GetAxis("Move Vertical", GameManager.GM.playerInput.GetAxis("Move Vertical")): 0.000;-0.000}";
 
+        _statusText.text +=
+            $"\nL: {TASInput.GetAxis("Look Horizontal", GameManager.GM.playerInput.GetAxis("Look Horizontal")): 0.000;-0.000} " +
+            $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
-        _statusText.text += "\n\nF5 - Play\nF6 - Stop\nF7 - Record\nF11 - Open\nF12 - Save";
+        _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record\nF11 - Open\nF12 - Save";
     }
 
     #endregion
