@@ -17,6 +17,9 @@ public sealed class DemoRecorder : MonoBehaviour
     private bool _playingBack;
     private bool _resetting;
     private bool _lastUpdateWasFixed;
+    private bool _paused;
+    private int _playbackSpeed = 1; // 1x, 2x, 4x, 8x
+    private int _pausedFrame; // Frame to resume from when unpausing
     private int CurrentDemoFrame => Time.renderedFrameCount - _demoStartFrame;
 
 
@@ -93,6 +96,35 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             WithUnlockedCursor(() => OpenDemo());
         }
+
+        if (Input.GetKeyDown(KeyCode.F10))
+        {
+            WithUnlockedCursor(() => ExportCSV());
+        }
+
+        if (Input.GetKeyDown(KeyCode.F9))
+        {
+            WithUnlockedCursor(() => ImportCSV());
+        }
+
+        // Playback controls (only during playback)
+        if (_playingBack && !_resetting)
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                TogglePause();
+            }
+
+            if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
+            {
+                IncreasePlaybackSpeed();
+            }
+
+            if (Input.GetKeyDown(KeyCode.LeftBracket) || Input.GetKeyDown(KeyCode.Minus))
+            {
+                DecreasePlaybackSpeed();
+            }
+        }
     }
 
     private static void WithUnlockedCursor(Action action)
@@ -104,6 +136,52 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             Cursor.visible = false;
         }
+    }
+
+    private void TogglePause()
+    {
+        if (!_playingBack) return;
+
+        _paused = !_paused;
+
+        if (_paused)
+        {
+            _pausedFrame = CurrentDemoFrame;
+            Time.timeScale = 0f;
+        }
+        else
+        {
+            Time.timeScale = 1f;
+            // Adjust start frame to account for paused time
+            _demoStartFrame = Time.renderedFrameCount - _pausedFrame;
+        }
+    }
+
+    private void IncreasePlaybackSpeed()
+    {
+        if (_paused) return;
+
+        _playbackSpeed *= 2;
+        if (_playbackSpeed > 8) _playbackSpeed = 8;
+
+        ApplyPlaybackSpeed();
+    }
+
+    private void DecreasePlaybackSpeed()
+    {
+        if (_paused) return;
+
+        _playbackSpeed /= 2;
+        if (_playbackSpeed < 1) _playbackSpeed = 1;
+
+        ApplyPlaybackSpeed();
+    }
+
+    private void ApplyPlaybackSpeed()
+    {
+        // Set target frame rate to achieve desired speed
+        // Base game runs at 50 FPS (Time.fixedDeltaTime = 0.02)
+        Application.targetFrameRate = 50 * _playbackSpeed;
     }
 
     private void EnsureStatusText()
@@ -126,8 +204,19 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var frame = CurrentDemoFrame;
 
-        if (_playingBack) _statusText.text = $"playback: {frame} / {_data.FrameCount}\n\n";
-        else _statusText.text = _recording ? $"recording: {frame} / ?\n\n" : $"stopped: 0 / {_data.FrameCount}\n\n";
+        if (_playingBack)
+        {
+            _statusText.text = $"playback: {frame} / {_data.FrameCount}";
+            if (_paused)
+                _statusText.text += " [PAUSED]";
+            else if (_playbackSpeed > 1)
+                _statusText.text += $" [{_playbackSpeed}x]";
+            _statusText.text += "\n\n";
+        }
+        else
+        {
+            _statusText.text = _recording ? $"recording: {frame} / ?\n\n" : $"stopped: 0 / {_data.FrameCount}\n\n";
+        }
 
         if (GameManager.GM.player != null)
         {
@@ -161,7 +250,15 @@ public sealed class DemoRecorder : MonoBehaviour
             $"\nL: {TASInput.GetAxis("Look Horizontal", GameManager.GM.playerInput.GetAxis("Look Horizontal")): 0.000;-0.000} " +
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
-        _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record\nF11 - Open\nF12 - Save";
+        _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
+        _statusText.text += "\nF9  - Import CSV\nF10 - Export CSV";
+        _statusText.text += "\nF11 - Open\nF12 - Save";
+
+        if (_playingBack)
+        {
+            _statusText.text += "\n\nSPACE - Pause/Resume";
+            _statusText.text += "\n[+]   - Speed Up\n[-]   - Slow Down";
+        }
     }
 
     #endregion
@@ -198,7 +295,12 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             _recording = false;
             _playingBack = true;
+            _paused = false;
+            _playbackSpeed = 1;
             _demoStartFrame = Time.renderedFrameCount;
+
+            Time.timeScale = 1f;
+            Application.targetFrameRate = 50;
 
             TASInput.disablePause = true;
             TASInput.StartPlayback(this);
@@ -209,6 +311,11 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         _recording = false;
         _playingBack = false;
+        _paused = false;
+        _playbackSpeed = 1;
+
+        Time.timeScale = 1f;
+        Application.targetFrameRate = 50;
 
         TASInput.disablePause = false;
         TASInput.StopPlayback();
@@ -264,6 +371,45 @@ public sealed class DemoRecorder : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"Failed to save demo: {e}");
+        }
+    }
+
+    private void ExportCSV()
+    {
+        if (_data.FrameCount == 0) return;
+
+        var path = _fileDialog.SavePathCSV();
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        try
+        {
+            if (!path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                path += ".csv";
+
+            var csv = DemoCSVSerializer.Serialize(_data);
+            File.WriteAllText(path, csv);
+            Debug.Log($"Exported CSV to: {path}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to export CSV: {e}");
+        }
+    }
+
+    private void ImportCSV()
+    {
+        var path = _fileDialog.OpenPathCSV();
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        try
+        {
+            var csv = File.ReadAllText(path);
+            _data = DemoCSVSerializer.Deserialize(csv);
+            Debug.Log($"Imported CSV from: {path} ({_data.FrameCount} frames)");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to import CSV: {e}");
         }
     }
     #endregion

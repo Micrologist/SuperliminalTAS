@@ -17,6 +17,12 @@ public sealed class DemoFileDialog
         new("All Files", "*")
     };
 
+    private static readonly ExtensionFilter[] CSVExtensionList =
+    {
+        new("CSV File (*.csv)", "csv"),
+        new("All Files", "*")
+    };
+
     public string DemoDirectory { get; }
 
     public DemoFileDialog()
@@ -36,6 +42,19 @@ public sealed class DemoFileDialog
     {
         var name = $"SuperliminalTAS-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.slt";
         var selected = _fileBrowser.SaveFilePanel("Save Recording as", DemoDirectory, name, ExtensionList);
+        return selected?.Name;
+    }
+
+    public string OpenPathCSV()
+    {
+        var selected = _fileBrowser.OpenFilePanel("Open CSV", DemoDirectory, CSVExtensionList, false);
+        return selected.FirstOrDefault()?.Name;
+    }
+
+    public string SavePathCSV()
+    {
+        var name = $"SuperliminalTAS-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.csv";
+        var selected = _fileBrowser.SaveFilePanel("Export CSV as", DemoDirectory, name, CSVExtensionList);
         return selected?.Name;
     }
 }
