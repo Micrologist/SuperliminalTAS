@@ -1,5 +1,9 @@
 ﻿using HarmonyLib;
+using System;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace SuperliminalTAS.Patches;
 
@@ -45,6 +49,27 @@ public class GetAxisPatch
     }
 }
 
+[HarmonyPatch]
+public class RewiredDeltaTimePatch
+{
+    private static FieldInfo fieldInfo;
+
+    static MethodBase TargetMethod()
+    {
+        return AccessTools.Method(
+            "Rewired.ReInput+YADQJtjjsJnFpIRXsWZbJAPaLFd+WJEYbcppSteIUfAbygiJwLxOmigk:AgiDzcfIDplWkWrlRVaBMFfZJjUH");
+    }
+
+    static void Postfix()
+    {
+        if (fieldInfo == null)
+        {
+            fieldInfo = AccessTools.Field(typeof(Rewired.ReInput), "unscaledDeltaTime");
+        }
+
+        fieldInfo?.SetValue(null, Time.fixedDeltaTime);
+    }
+}
 #endregion
 
 #region RNG Patches

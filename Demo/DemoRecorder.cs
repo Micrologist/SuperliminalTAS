@@ -138,11 +138,19 @@ public sealed class DemoRecorder : MonoBehaviour
             _statusText.text += $"Velocity: {horizontal:0.00000}, {vel.y:0.00000}\n";
         }
 
+        /**
         if (_recording || _playingBack)
         {
             var secondsByFrames = (Time.renderedFrameCount - _demoStartFrame) * 0.02;
             _statusText.text += $"\n{Time.timeSinceLevelLoad:0.00} / {secondsByFrames:0.00}";
         }
+        **/
+
+        _statusText.text += $"\nM: {TASInput.GetAxis("Move Horizontal", GameManager.GM.playerInput.GetAxis("Move Horizontal")):0.000} " +
+            $"{TASInput.GetAxis("Move Vertical", GameManager.GM.playerInput.GetAxis("Move Vertical")):0.000}";
+        _statusText.text += $"\nL: {TASInput.GetAxis("Look Horizontal", GameManager.GM.playerInput.GetAxis("Look Horizontal")):0.000} " +
+            $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")):0.000}";
+
 
         _statusText.text += "\n\nF5 - Play\nF6 - Stop\nF7 - Record\nF11 - Open\nF12 - Save";
     }
