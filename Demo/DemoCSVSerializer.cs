@@ -66,11 +66,15 @@ public static class DemoCSVSerializer
 
         // Parse header to validate structure
         var header = lines[0].Split(',');
-        int expectedColumns = DemoActions.Axes.Length + DemoActions.Buttons.Length;
-        bool hasSpeedColumn = header.Length == expectedColumns + 1;
+        int requiredColumns = DemoActions.Axes.Length + DemoActions.Buttons.Length;
 
-        if (header.Length != expectedColumns && !hasSpeedColumn)
-            throw new InvalidDataException($"Expected {expectedColumns} or {expectedColumns + 1} columns, got {header.Length}.");
+        // Check if we have at least the required columns
+        if (header.Length < requiredColumns)
+            throw new InvalidDataException($"Expected at least {requiredColumns} columns, got {header.Length}.");
+
+        // Check if there's a Speed column (8th column)
+        // Any columns beyond Speed are ignored (for notes, metadata, etc.)
+        bool hasSpeedColumn = header.Length > requiredColumns;
 
         int frameCount = lines.Length - 1; // Exclude header
 
@@ -88,9 +92,10 @@ public static class DemoCSVSerializer
         for (int i = 1; i < lines.Length; i++)
         {
             var values = lines[i].Split(',');
-            int expectedRowColumns = hasSpeedColumn ? expectedColumns + 1 : expectedColumns;
-            if (values.Length != expectedRowColumns)
-                throw new InvalidDataException($"Row {i} has {values.Length} columns, expected {expectedRowColumns}.");
+            // Allow extra columns for notes/metadata, just check we have minimum required
+            int minimumColumns = hasSpeedColumn ? requiredColumns + 1 : requiredColumns;
+            if (values.Length < minimumColumns)
+                throw new InvalidDataException($"Row {i} has {values.Length} columns, expected at least {minimumColumns}.");
 
             int col = 0;
 
