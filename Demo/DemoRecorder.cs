@@ -303,10 +303,6 @@ public sealed class DemoRecorder : MonoBehaviour
             _playingBack = true;
             _demoStartFrame = Time.renderedFrameCount;
 
-            _playbackSpeedIndex = 5; // Reset to 50 FPS (1x)
-            _usingCustomSpeed = false;
-            ApplyPlaybackSpeed();
-
             TASInput.disablePause = true;
             TASInput.StartPlayback(this);
         }));
