@@ -18,8 +18,12 @@ public sealed class DemoRecorder : MonoBehaviour
     private bool _resetting;
     private bool _lastUpdateWasFixed;
     private bool _paused;
-    private int _playbackSpeed = 1; // 1x, 2x, 4x, 8x
     private int _pausedFrame; // Frame to resume from when unpausing
+
+    // Available playback speeds in FPS (base game is 50 FPS)
+    private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
+    private int _playbackSpeedIndex = 5; // Start at 50 FPS (1x speed)
+
     private int CurrentDemoFrame => Time.renderedFrameCount - _demoStartFrame;
 
 
@@ -162,8 +166,9 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_paused) return;
 
-        _playbackSpeed *= 2;
-        if (_playbackSpeed > 8) _playbackSpeed = 8;
+        _playbackSpeedIndex++;
+        if (_playbackSpeedIndex >= PlaybackSpeeds.Length)
+            _playbackSpeedIndex = PlaybackSpeeds.Length - 1;
 
         ApplyPlaybackSpeed();
     }
@@ -172,17 +177,16 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_paused) return;
 
-        _playbackSpeed /= 2;
-        if (_playbackSpeed < 1) _playbackSpeed = 1;
+        _playbackSpeedIndex--;
+        if (_playbackSpeedIndex < 0)
+            _playbackSpeedIndex = 0;
 
         ApplyPlaybackSpeed();
     }
 
     private void ApplyPlaybackSpeed()
     {
-        // Set target frame rate to achieve desired speed
-        // Base game runs at 50 FPS (Time.fixedDeltaTime = 0.02)
-        Application.targetFrameRate = 50 * _playbackSpeed;
+        Application.targetFrameRate = PlaybackSpeeds[_playbackSpeedIndex];
     }
 
     private void EnsureStatusText()
@@ -210,8 +214,12 @@ public sealed class DemoRecorder : MonoBehaviour
             _statusText.text = $"playback: {frame} / {_data.FrameCount}";
             if (_paused)
                 _statusText.text += " [PAUSED]";
-            else if (_playbackSpeed > 1)
-                _statusText.text += $" [{_playbackSpeed}x]";
+            else
+            {
+                int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
+                if (currentFps != 50)
+                    _statusText.text += $" [{currentFps} FPS]";
+            }
             _statusText.text += "\n\n";
         }
         else
@@ -297,7 +305,7 @@ public sealed class DemoRecorder : MonoBehaviour
             _recording = false;
             _playingBack = true;
             _paused = false;
-            _playbackSpeed = 1;
+            _playbackSpeedIndex = 5; // Reset to 50 FPS (normal speed)
             _demoStartFrame = Time.renderedFrameCount;
 
             Time.timeScale = 1f;
@@ -313,7 +321,7 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
         _playingBack = false;
         _paused = false;
-        _playbackSpeed = 1;
+        _playbackSpeedIndex = 5; // Reset to 50 FPS (normal speed)
 
         Time.timeScale = 1f;
         Application.targetFrameRate = 50;
