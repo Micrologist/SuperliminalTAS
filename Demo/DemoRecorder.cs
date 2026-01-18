@@ -410,7 +410,6 @@ public sealed class DemoRecorder : MonoBehaviour
                     csv = sr.ReadToEnd();
                 }
 
-                var csv = File.ReadAllText(path);
                 _data = DemoCSVSerializer.Deserialize(csv);
                 Debug.Log($"Loaded CSV from: {path} ({_data.FrameCount} frames)");
             }
