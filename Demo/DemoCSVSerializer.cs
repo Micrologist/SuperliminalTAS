@@ -19,23 +19,16 @@ public static class DemoCSVSerializer
         var sb = new StringBuilder();
 
         // Header row
-        sb.Append("Frame,");
         foreach (var axis in DemoActions.Axes)
             sb.Append($"{axis},");
         foreach (var button in DemoActions.Buttons)
             sb.Append($"{button},");
-        foreach (var button in DemoActions.Buttons)
-            sb.Append($"{button}Down,");
-        foreach (var button in DemoActions.Buttons)
-            sb.Append($"{button}Up,");
         sb.Length--; // Remove trailing comma
         sb.AppendLine();
 
         // Data rows (one per frame)
         for (int frame = 0; frame < data.FrameCount; frame++)
         {
-            sb.Append($"{frame},");
-
             // Axes
             foreach (var axis in DemoActions.Axes)
             {
@@ -48,20 +41,6 @@ public static class DemoCSVSerializer
             foreach (var button in DemoActions.Buttons)
             {
                 bool value = data.GetButton(button, frame);
-                sb.Append(value ? "1," : "0,");
-            }
-
-            // ButtonsDown
-            foreach (var button in DemoActions.Buttons)
-            {
-                bool value = data.GetButtonDown(button, frame);
-                sb.Append(value ? "1," : "0,");
-            }
-
-            // ButtonsUp
-            foreach (var button in DemoActions.Buttons)
-            {
-                bool value = data.GetButtonUp(button, frame);
                 sb.Append(value ? "1," : "0,");
             }
 
@@ -83,7 +62,7 @@ public static class DemoCSVSerializer
 
         // Parse header to validate structure
         var header = lines[0].Split(',');
-        int expectedColumns = 1 + DemoActions.Axes.Length + (DemoActions.Buttons.Length * 3);
+        int expectedColumns = DemoActions.Axes.Length + DemoActions.Buttons.Length;
         if (header.Length != expectedColumns)
             throw new InvalidDataException($"Expected {expectedColumns} columns, got {header.Length}.");
 
@@ -94,14 +73,8 @@ public static class DemoCSVSerializer
             axes[axis] = new List<float>(frameCount);
 
         var buttons = new Dictionary<string, List<bool>>(DemoActions.Buttons.Length);
-        var buttonsDown = new Dictionary<string, List<bool>>(DemoActions.Buttons.Length);
-        var buttonsUp = new Dictionary<string, List<bool>>(DemoActions.Buttons.Length);
         foreach (var button in DemoActions.Buttons)
-        {
             buttons[button] = new List<bool>(frameCount);
-            buttonsDown[button] = new List<bool>(frameCount);
-            buttonsUp[button] = new List<bool>(frameCount);
-        }
 
         // Parse data rows
         for (int i = 1; i < lines.Length; i++)
@@ -110,7 +83,7 @@ public static class DemoCSVSerializer
             if (values.Length != expectedColumns)
                 throw new InvalidDataException($"Row {i} has {values.Length} columns, expected {expectedColumns}.");
 
-            int col = 1; // Skip frame number column
+            int col = 0;
 
             // Parse axes
             foreach (var axis in DemoActions.Axes)
@@ -128,26 +101,10 @@ public static class DemoCSVSerializer
                 buttons[button].Add(buttonValue);
                 col++;
             }
-
-            // Parse buttonsDown
-            foreach (var button in DemoActions.Buttons)
-            {
-                bool buttonValue = ParseBool(values[col], i, col);
-                buttonsDown[button].Add(buttonValue);
-                col++;
-            }
-
-            // Parse buttonsUp
-            foreach (var button in DemoActions.Buttons)
-            {
-                bool buttonValue = ParseBool(values[col], i, col);
-                buttonsUp[button].Add(buttonValue);
-                col++;
-            }
         }
 
         var data = DemoData.CreateEmpty();
-        data.ReplaceAll(axes, buttons, buttonsDown, buttonsUp);
+        data.ReplaceAll(axes, buttons);
         return data;
     }
 
