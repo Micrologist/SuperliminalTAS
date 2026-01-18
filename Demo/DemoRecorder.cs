@@ -109,6 +109,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F8))
         {
+            StopPlayback();
             ReloadFile();
             StartPlayback();
         }
@@ -270,7 +271,6 @@ public sealed class DemoRecorder : MonoBehaviour
             _playingBack = true;
             _demoStartFrame = Time.renderedFrameCount;
 
-            Time.timeScale = 1f;
             ApplyPlaybackSpeed();
 
             TASInput.disablePause = true;
@@ -283,7 +283,6 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
         _playingBack = false;
 
-        Time.timeScale = 1f;
         ApplyPlaybackSpeed();
 
         TASInput.disablePause = false;
