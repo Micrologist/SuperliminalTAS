@@ -1,8 +1,10 @@
-﻿using Rewired;
+﻿using HarmonyLib;
+using Rewired;
 using SuperliminalTAS.Patches;
 using System;
 using System.Collections;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -237,12 +239,11 @@ public sealed class DemoRecorder : MonoBehaviour
                 $"{playerPos.y:0.00000}, " +
                 $"{playerPos.z:0.00000}\n";
 
-            var playerForward = GameManager.GM.playerCamera.transform.forward;
+            var xRot = GameManager.GM.playerCamera.transform.rotation.eulerAngles.x;
 
             _statusText.text +=
-                $"R: {playerForward.x:0.00000}, " +
-                $"{playerForward.y:0.00000}, " +
-                $"{playerForward.z:0.00000}\n";
+                $"R: {xRot:0.00000}, " +
+                $"{GameManager.GM.player.transform.rotation.eulerAngles.y:0.00000}\n";
 
             var vel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
             float horizontal = Mathf.Sqrt(vel.x * vel.x + vel.z * vel.z);
@@ -250,6 +251,21 @@ public sealed class DemoRecorder : MonoBehaviour
             _statusText.text +=
                 $"V: {horizontal: 0.00000;-0.00000}, {vel.y: 0.00000;-0.00000}\n";
 
+
+            var resizeScript = GameManager.GM.playerCamera.GetComponent<ResizeScript>();
+            GameObject grabbedObject = resizeScript.GetGrabbedObject();
+
+            if (grabbedObject != null)
+            {
+                var fieldInfo = AccessTools.Field(typeof(ResizeScript), "scaleAtMinDistance");
+                var scale = ((Vector3)(fieldInfo?.GetValue(resizeScript))).z;
+
+                // Use min distance scale if object is held, otherwise current scale
+                if (float.IsNaN(scale))
+                    scale = (GameManager.GM.playerCamera.transform.position - grabbedObject.transform.position).magnitude;
+
+                _statusText.text += "O: " + scale.ToString("0.0000") + " " + grabbedObject.transform.localScale.x.ToString("0.0000") + "x\n";
+            }
         }
 
         /**
@@ -436,6 +452,8 @@ public sealed class DemoRecorder : MonoBehaviour
             Debug.LogError($"Failed to load file: {e}");
         }
     }
+
+
 
     private void ReloadFile()
     {
