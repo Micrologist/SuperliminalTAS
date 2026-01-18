@@ -26,6 +26,7 @@ public sealed class DemoRecorder : MonoBehaviour
     private Text _statusText;
     private DemoData _data;
     private DemoFileDialog _fileDialog;
+    private string _lastOpenedFile;
 
     private void Awake()
     {
@@ -102,9 +103,9 @@ public sealed class DemoRecorder : MonoBehaviour
             WithUnlockedCursor(() => ExportCSV());
         }
 
-        if (Input.GetKeyDown(KeyCode.F9))
+        if (Input.GetKeyDown(KeyCode.F8))
         {
-            WithUnlockedCursor(() => ImportCSV());
+            ReloadFile();
         }
 
         // Playback controls (only during playback)
@@ -251,7 +252,7 @@ public sealed class DemoRecorder : MonoBehaviour
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
         _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
-        _statusText.text += "\nF9  - Import CSV\nF10 - Export CSV";
+        _statusText.text += "\nF8  - Reload\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
 
         if (_playingBack)
@@ -342,15 +343,7 @@ public sealed class DemoRecorder : MonoBehaviour
         var path = _fileDialog.OpenPath();
         if (string.IsNullOrWhiteSpace(path)) return;
 
-        try
-        {
-            var bytes = File.ReadAllBytes(path);
-            _data = DemoSerializer.Deserialize(bytes);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to open demo: {e}");
-        }
+        LoadFile(path);
     }
 
     private void SaveDemo()
@@ -396,21 +389,56 @@ public sealed class DemoRecorder : MonoBehaviour
         }
     }
 
-    private void ImportCSV()
+    private void LoadFile(string path)
     {
-        var path = _fileDialog.OpenPathCSV();
         if (string.IsNullOrWhiteSpace(path)) return;
 
         try
         {
-            var csv = File.ReadAllText(path);
-            _data = DemoCSVSerializer.Deserialize(csv);
-            Debug.Log($"Imported CSV from: {path} ({_data.FrameCount} frames)");
+            var extension = Path.GetExtension(path).ToLowerInvariant();
+
+            if (extension == ".csv")
+            {
+                var csv = File.ReadAllText(path);
+                _data = DemoCSVSerializer.Deserialize(csv);
+                Debug.Log($"Loaded CSV from: {path} ({_data.FrameCount} frames)");
+            }
+            else if (extension == ".slt")
+            {
+                var bytes = File.ReadAllBytes(path);
+                _data = DemoSerializer.Deserialize(bytes);
+                Debug.Log($"Loaded SLT from: {path} ({_data.FrameCount} frames)");
+            }
+            else
+            {
+                Debug.LogError($"Unknown file type: {extension}");
+                return;
+            }
+
+            _lastOpenedFile = path;
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to import CSV: {e}");
+            Debug.LogError($"Failed to load file: {e}");
         }
+    }
+
+    private void ReloadFile()
+    {
+        if (string.IsNullOrWhiteSpace(_lastOpenedFile))
+        {
+            Debug.LogWarning("No file to reload. Open a file first.");
+            return;
+        }
+
+        if (!File.Exists(_lastOpenedFile))
+        {
+            Debug.LogError($"File no longer exists: {_lastOpenedFile}");
+            return;
+        }
+
+        Debug.Log($"Reloading: {_lastOpenedFile}");
+        LoadFile(_lastOpenedFile);
     }
     #endregion
 

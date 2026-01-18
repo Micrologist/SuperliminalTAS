@@ -37,9 +37,9 @@ A Tool-Assisted Speedrun (TAS) tool for Superliminal that enables deterministic 
 - **F7** - Start recording
 
 ### File Operations
-- **F9** - Import CSV file
+- **F8** - Reload current file (for quick iteration when editing CSV)
 - **F10** - Export to CSV
-- **F11** - Open binary `.slt` file
+- **F11** - Open file (supports both `.slt` and `.csv`)
 - **F12** - Save binary `.slt` file
 
 ### Playback Controls (During Playback Only)
@@ -70,8 +70,8 @@ A Tool-Assisted Speedrun (TAS) tool for Superliminal that enables deterministic 
      - **ButtonsUp**: 1 on the frame the button is released, 0 otherwise
    - Save the CSV file
 
-4. **Import Edited Inputs**
-   - Press **F9** to import your edited CSV
+4. **Load Edited Inputs**
+   - Press **F11** to open your CSV file
    - Verify the frame count in the UI
 
 5. **Test Playback**
@@ -81,8 +81,10 @@ A Tool-Assisted Speedrun (TAS) tool for Superliminal that enables deterministic 
    - Press **F6** to stop
 
 6. **Refine and Iterate**
-   - Export to CSV again if you need to make adjustments
-   - Import and test until perfect
+   - Edit the CSV file in Excel
+   - Press **F8** to quickly reload without navigating the file dialog
+   - Test again with **F5**
+   - Repeat until perfect
 
 ### Input Types
 
