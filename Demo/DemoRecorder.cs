@@ -22,6 +22,10 @@ public sealed class DemoRecorder : MonoBehaviour
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
     private int _playbackSpeedIndex = 5; // Start at 50 FPS (1x speed)
 
+    // Track if we're using a custom speed from CSV
+    private bool _usingCustomSpeed;
+    private float _customSpeedMultiplier = 1f;
+
     private int CurrentDemoFrame => Time.renderedFrameCount - _demoStartFrame;
 
 
@@ -69,6 +73,15 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         else if (_playingBack)
         {
+            // Check for speed change from CSV at current frame
+            var speed = _data.GetSpeed(CurrentDemoFrame);
+            if (speed.HasValue)
+            {
+                _usingCustomSpeed = true;
+                _customSpeedMultiplier = speed.Value;
+                ApplyCustomSpeed(speed.Value);
+            }
+
             if (CurrentDemoFrame + 1 >= _data.FrameCount)
                 StopPlayback();
         }
@@ -141,6 +154,7 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_playbackSpeedIndex >= PlaybackSpeeds.Length)
             _playbackSpeedIndex = PlaybackSpeeds.Length - 1;
 
+        _usingCustomSpeed = false;
         ApplyPlaybackSpeed();
     }
 
@@ -150,12 +164,22 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_playbackSpeedIndex < 0)
             _playbackSpeedIndex = 0;
 
+        _usingCustomSpeed = false;
         ApplyPlaybackSpeed();
     }
 
     private void ApplyPlaybackSpeed()
     {
         Application.targetFrameRate = PlaybackSpeeds[_playbackSpeedIndex];
+    }
+
+    private void ApplyCustomSpeed(float multiplier)
+    {
+        // Base game speed is 50 FPS
+        int targetFps = Mathf.RoundToInt(50f * multiplier);
+        // Clamp to reasonable values (at least 1 FPS)
+        targetFps = Mathf.Max(1, targetFps);
+        Application.targetFrameRate = targetFps;
     }
 
     private void EnsureStatusText()
@@ -178,10 +202,18 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var frame = CurrentDemoFrame;
 
-        int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
-        float currentSpeedMult = currentFps / 50f;
+        float currentSpeedMult;
+        if (_usingCustomSpeed)
+        {
+            currentSpeedMult = _customSpeedMultiplier;
+        }
+        else
+        {
+            int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
+            currentSpeedMult = currentFps / 50f;
+        }
 
-        string speedInfo = currentFps != 50 ? $" [{currentSpeedMult}x]" : "";
+        string speedInfo = currentSpeedMult != 1f ? $" [{currentSpeedMult}x]" : "";
 
         if (_playingBack)
         {
@@ -271,6 +303,8 @@ public sealed class DemoRecorder : MonoBehaviour
             _demoStartFrame = Time.renderedFrameCount;
 
             Time.timeScale = 1f;
+            _playbackSpeedIndex = 5; // Reset to 50 FPS (1x)
+            _usingCustomSpeed = false;
             ApplyPlaybackSpeed();
 
             TASInput.disablePause = true;
