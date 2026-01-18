@@ -302,7 +302,6 @@ public sealed class DemoRecorder : MonoBehaviour
             _playingBack = true;
             _demoStartFrame = Time.renderedFrameCount;
 
-            Time.timeScale = 1f;
             _playbackSpeedIndex = 5; // Reset to 50 FPS (1x)
             _usingCustomSpeed = false;
             ApplyPlaybackSpeed();
@@ -317,7 +316,6 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
         _playingBack = false;
 
-        Time.timeScale = 1f;
         ApplyPlaybackSpeed();
 
         TASInput.disablePause = false;
