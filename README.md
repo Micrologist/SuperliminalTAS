@@ -30,6 +30,7 @@ A Tool-Assisted Speedrun (TAS) tool for Superliminal that enables deterministic 
   - **Slow-motion**: 1, 2, 5, 10, 25 FPS (for precise frame-by-frame analysis)
   - **Normal**: 50 FPS (1x speed)
   - **Fast-forward**: 100, 200, 400 FPS (2x, 4x, 8x speed)
+  - Speed setting is **persistent** - works at all times and is remembered across playback sessions
 - **Frame-accurate control** - Maintains perfect sync even when paused or speed-adjusted
 
 ## Hotkeys
@@ -45,10 +46,12 @@ A Tool-Assisted Speedrun (TAS) tool for Superliminal that enables deterministic 
 - **F11** - Open file (supports both `.slt` and `.csv`)
 - **F12** - Save binary `.slt` file
 
-### Playback Controls (During Playback Only)
-- **SPACE** - Pause/Resume playback
+### Playback Speed Controls (Always Available)
 - **[ or -** - Decrease playback speed (cycle through: 400 → 200 → 100 → 50 → 25 → 10 → 5 → 2 → 1 FPS)
 - **] or +** - Increase playback speed (cycle through: 1 → 2 → 5 → 10 → 25 → 50 → 100 → 200 → 400 FPS)
+
+### Playback Controls (During Playback Only)
+- **SPACE** - Pause/Resume playback
 
 ## Workflow
 

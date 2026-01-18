@@ -112,23 +112,20 @@ public sealed class DemoRecorder : MonoBehaviour
             ReloadFile();
         }
 
-        // Playback controls (only during playback)
-        if (_playingBack && !_resetting)
+        // Playback controls
+        if (Input.GetKeyDown(KeyCode.Space) && _playingBack && !_resetting)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                TogglePause();
-            }
+            TogglePause();
+        }
 
-            if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
-            {
-                IncreasePlaybackSpeed();
-            }
+        if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
+        {
+            IncreasePlaybackSpeed();
+        }
 
-            if (Input.GetKeyDown(KeyCode.LeftBracket) || Input.GetKeyDown(KeyCode.Minus))
-            {
-                DecreasePlaybackSpeed();
-            }
+        if (Input.GetKeyDown(KeyCode.LeftBracket) || Input.GetKeyDown(KeyCode.Minus))
+        {
+            DecreasePlaybackSpeed();
         }
     }
 
@@ -164,8 +161,6 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void IncreasePlaybackSpeed()
     {
-        if (_paused) return;
-
         _playbackSpeedIndex++;
         if (_playbackSpeedIndex >= PlaybackSpeeds.Length)
             _playbackSpeedIndex = PlaybackSpeeds.Length - 1;
@@ -175,8 +170,6 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void DecreasePlaybackSpeed()
     {
-        if (_paused) return;
-
         _playbackSpeedIndex--;
         if (_playbackSpeedIndex < 0)
             _playbackSpeedIndex = 0;
@@ -209,22 +202,22 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var frame = CurrentDemoFrame;
 
+        int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
+        string speedInfo = currentFps != 50 ? $" [{currentFps} FPS]" : "";
+
         if (_playingBack)
         {
             _statusText.text = $"playback: {frame} / {_data.FrameCount}";
             if (_paused)
                 _statusText.text += " [PAUSED]";
             else
-            {
-                int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
-                if (currentFps != 50)
-                    _statusText.text += $" [{currentFps} FPS]";
-            }
+                _statusText.text += speedInfo;
             _statusText.text += "\n\n";
         }
         else
         {
-            _statusText.text = _recording ? $"recording: {frame} / ?\n\n" : $"stopped: 0 / {_data.FrameCount}\n\n";
+            string status = _recording ? $"recording: {frame} / ?" : $"stopped: 0 / {_data.FrameCount}";
+            _statusText.text = status + speedInfo + "\n\n";
         }
 
         if (GameManager.GM.player != null)
@@ -262,11 +255,11 @@ public sealed class DemoRecorder : MonoBehaviour
         _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
         _statusText.text += "\nF8  - Reload\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
+        _statusText.text += "\n\n[+]   - Speed Up\n[-]   - Slow Down";
 
         if (_playingBack)
         {
-            _statusText.text += "\n\nSPACE - Pause/Resume";
-            _statusText.text += "\n[+]   - Speed Up\n[-]   - Slow Down";
+            _statusText.text += "\nSPACE - Pause/Resume";
         }
     }
 
@@ -305,11 +298,10 @@ public sealed class DemoRecorder : MonoBehaviour
             _recording = false;
             _playingBack = true;
             _paused = false;
-            _playbackSpeedIndex = 5; // Reset to 50 FPS (normal speed)
             _demoStartFrame = Time.renderedFrameCount;
 
             Time.timeScale = 1f;
-            Application.targetFrameRate = 50;
+            ApplyPlaybackSpeed();
 
             TASInput.disablePause = true;
             TASInput.StartPlayback(this);
@@ -321,10 +313,9 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
         _playingBack = false;
         _paused = false;
-        _playbackSpeedIndex = 5; // Reset to 50 FPS (normal speed)
 
         Time.timeScale = 1f;
-        Application.targetFrameRate = 50;
+        ApplyPlaybackSpeed();
 
         TASInput.disablePause = false;
         TASInput.StopPlayback();
