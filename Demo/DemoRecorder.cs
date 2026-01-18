@@ -110,6 +110,7 @@ public sealed class DemoRecorder : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F8))
         {
             ReloadFile();
+            StartPlayback();
         }
 
         // Playback controls
@@ -255,7 +256,7 @@ public sealed class DemoRecorder : MonoBehaviour
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
         _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
-        _statusText.text += "\nF8  - Reload\nF10 - Export CSV";
+        _statusText.text += "\nF8  - Reload & Play\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
         _statusText.text += "\n\n[+]   - Speed Up\n[-]   - Slow Down";
 
