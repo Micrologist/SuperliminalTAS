@@ -203,7 +203,9 @@ public sealed class DemoRecorder : MonoBehaviour
         var frame = CurrentDemoFrame;
 
         int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
-        string speedInfo = currentFps != 50 ? $" [{currentFps} FPS]" : "";
+        float currentSpeedMult = currentFps / 50f;
+
+        string speedInfo = currentFps != 50 ? $" [{currentSpeedMult}x]" : "";
 
         if (_playingBack)
         {
