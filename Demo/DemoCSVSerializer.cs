@@ -40,7 +40,7 @@ public static class DemoCSVSerializer
             foreach (var axis in DemoActions.Axes)
             {
                 float value = data.GetAxis(axis, frame);
-                sb.Append(value.ToString("F6", CultureInfo.InvariantCulture));
+                sb.Append(value.ToString("R", CultureInfo.InvariantCulture));
                 sb.Append(',');
             }
 
