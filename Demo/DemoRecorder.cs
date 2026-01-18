@@ -34,6 +34,8 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         _fileDialog = new DemoFileDialog();
         _data = DemoData.CreateEmpty();
+
+        Application.targetFrameRate = 50;
     }
 
     private void Update()
