@@ -484,7 +484,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         SceneManager.sceneLoaded += OnLoaded;
 
-        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
+        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(1.0f);
 
         GameManager.GM.TriggerScenePreUnload();
         GameManager.GM.GetComponent<SaveAndCheckpointManager>().RestartLevel();
