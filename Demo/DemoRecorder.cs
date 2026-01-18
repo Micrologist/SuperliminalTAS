@@ -122,6 +122,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F8))
         {
+            StopPlayback();
             ReloadFile();
             StartPlayback();
         }
