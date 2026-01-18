@@ -17,8 +17,6 @@ public sealed class DemoRecorder : MonoBehaviour
     private bool _playingBack;
     private bool _resetting;
     private bool _lastUpdateWasFixed;
-    private bool _paused;
-    private int _pausedFrame; // Frame to resume from when unpausing
 
     // Available playback speeds in FPS (base game is 50 FPS)
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
@@ -112,12 +110,6 @@ public sealed class DemoRecorder : MonoBehaviour
             ReloadFile();
         }
 
-        // Playback controls
-        if (Input.GetKeyDown(KeyCode.Space) && _playingBack && !_resetting)
-        {
-            TogglePause();
-        }
-
         if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
         {
             IncreasePlaybackSpeed();
@@ -137,25 +129,6 @@ public sealed class DemoRecorder : MonoBehaviour
         finally
         {
             Cursor.visible = false;
-        }
-    }
-
-    private void TogglePause()
-    {
-        if (!_playingBack) return;
-
-        _paused = !_paused;
-
-        if (_paused)
-        {
-            _pausedFrame = CurrentDemoFrame;
-            Time.timeScale = 0f;
-        }
-        else
-        {
-            Time.timeScale = 1f;
-            // Adjust start frame to account for paused time
-            _demoStartFrame = Time.renderedFrameCount - _pausedFrame;
         }
     }
 
@@ -210,10 +183,8 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_playingBack)
         {
             _statusText.text = $"playback: {frame} / {_data.FrameCount}";
-            if (_paused)
-                _statusText.text += " [PAUSED]";
-            else
-                _statusText.text += speedInfo;
+
+            _statusText.text += speedInfo;
             _statusText.text += "\n\n";
         }
         else
@@ -257,12 +228,7 @@ public sealed class DemoRecorder : MonoBehaviour
         _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
         _statusText.text += "\nF8  - Reload\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
-        _statusText.text += "\n\n[+]   - Speed Up\n[-]   - Slow Down";
-
-        if (_playingBack)
-        {
-            _statusText.text += "\nSPACE - Pause/Resume";
-        }
+        _statusText.text += "\n\n+/- - Speed Up/Down";
     }
 
     #endregion
@@ -299,7 +265,6 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             _recording = false;
             _playingBack = true;
-            _paused = false;
             _demoStartFrame = Time.renderedFrameCount;
 
             Time.timeScale = 1f;
@@ -314,7 +279,6 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         _recording = false;
         _playingBack = false;
-        _paused = false;
 
         Time.timeScale = 1f;
         ApplyPlaybackSpeed();

@@ -19,7 +19,7 @@ public static class DemoSerializer
         var magicBytes = Encoding.ASCII.GetBytes(Magic);
         var lengthBytes = BitConverter.GetBytes(data.FrameCount);
 
-        using var ms = new MemoryStream(capacity: 16 + 4 + data.FrameCount * (4 * DemoActions.Axes.Length + 3 * 3)); // rough
+        using var ms = new MemoryStream(capacity: 16 + 4 + data.FrameCount * (4 * DemoActions.Axes.Length + DemoActions.Buttons.Length)); // rough
 
         ms.Write(magicBytes, 0, magicBytes.Length);
         ms.Write(lengthBytes, 0, lengthBytes.Length);
@@ -31,14 +31,6 @@ public static class DemoSerializer
         // Buttons (bool * length)
         foreach (var b in DemoActions.Buttons)
             WriteBoolList(ms, data.Buttons[b]);
-
-        // ButtonDown
-        foreach (var b in DemoActions.Buttons)
-            WriteBoolList(ms, data.ButtonsDown[b]);
-
-        // ButtonUp
-        foreach (var b in DemoActions.Buttons)
-            WriteBoolList(ms, data.ButtonsUp[b]);
 
         return ms.ToArray();
     }
@@ -67,16 +59,8 @@ public static class DemoSerializer
         foreach (var b in DemoActions.Buttons)
             buttons[b] = ReadBoolList(br, length);
 
-        var buttonsDown = new Dictionary<string, List<bool>>(DemoActions.Buttons.Length);
-        foreach (var b in DemoActions.Buttons)
-            buttonsDown[b] = ReadBoolList(br, length);
-
-        var buttonsUp = new Dictionary<string, List<bool>>(DemoActions.Buttons.Length);
-        foreach (var b in DemoActions.Buttons)
-            buttonsUp[b] = ReadBoolList(br, length);
-
         var data = DemoData.CreateEmpty();
-        data.ReplaceAll(axes, buttons, buttonsDown, buttonsUp);
+        data.ReplaceAll(axes, buttons);
         return data;
     }
 
