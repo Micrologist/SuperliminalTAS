@@ -1,8 +1,10 @@
-﻿using Rewired;
+﻿using HarmonyLib;
+using Rewired;
 using SuperliminalTAS.Patches;
 using System;
 using System.Collections;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -21,6 +23,10 @@ public sealed class DemoRecorder : MonoBehaviour
     // Available playback speeds in FPS (base game is 50 FPS)
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
     private int _playbackSpeedIndex = 5; // Start at 50 FPS (1x speed)
+
+    // Track if we're using a custom speed from CSV
+    private bool _usingCustomSpeed;
+    private float _customSpeedMultiplier = 1f;
 
     private int CurrentDemoFrame => Time.renderedFrameCount - _demoStartFrame;
 
@@ -69,6 +75,15 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         else if (_playingBack)
         {
+            // Check for speed change from CSV at current frame
+            var speed = _data.GetSpeed(CurrentDemoFrame);
+            if (speed.HasValue)
+            {
+                _usingCustomSpeed = true;
+                _customSpeedMultiplier = speed.Value;
+                ApplyCustomSpeed(speed.Value);
+            }
+
             if (CurrentDemoFrame + 1 >= _data.FrameCount)
                 StopPlayback();
         }
@@ -142,6 +157,7 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_playbackSpeedIndex >= PlaybackSpeeds.Length)
             _playbackSpeedIndex = PlaybackSpeeds.Length - 1;
 
+        _usingCustomSpeed = false;
         ApplyPlaybackSpeed();
     }
 
@@ -151,12 +167,22 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_playbackSpeedIndex < 0)
             _playbackSpeedIndex = 0;
 
+        _usingCustomSpeed = false;
         ApplyPlaybackSpeed();
     }
 
     private void ApplyPlaybackSpeed()
     {
         Application.targetFrameRate = PlaybackSpeeds[_playbackSpeedIndex];
+    }
+
+    private void ApplyCustomSpeed(float multiplier)
+    {
+        // Base game speed is 50 FPS
+        int targetFps = Mathf.RoundToInt(50f * multiplier);
+        // Clamp to reasonable values (at least 1 FPS)
+        targetFps = Mathf.Max(1, targetFps);
+        Application.targetFrameRate = targetFps;
     }
 
     private void EnsureStatusText()
@@ -179,10 +205,18 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var frame = CurrentDemoFrame;
 
-        int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
-        float currentSpeedMult = currentFps / 50f;
+        float currentSpeedMult;
+        if (_usingCustomSpeed)
+        {
+            currentSpeedMult = _customSpeedMultiplier;
+        }
+        else
+        {
+            int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
+            currentSpeedMult = currentFps / 50f;
+        }
 
-        string speedInfo = currentFps != 50 ? $" [{currentSpeedMult}x]" : "";
+        string speedInfo = currentSpeedMult != 1f ? $" [{currentSpeedMult}x]" : "";
 
         if (_playingBack)
         {
@@ -205,12 +239,33 @@ public sealed class DemoRecorder : MonoBehaviour
                 $"{playerPos.y:0.00000}, " +
                 $"{playerPos.z:0.00000}\n";
 
+            var xRot = GameManager.GM.playerCamera.transform.rotation.eulerAngles.x;
+
+            _statusText.text +=
+                $"R: {xRot:0.00000}, " +
+                $"{GameManager.GM.player.transform.rotation.eulerAngles.y:0.00000}\n";
+
             var vel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
             float horizontal = Mathf.Sqrt(vel.x * vel.x + vel.z * vel.z);
 
             _statusText.text +=
                 $"V: {horizontal: 0.00000;-0.00000}, {vel.y: 0.00000;-0.00000}\n";
 
+
+            var resizeScript = GameManager.GM.playerCamera.GetComponent<ResizeScript>();
+            GameObject grabbedObject = resizeScript.GetGrabbedObject();
+
+            if (grabbedObject != null)
+            {
+                var fieldInfo = AccessTools.Field(typeof(ResizeScript), "scaleAtMinDistance");
+                var scale = ((Vector3)(fieldInfo?.GetValue(resizeScript))).z;
+
+                // Use min distance scale if object is held, otherwise current scale
+                if (float.IsNaN(scale))
+                    scale = (GameManager.GM.playerCamera.transform.position - grabbedObject.transform.position).magnitude;
+
+                _statusText.text += "O: " + scale.ToString("0.0000") + " " + grabbedObject.transform.localScale.x.ToString("0.0000") + "x\n";
+            }
         }
 
         /**
@@ -270,8 +325,6 @@ public sealed class DemoRecorder : MonoBehaviour
             _recording = false;
             _playingBack = true;
             _demoStartFrame = Time.renderedFrameCount;
-
-            ApplyPlaybackSpeed();
 
             TASInput.disablePause = true;
             TASInput.StartPlayback(this);
@@ -400,6 +453,8 @@ public sealed class DemoRecorder : MonoBehaviour
         }
     }
 
+
+
     private void ReloadFile()
     {
         if (string.IsNullOrWhiteSpace(_lastOpenedFile))
@@ -450,7 +505,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         SceneManager.sceneLoaded += OnLoaded;
 
-        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
+        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(1.0f);
 
         GameManager.GM.TriggerScenePreUnload();
         GameManager.GM.GetComponent<SaveAndCheckpointManager>().RestartLevel();

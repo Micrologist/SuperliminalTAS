@@ -23,7 +23,7 @@ public static class DemoCSVSerializer
             sb.Append($"{axis},");
         foreach (var button in DemoActions.Buttons)
             sb.Append($"{button},");
-        sb.Length--; // Remove trailing comma
+        sb.Append("Speed");
         sb.AppendLine();
 
         // Data rows (one per frame)
@@ -44,7 +44,11 @@ public static class DemoCSVSerializer
                 sb.Append(value ? "1," : "0,");
             }
 
-            sb.Length--; // Remove trailing comma
+            // Speed (optional per-frame playback speed multiplier)
+            var speed = data.GetSpeed(frame);
+            if (speed.HasValue)
+                sb.Append($"{speed.Value}x");
+
             sb.AppendLine();
         }
 
@@ -63,8 +67,10 @@ public static class DemoCSVSerializer
         // Parse header to validate structure
         var header = lines[0].Split(',');
         int expectedColumns = DemoActions.Axes.Length + DemoActions.Buttons.Length;
-        if (header.Length != expectedColumns)
-            throw new InvalidDataException($"Expected {expectedColumns} columns, got {header.Length}.");
+        bool hasSpeedColumn = header.Length >= expectedColumns + 1;
+
+        if (header.Length < expectedColumns && !hasSpeedColumn)
+            throw new InvalidDataException($"Expected {expectedColumns} or {expectedColumns + 1} columns, got {header.Length}.");
 
         int frameCount = lines.Length - 1; // Exclude header
 
@@ -76,12 +82,16 @@ public static class DemoCSVSerializer
         foreach (var button in DemoActions.Buttons)
             buttons[button] = new List<bool>(frameCount);
 
+        var speeds = hasSpeedColumn ? new List<float?>(frameCount) : null;
+
         // Parse data rows
         for (int i = 1; i < lines.Length; i++)
         {
             var values = lines[i].Split(',');
-            if (values.Length != expectedColumns)
-                throw new InvalidDataException($"Row {i} has {values.Length} columns, expected {expectedColumns}.");
+            // Allow extra columns for notes/metadata, just check we have minimum required
+            int minimumColumns = hasSpeedColumn ? requiredColumns + 1 : requiredColumns;
+            if (values.Length < minimumColumns)
+                throw new InvalidDataException($"Row {i} has {values.Length} columns, expected at least {minimumColumns}.");
 
             int col = 0;
 
@@ -101,10 +111,16 @@ public static class DemoCSVSerializer
                 buttons[button].Add(buttonValue);
                 col++;
             }
+
+            // Parse speed (if column exists)
+            if (hasSpeedColumn)
+            {
+                speeds.Add(ParseSpeed(values[col], i, col));
+            }
         }
 
         var data = DemoData.CreateEmpty();
-        data.ReplaceAll(axes, buttons);
+        data.ReplaceAll(axes, buttons, speeds);
         return data;
     }
 
@@ -116,5 +132,26 @@ public static class DemoCSVSerializer
             return false;
 
         throw new InvalidDataException($"Invalid boolean value at row {row}, column {col}: '{value}' (expected 0/1 or true/false)");
+    }
+
+    private static float? ParseSpeed(string value, int row, int col)
+    {
+        // Empty or whitespace means no speed change
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        // Remove 'x' suffix if present
+        var speedStr = value.Trim();
+        if (speedStr.EndsWith("x", StringComparison.OrdinalIgnoreCase))
+            speedStr = speedStr.Substring(0, speedStr.Length - 1);
+
+        if (float.TryParse(speedStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float speedValue))
+        {
+            if (speedValue > 0)
+                return speedValue;
+            throw new InvalidDataException($"Speed multiplier at row {row}, column {col} must be positive: '{value}'");
+        }
+
+        throw new InvalidDataException($"Invalid speed value at row {row}, column {col}: '{value}' (expected format: '8x', '0.02x', or empty)");
     }
 }
