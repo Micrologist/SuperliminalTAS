@@ -35,6 +35,7 @@ public sealed class DemoRecorder : MonoBehaviour
     private DemoData _data;
     private DemoFileDialog _fileDialog;
     private string _lastOpenedFile;
+    private DateTime _lastFileWriteTime;
 
     private void Awake()
     {
@@ -53,6 +54,36 @@ public sealed class DemoRecorder : MonoBehaviour
 
         EnsureStatusText();
         UpdateStatusText();
+        CheckForFileChanges();
+    }
+
+    private void CheckForFileChanges()
+    {
+        // Only check for file changes if we have a loaded file and we're not currently recording or resetting
+        if (string.IsNullOrWhiteSpace(_lastOpenedFile) || _recording || _resetting)
+            return;
+
+        try
+        {
+            if (!File.Exists(_lastOpenedFile))
+                return;
+
+            var currentWriteTime = File.GetLastWriteTime(_lastOpenedFile);
+
+            // If the file has been modified since we last loaded it
+            if (_lastFileWriteTime != default && currentWriteTime > _lastFileWriteTime)
+            {
+                Debug.Log($"File change detected: {_lastOpenedFile}");
+                StopPlayback();
+                ReloadFile();
+                StartPlayback();
+            }
+        }
+        catch (Exception e)
+        {
+            // Silently ignore errors (file might be temporarily locked during writing)
+            // Don't spam the console with errors during normal editing
+        }
     }
 
     private void FixedUpdate()
@@ -446,6 +477,7 @@ public sealed class DemoRecorder : MonoBehaviour
             }
 
             _lastOpenedFile = path;
+            _lastFileWriteTime = File.GetLastWriteTime(path);
         }
         catch (Exception e)
         {
