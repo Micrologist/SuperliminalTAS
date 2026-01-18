@@ -11,9 +11,23 @@ public sealed class DemoFileDialog
 {
     private readonly StandaloneFileBrowserWindows _fileBrowser = new();
 
-    private static readonly ExtensionFilter[] ExtensionList =
+    private static readonly ExtensionFilter[] OpenExtensionList =
+    {
+        new("TAS Files (*.slt, *.csv)", "slt", "csv"),
+        new("Superliminal TAS Recording (*.slt)", "slt"),
+        new("CSV File (*.csv)", "csv"),
+        new("All Files", "*")
+    };
+
+    private static readonly ExtensionFilter[] SaveSLTExtensionList =
     {
         new("Superliminal TAS Recording (*.slt)", "slt"),
+        new("All Files", "*")
+    };
+
+    private static readonly ExtensionFilter[] SaveCSVExtensionList =
+    {
+        new("CSV File (*.csv)", "csv"),
         new("All Files", "*")
     };
 
@@ -28,14 +42,21 @@ public sealed class DemoFileDialog
 
     public string OpenPath()
     {
-        var selected = _fileBrowser.OpenFilePanel("Open", DemoDirectory, ExtensionList, false);
+        var selected = _fileBrowser.OpenFilePanel("Open TAS File", DemoDirectory, OpenExtensionList, false);
         return selected.FirstOrDefault()?.Name;
     }
 
     public string SavePath()
     {
         var name = $"SuperliminalTAS-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.slt";
-        var selected = _fileBrowser.SaveFilePanel("Save Recording as", DemoDirectory, name, ExtensionList);
+        var selected = _fileBrowser.SaveFilePanel("Save Recording as", DemoDirectory, name, SaveSLTExtensionList);
+        return selected?.Name;
+    }
+
+    public string SavePathCSV()
+    {
+        var name = $"SuperliminalTAS-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.csv";
+        var selected = _fileBrowser.SaveFilePanel("Export CSV as", DemoDirectory, name, SaveCSVExtensionList);
         return selected?.Name;
     }
 }

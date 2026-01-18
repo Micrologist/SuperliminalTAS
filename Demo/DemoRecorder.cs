@@ -17,12 +17,20 @@ public sealed class DemoRecorder : MonoBehaviour
     private bool _playingBack;
     private bool _resetting;
     private bool _lastUpdateWasFixed;
+    private bool _paused;
+    private int _pausedFrame; // Frame to resume from when unpausing
+
+    // Available playback speeds in FPS (base game is 50 FPS)
+    private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
+    private int _playbackSpeedIndex = 5; // Start at 50 FPS (1x speed)
+
     private int CurrentDemoFrame => Time.renderedFrameCount - _demoStartFrame;
 
 
     private Text _statusText;
     private DemoData _data;
     private DemoFileDialog _fileDialog;
+    private string _lastOpenedFile;
 
     private void Awake()
     {
@@ -93,6 +101,32 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             WithUnlockedCursor(() => OpenDemo());
         }
+
+        if (Input.GetKeyDown(KeyCode.F10))
+        {
+            WithUnlockedCursor(() => ExportCSV());
+        }
+
+        if (Input.GetKeyDown(KeyCode.F8))
+        {
+            ReloadFile();
+        }
+
+        // Playback controls
+        if (Input.GetKeyDown(KeyCode.Space) && _playingBack && !_resetting)
+        {
+            TogglePause();
+        }
+
+        if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
+        {
+            IncreasePlaybackSpeed();
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftBracket) || Input.GetKeyDown(KeyCode.Minus))
+        {
+            DecreasePlaybackSpeed();
+        }
     }
 
     private static void WithUnlockedCursor(Action action)
@@ -104,6 +138,48 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             Cursor.visible = false;
         }
+    }
+
+    private void TogglePause()
+    {
+        if (!_playingBack) return;
+
+        _paused = !_paused;
+
+        if (_paused)
+        {
+            _pausedFrame = CurrentDemoFrame;
+            Time.timeScale = 0f;
+        }
+        else
+        {
+            Time.timeScale = 1f;
+            // Adjust start frame to account for paused time
+            _demoStartFrame = Time.renderedFrameCount - _pausedFrame;
+        }
+    }
+
+    private void IncreasePlaybackSpeed()
+    {
+        _playbackSpeedIndex++;
+        if (_playbackSpeedIndex >= PlaybackSpeeds.Length)
+            _playbackSpeedIndex = PlaybackSpeeds.Length - 1;
+
+        ApplyPlaybackSpeed();
+    }
+
+    private void DecreasePlaybackSpeed()
+    {
+        _playbackSpeedIndex--;
+        if (_playbackSpeedIndex < 0)
+            _playbackSpeedIndex = 0;
+
+        ApplyPlaybackSpeed();
+    }
+
+    private void ApplyPlaybackSpeed()
+    {
+        Application.targetFrameRate = PlaybackSpeeds[_playbackSpeedIndex];
     }
 
     private void EnsureStatusText()
@@ -126,8 +202,23 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var frame = CurrentDemoFrame;
 
-        if (_playingBack) _statusText.text = $"playback: {frame} / {_data.FrameCount}\n\n";
-        else _statusText.text = _recording ? $"recording: {frame} / ?\n\n" : $"stopped: 0 / {_data.FrameCount}\n\n";
+        int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
+        string speedInfo = currentFps != 50 ? $" [{currentFps} FPS]" : "";
+
+        if (_playingBack)
+        {
+            _statusText.text = $"playback: {frame} / {_data.FrameCount}";
+            if (_paused)
+                _statusText.text += " [PAUSED]";
+            else
+                _statusText.text += speedInfo;
+            _statusText.text += "\n\n";
+        }
+        else
+        {
+            string status = _recording ? $"recording: {frame} / ?" : $"stopped: 0 / {_data.FrameCount}";
+            _statusText.text = status + speedInfo + "\n\n";
+        }
 
         if (GameManager.GM.player != null)
         {
@@ -161,7 +252,15 @@ public sealed class DemoRecorder : MonoBehaviour
             $"\nL: {TASInput.GetAxis("Look Horizontal", GameManager.GM.playerInput.GetAxis("Look Horizontal")): 0.000;-0.000} " +
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
-        _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record\nF11 - Open\nF12 - Save";
+        _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
+        _statusText.text += "\nF8  - Reload\nF10 - Export CSV";
+        _statusText.text += "\nF11 - Open\nF12 - Save";
+        _statusText.text += "\n\n[+]   - Speed Up\n[-]   - Slow Down";
+
+        if (_playingBack)
+        {
+            _statusText.text += "\nSPACE - Pause/Resume";
+        }
     }
 
     #endregion
@@ -198,7 +297,11 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             _recording = false;
             _playingBack = true;
+            _paused = false;
             _demoStartFrame = Time.renderedFrameCount;
+
+            Time.timeScale = 1f;
+            ApplyPlaybackSpeed();
 
             TASInput.disablePause = true;
             TASInput.StartPlayback(this);
@@ -209,6 +312,10 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         _recording = false;
         _playingBack = false;
+        _paused = false;
+
+        Time.timeScale = 1f;
+        ApplyPlaybackSpeed();
 
         TASInput.disablePause = false;
         TASInput.StopPlayback();
@@ -235,15 +342,7 @@ public sealed class DemoRecorder : MonoBehaviour
         var path = _fileDialog.OpenPath();
         if (string.IsNullOrWhiteSpace(path)) return;
 
-        try
-        {
-            var bytes = File.ReadAllBytes(path);
-            _data = DemoSerializer.Deserialize(bytes);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to open demo: {e}");
-        }
+        LoadFile(path);
     }
 
     private void SaveDemo()
@@ -265,6 +364,90 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             Debug.LogError($"Failed to save demo: {e}");
         }
+    }
+
+    private void ExportCSV()
+    {
+        if (_data.FrameCount == 0) return;
+
+        var path = _fileDialog.SavePathCSV();
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        try
+        {
+            if (!path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                path += ".csv";
+
+            var csv = DemoCSVSerializer.Serialize(_data);
+            File.WriteAllText(path, csv);
+            Debug.Log($"Exported CSV to: {path}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to export CSV: {e}");
+        }
+    }
+
+    private void LoadFile(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        try
+        {
+            var extension = Path.GetExtension(path).ToLowerInvariant();
+
+            if (extension == ".csv")
+            {
+                string csv;
+                using (var fs = new FileStream(
+                    path,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite))
+                using (var sr = new StreamReader(fs))
+                {
+                    csv = sr.ReadToEnd();
+                }
+
+                _data = DemoCSVSerializer.Deserialize(csv);
+                Debug.Log($"Loaded CSV from: {path} ({_data.FrameCount} frames)");
+            }
+            else if (extension == ".slt")
+            {
+                var bytes = File.ReadAllBytes(path);
+                _data = DemoSerializer.Deserialize(bytes);
+                Debug.Log($"Loaded SLT from: {path} ({_data.FrameCount} frames)");
+            }
+            else
+            {
+                Debug.LogError($"Unknown file type: {extension}");
+                return;
+            }
+
+            _lastOpenedFile = path;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to load file: {e}");
+        }
+    }
+
+    private void ReloadFile()
+    {
+        if (string.IsNullOrWhiteSpace(_lastOpenedFile))
+        {
+            Debug.LogWarning("No file to reload. Open a file first.");
+            return;
+        }
+
+        if (!File.Exists(_lastOpenedFile))
+        {
+            Debug.LogError($"File no longer exists: {_lastOpenedFile}");
+            return;
+        }
+
+        Debug.Log($"Reloading: {_lastOpenedFile}");
+        LoadFile(_lastOpenedFile);
     }
     #endregion
 
