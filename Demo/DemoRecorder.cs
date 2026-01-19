@@ -669,10 +669,9 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private IEnumerator AfterSceneLoadedPhaseLocked(Action afterLoaded)
     {
-        GameManager.GM.player.transform.Find("GUI Camera").GetComponent<FadeCameraToBlack>().enabled = false;
-        GameManager.GM.player.transform.Find("GUI Camera/Canvas/Fade").gameObject.SetActive(false);
-
         TASInput.blockAllInput = false;
+
+        GameManager.GM.player.transform.Find("GUI Camera/Canvas/Fade").localScale = Vector3.zero;
         _resetting = false;
         afterLoaded?.Invoke();
 
