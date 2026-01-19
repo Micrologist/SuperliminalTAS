@@ -66,11 +66,12 @@ public static class DemoCSVSerializer
 
         // Parse header to validate structure
         var header = lines[0].Split(',');
-        int expectedColumns = DemoActions.Axes.Length + DemoActions.Buttons.Length;
-        bool hasSpeedColumn = header.Length >= expectedColumns + 1;
+        int requiredColumns = DemoActions.Axes.Length + DemoActions.Buttons.Length;
 
-        if (header.Length < expectedColumns && !hasSpeedColumn)
-            throw new InvalidDataException($"Expected {expectedColumns} or {expectedColumns + 1} columns, got {header.Length}.");
+        bool hasSpeedColumn = header.Length > requiredColumns;
+
+        if (header.Length < requiredColumns)
+            throw new InvalidDataException($"Expected at least {requiredColumns} columns, got {header.Length}.");
 
         int frameCount = lines.Length - 1; // Exclude header
 
