@@ -94,13 +94,6 @@ public sealed class DemoRecorder : MonoBehaviour
             Debug.Log(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
 
         _lastUpdateWasFixed = true;
-
-        // Handle checkpoint reset on main thread in FixedUpdate
-        if (_needsCheckpointReset)
-        {
-            _needsCheckpointReset = false;
-            ResetToCheckpoint();
-        }
     }
 
     private void LateUpdate()
@@ -134,6 +127,12 @@ public sealed class DemoRecorder : MonoBehaviour
             if (CurrentDemoFrame + 1 >= _data.FrameCount)
                 StopPlayback();
         }
+
+        if (_needsCheckpointReset)
+        {
+            _needsCheckpointReset = false;
+            ResetToCheckpoint();
+        }
     }
 
     #region Hotkeys / UI
@@ -143,7 +142,6 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_recording)
         {
             if (Input.GetKeyDown(KeyCode.F6)) StopRecording();
-            if (Input.GetKeyDown(KeyCode.F8)) TriggerCheckpointResetDuringRecording();
         }
         else if (_playingBack)
         {
@@ -154,6 +152,8 @@ public sealed class DemoRecorder : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.F5)) StartPlayback();
             else if (Input.GetKeyDown(KeyCode.F7)) StartRecording();
         }
+
+        if (!_playingBack && Input.GetKeyDown(KeyCode.F8)) TriggerCheckpointReset();
 
         if (Input.GetKeyDown(KeyCode.F12))
         {
@@ -364,9 +364,8 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             _data = DemoData.CreateEmpty();
 
-            // Capture level and checkpoint information
             _data.LevelId = SceneManager.GetActiveScene().name;
-            _data.CheckpointId = GetCurrentCheckpointId();
+            _data.CheckpointId = -1;
 
             _recording = true;
             _playingBack = false;
@@ -383,22 +382,28 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
     }
 
-    private void TriggerCheckpointResetDuringRecording()
+    private void TriggerCheckpointReset()
     {
+        _needsCheckpointReset = true;
+
         if (!_recording) return;
 
         Debug.Log($"Triggering checkpoint reset at frame {CurrentDemoFrame}");
 
         // Mark this frame as having a checkpoint reset
         _data.SetCheckpointReset(CurrentDemoFrame, true);
-
-        // Trigger the actual reset (will happen in FixedUpdate)
-        _needsCheckpointReset = true;
     }
 
     private void StartPlayback()
     {
         if (_data.FrameCount < 1 || _recording || _playingBack || _resetting) return;
+
+        if (!String.IsNullOrEmpty(_data.LevelId) && _data.LevelId != SceneManager.GetActiveScene().name)
+        {
+            GameManager.GM.TriggerScenePreUnload();
+            SceneManager.LoadScene(_data.LevelId);
+            return;
+        }
 
         StartCoroutine(ResetLevelStateThen(() =>
         {
@@ -536,10 +541,7 @@ public sealed class DemoRecorder : MonoBehaviour
             {
                 Debug.Log($"Demo Level: {_data.LevelId}");
                 var currentScene = SceneManager.GetActiveScene().name;
-                if (_data.LevelId != currentScene)
-                {
-                    Debug.LogWarning($"Demo was recorded on level '{_data.LevelId}' but current level is '{currentScene}'");
-                }
+
             }
 
             if (_data.CheckpointId >= 0)
@@ -583,39 +585,6 @@ public sealed class DemoRecorder : MonoBehaviour
 
     #region Level and Checkpoint Management
 
-    private int GetCurrentCheckpointId()
-    {
-        try
-        {
-            var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
-            if (saveManager == null) return -1;
-
-            // Use reflection to get the current checkpoint ID
-            var checkpointField = AccessTools.Field(typeof(SaveAndCheckpointManager), "checkpointNum");
-            if (checkpointField != null)
-            {
-                var value = checkpointField.GetValue(saveManager);
-                if (value is int checkpointId)
-                    return checkpointId;
-            }
-
-            // Fallback: try property if field doesn't exist
-            var checkpointProperty = AccessTools.Property(typeof(SaveAndCheckpointManager), "checkpointNum");
-            if (checkpointProperty != null)
-            {
-                var value = checkpointProperty.GetValue(saveManager);
-                if (value is int checkpointId)
-                    return checkpointId;
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogWarning($"Failed to get checkpoint ID: {e}");
-        }
-
-        return -1; // Default to level start
-    }
-
     private void ResetToCheckpoint()
     {
         try
@@ -627,7 +596,6 @@ public sealed class DemoRecorder : MonoBehaviour
                 return;
             }
 
-            // Reset to last checkpoint - this runs synchronously
             saveManager.ResetToLastCheckpoint();
         }
         catch (Exception e)
