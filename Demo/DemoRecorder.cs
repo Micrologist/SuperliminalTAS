@@ -423,6 +423,8 @@ public sealed class DemoRecorder : MonoBehaviour
     private void StopRecording()
     {
         TASInput.disablePause = false;
+        _playbackSpeedIndex = 5;
+        ApplyPlaybackSpeed();
         _recording = false;
     }
 
@@ -470,6 +472,9 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         _recording = false;
         _playingBack = false;
+
+        _playbackSpeedIndex = 5;
+        ApplyPlaybackSpeed();
 
         TASInput.disablePause = false;
         TASInput.StopPlayback();
