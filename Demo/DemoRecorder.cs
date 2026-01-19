@@ -40,9 +40,12 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void Update()
     {
-        if (!_lastUpdateWasFixed && (_recording || _playingBack))
-            Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback");
-
+        if (!_lastUpdateWasFixed && (_recording || _playingBack) && CurrentDemoFrame > 1)
+        {
+            Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback, aborting!");
+            StopPlayback();
+            StopRecording();
+        }
         _lastUpdateWasFixed = false;
 
         EnsureStatusText();
