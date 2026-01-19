@@ -155,7 +155,7 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.F5)) StartPlayback();
             else if (Input.GetKeyDown(KeyCode.F6)) StartRecording();
-            else if (Input.GetKeyDown(KeyCode.F7)) TriggerCheckpointReset();
+            else if (Input.GetKeyDown(KeyCode.F7)) StartRecordingFromCheckpoint();
 
             if (Input.GetKeyDown(KeyCode.F12))
             {
@@ -358,7 +358,7 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         else
         {
-            _statusText.text += "\n\nF5  - Play\nF6  - Record\nF7  - Reset CP";
+            _statusText.text += "\n\nF5  - Play\nF6  - Record\nF7  - Record from CP";
             _statusText.text += "\nF11 - Open\nF12 - Save";
         }
 
@@ -387,6 +387,75 @@ public sealed class DemoRecorder : MonoBehaviour
             TASInput.disablePause = true;
             TASInput.StopPlayback();
         }));
+    }
+
+    private void StartRecordingFromCheckpoint()
+    {
+        if (_recording || _playingBack || _resetting) return;
+
+        int checkpointId = GetCurrentCheckpointIndex();
+
+        StartCoroutine(ResetLevelStateThen(() =>
+        {
+            // Teleport to the checkpoint first
+            if (checkpointId >= 0)
+            {
+                TeleportToCheckpoint(checkpointId);
+            }
+
+            _data = DemoData.CreateEmpty();
+
+            _data.LevelId = SceneManager.GetActiveScene().name;
+            _data.CheckpointId = checkpointId;
+
+            _recording = true;
+            _playingBack = false;
+            _demoStartFrame = Time.renderedFrameCount;
+
+            TASInput.disablePause = true;
+            TASInput.StopPlayback();
+
+            Debug.Log($"Started recording from checkpoint {checkpointId}");
+        }));
+    }
+
+    private int GetCurrentCheckpointIndex()
+    {
+        try
+        {
+            var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
+            if (saveManager == null)
+            {
+                Debug.LogWarning("SaveAndCheckpointManager not found, using checkpoint -1");
+                return -1;
+            }
+
+            // Use reflection to get the current checkpoint index
+            var checkpointIndexField = AccessTools.Field(typeof(SaveAndCheckpointManager), "currentCheckpointIndex");
+            if (checkpointIndexField != null)
+            {
+                var index = (int)checkpointIndexField.GetValue(saveManager);
+                Debug.Log($"Current checkpoint index: {index}");
+                return index;
+            }
+
+            // Try alternative field names
+            var lastCheckpointField = AccessTools.Field(typeof(SaveAndCheckpointManager), "lastCheckpointIndex");
+            if (lastCheckpointField != null)
+            {
+                var index = (int)lastCheckpointField.GetValue(saveManager);
+                Debug.Log($"Last checkpoint index: {index}");
+                return index;
+            }
+
+            Debug.LogWarning("Could not find checkpoint index field, using -1");
+            return -1;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to get current checkpoint index: {e}");
+            return -1;
+        }
     }
 
     private void StopRecording()
