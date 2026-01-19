@@ -45,6 +45,7 @@ public sealed class DemoRecorder : MonoBehaviour
         _data = DemoData.CreateEmpty();
 
         Application.targetFrameRate = 50;
+        SceneManager.sceneLoaded += OnLoadDisableFade;
     }
 
     private void Update()
@@ -671,11 +672,15 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         TASInput.blockAllInput = false;
 
-        GameManager.GM.player.transform.Find("GUI Camera/Canvas/Fade").localScale = Vector3.zero;
         _resetting = false;
         afterLoaded?.Invoke();
 
         yield break;
+    }
+
+    private void OnLoadDisableFade(Scene scene, LoadSceneMode mode)
+    {
+        GameManager.GM.player.transform.Find("GUI Camera/Canvas/Fade").localScale = Vector3.zero;
     }
 
     #endregion
