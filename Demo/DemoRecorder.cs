@@ -607,6 +607,25 @@ public sealed class DemoRecorder : MonoBehaviour
         }
     }
 
+    private int GetCurrentCheckpointIndex()
+    {
+        var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
+        if (saveManager == null) return -1;
+
+        if (SaveGamePatch.lastCheckpoint == null) return -1;
+
+        CheckPoint[] array = global::UnityEngine.Object.FindObjectsOfType<CheckPoint>();
+        RoomOrder roomOrder = global::UnityEngine.Object.FindObjectOfType<RoomOrder>();
+        if (roomOrder)
+        {
+            Array.Sort<CheckPoint>(array, (CheckPoint x, CheckPoint y) => Array.IndexOf<Transform>(roomOrder.TopLevelRoomOrder, x.transform.root).CompareTo(Array.IndexOf<Transform>(roomOrder.TopLevelRoomOrder, y.transform.root)));
+            return Array.IndexOf(array, SaveGamePatch.lastCheckpoint);
+        }
+
+        return -1;
+
+    }
+
     #endregion
 
     #region Scene Reset
