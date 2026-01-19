@@ -401,13 +401,6 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_data.FrameCount < 1 || _recording || _playingBack || _resetting) return;
 
-        if (!String.IsNullOrEmpty(_data.LevelId) && _data.LevelId != SceneManager.GetActiveScene().name)
-        {
-            GameManager.GM.TriggerScenePreUnload();
-            SceneManager.LoadScene(_data.LevelId);
-            return;
-        }
-
         StartCoroutine(ResetLevelStateThen(() =>
         {
             // If demo has a specific checkpoint, teleport to it
@@ -539,14 +532,6 @@ public sealed class DemoRecorder : MonoBehaviour
                 return;
             }
 
-            // Display level and checkpoint information
-            if (!string.IsNullOrEmpty(_data.LevelId))
-            {
-                Debug.Log($"Demo Level: {_data.LevelId}");
-                var currentScene = SceneManager.GetActiveScene().name;
-
-            }
-
             if (_data.CheckpointId >= 0)
             {
                 Debug.Log($"Demo Checkpoint: {_data.CheckpointId}");
@@ -554,6 +539,14 @@ public sealed class DemoRecorder : MonoBehaviour
 
             _lastOpenedFile = path;
             _lastFileWriteTime = File.GetLastWriteTime(path);
+
+            // Display level and checkpoint information
+            if (!string.IsNullOrEmpty(_data.LevelId))
+            {
+                Debug.Log($"Demo Level: {_data.LevelId}");
+                GameManager.GM.TriggerScenePreUnload();
+                SceneManager.LoadScene(_data.LevelId);
+            }
         }
         catch (Exception e)
         {
