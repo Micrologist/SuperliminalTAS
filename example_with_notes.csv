@@ -1,0 +1,11 @@
+Move Horizontal,Move Vertical,Look Horizontal,Look Vertical,Jump,Grab,Rotate,Speed,Notes,Frame Description
+0,0,0,0,0,0,0,8x,Start fast,Beginning of sequence
+0,0,0,0,0,0,0,,Walking forward,
+0,0,0,0,0,0,0,,,
+0,0,0,0,0,0,0,,,
+0,0,0,0,0,0,0,,Important frame!,Need to verify this
+0.5,0,-0.1,0,1,0,0,0.02x,Slow down here,Testing precise timing
+0.5,0,-0.1,0,1,0,0,,,
+0.5,0,-0.1,0,1,0,0,,,
+0.5,0,-0.1,0,0,0,0,,,
+0,0,0,0,0,0,0,1x,Back to normal,End of test section

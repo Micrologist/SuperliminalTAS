@@ -1,8 +1,10 @@
-﻿using Rewired;
+﻿using HarmonyLib;
+using Rewired;
 using SuperliminalTAS.Patches;
 using System;
 using System.Collections;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -22,6 +24,10 @@ public sealed class DemoRecorder : MonoBehaviour
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
     private int _playbackSpeedIndex = 5; // Start at 50 FPS (1x speed)
 
+    // Track if we're using a custom speed from CSV
+    private bool _usingCustomSpeed;
+    private float _customSpeedMultiplier = 1f;
+
     private int CurrentDemoFrame => Time.renderedFrameCount - _demoStartFrame;
 
 
@@ -29,6 +35,7 @@ public sealed class DemoRecorder : MonoBehaviour
     private DemoData _data;
     private DemoFileDialog _fileDialog;
     private string _lastOpenedFile;
+    private DateTime _lastFileWriteTime;
 
     private void Awake()
     {
@@ -50,6 +57,34 @@ public sealed class DemoRecorder : MonoBehaviour
 
         EnsureStatusText();
         UpdateStatusText();
+        CheckForFileChanges();
+    }
+
+    private void CheckForFileChanges()
+    {
+        // Only check for file changes if we have a loaded file and we're not currently recording or resetting
+        if (string.IsNullOrWhiteSpace(_lastOpenedFile) || _recording || _resetting)
+            return;
+
+        try
+        {
+            if (!File.Exists(_lastOpenedFile))
+                return;
+
+            var currentWriteTime = File.GetLastWriteTime(_lastOpenedFile);
+
+            // If the file has been modified since we last loaded it
+            if (_lastFileWriteTime != default && currentWriteTime > _lastFileWriteTime)
+            {
+                Debug.Log($"File change detected: {_lastOpenedFile}");
+                StopPlayback();
+                StartCoroutine(ReloadFile());
+            }
+        }
+        catch (Exception e)
+        {
+            // Silently ignore errors (file might be temporarily locked during writing)
+        }
     }
 
     private void FixedUpdate()
@@ -72,6 +107,15 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         else if (_playingBack)
         {
+            // Check for speed change from CSV at current frame
+            var speed = _data.GetSpeed(CurrentDemoFrame);
+            if (speed.HasValue)
+            {
+                _usingCustomSpeed = true;
+                _customSpeedMultiplier = speed.Value;
+                ApplyCustomSpeed(speed.Value);
+            }
+
             if (CurrentDemoFrame + 1 >= _data.FrameCount)
                 StopPlayback();
         }
@@ -110,13 +154,6 @@ public sealed class DemoRecorder : MonoBehaviour
             WithUnlockedCursor(() => ExportCSV());
         }
 
-        if (Input.GetKeyDown(KeyCode.F8))
-        {
-            StopPlayback();
-            ReloadFile();
-            StartPlayback();
-        }
-
         if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
         {
             IncreasePlaybackSpeed();
@@ -145,6 +182,7 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_playbackSpeedIndex >= PlaybackSpeeds.Length)
             _playbackSpeedIndex = PlaybackSpeeds.Length - 1;
 
+        _usingCustomSpeed = false;
         ApplyPlaybackSpeed();
     }
 
@@ -154,12 +192,22 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_playbackSpeedIndex < 0)
             _playbackSpeedIndex = 0;
 
+        _usingCustomSpeed = false;
         ApplyPlaybackSpeed();
     }
 
     private void ApplyPlaybackSpeed()
     {
         Application.targetFrameRate = PlaybackSpeeds[_playbackSpeedIndex];
+    }
+
+    private void ApplyCustomSpeed(float multiplier)
+    {
+        // Base game speed is 50 FPS
+        int targetFps = Mathf.RoundToInt(50f * multiplier);
+        // Clamp to reasonable values (at least 1 FPS)
+        targetFps = Mathf.Max(1, targetFps);
+        Application.targetFrameRate = targetFps;
     }
 
     private void EnsureStatusText()
@@ -182,10 +230,18 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var frame = CurrentDemoFrame;
 
-        int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
-        float currentSpeedMult = currentFps / 50f;
+        float currentSpeedMult;
+        if (_usingCustomSpeed)
+        {
+            currentSpeedMult = _customSpeedMultiplier;
+        }
+        else
+        {
+            int currentFps = PlaybackSpeeds[_playbackSpeedIndex];
+            currentSpeedMult = currentFps / 50f;
+        }
 
-        string speedInfo = currentFps != 50 ? $" [{currentSpeedMult}x]" : "";
+        string speedInfo = currentSpeedMult != 1f ? $" [{currentSpeedMult}x]" : "";
 
         if (_playingBack)
         {
@@ -202,18 +258,59 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (GameManager.GM.player != null)
         {
-            var playerPos = GameManager.GM.player.transform.position;
+            var player = GameManager.GM.player;
+
+
+            var playerPos = player.transform.position;
             _statusText.text +=
                 $"P: {playerPos.x:0.00000}, " +
                 $"{playerPos.y:0.00000}, " +
                 $"{playerPos.z:0.00000}\n";
 
-            var vel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
+            var xRot = GameManager.GM.playerCamera.transform.rotation.eulerAngles.x;
+
+            _statusText.text +=
+                $"R: {xRot:0.00000}, " +
+                $"{player.transform.rotation.eulerAngles.y:0.00000}\n";
+
+            var vel = player.GetComponent<CharacterController>().velocity;
             float horizontal = Mathf.Sqrt(vel.x * vel.x + vel.z * vel.z);
 
             _statusText.text +=
                 $"V: {horizontal: 0.00000;-0.00000}, {vel.y: 0.00000;-0.00000}\n";
 
+
+            var resizeScript = GameManager.GM.playerCamera.GetComponent<ResizeScript>();
+            GameObject grabbedObject = resizeScript.GetGrabbedObject();
+
+            if (grabbedObject != null)
+            {
+                var fieldInfo = AccessTools.Field(typeof(ResizeScript), "scaleAtMinDistance");
+                var scale = ((Vector3)(fieldInfo?.GetValue(resizeScript))).z;
+
+                // Use min distance scale if object is held, otherwise current scale
+                if (float.IsNaN(scale))
+                    scale = (GameManager.GM.playerCamera.transform.position - grabbedObject.transform.position).magnitude;
+
+                _statusText.text += "O: " + scale.ToString("0.0000") + " " + grabbedObject.transform.localScale.x.ToString("0.0000") + "x\n";
+
+                if (grabbedObject.GetComponent<Collider>() != null)
+                {
+                    Collider playerCollider = player.GetComponent<Collider>();
+                    Collider objectCollider = grabbedObject.GetComponent<Collider>();
+                    if (
+                        Physics.ComputePenetration(playerCollider, playerCollider.transform.position, playerCollider.transform.rotation,
+                            objectCollider, objectCollider.transform.position, objectCollider.transform.rotation,
+                            out Vector3 direction, out float distance))
+                    {
+                        Vector3 warpPrediction = player.transform.position + direction * distance;
+                        if (distance > 5)
+                        {
+                            _statusText.text += "W: " + warpPrediction.x.ToString("0.0") + ", " + warpPrediction.y.ToString("0.0") + ", " + warpPrediction.z.ToString("0.0") + " ("+ distance.ToString("0.0") + ")\n";
+                        }
+                    }
+                }
+            }
         }
 
         /**
@@ -233,7 +330,7 @@ public sealed class DemoRecorder : MonoBehaviour
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
         _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
-        _statusText.text += "\nF8  - Reload & Play\nF10 - Export CSV";
+        _statusText.text += "\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
         _statusText.text += "\n\n+/- - Speed Up/Down";
     }
@@ -273,8 +370,6 @@ public sealed class DemoRecorder : MonoBehaviour
             _recording = false;
             _playingBack = true;
             _demoStartFrame = Time.renderedFrameCount;
-
-            ApplyPlaybackSpeed();
 
             TASInput.disablePause = true;
             TASInput.StartPlayback(this);
@@ -396,6 +491,7 @@ public sealed class DemoRecorder : MonoBehaviour
             }
 
             _lastOpenedFile = path;
+            _lastFileWriteTime = File.GetLastWriteTime(path);
         }
         catch (Exception e)
         {
@@ -403,22 +499,28 @@ public sealed class DemoRecorder : MonoBehaviour
         }
     }
 
-    private void ReloadFile()
+
+
+    private IEnumerator ReloadFile()
     {
         if (string.IsNullOrWhiteSpace(_lastOpenedFile))
         {
             Debug.LogWarning("No file to reload. Open a file first.");
-            return;
+            yield break;
         }
 
         if (!File.Exists(_lastOpenedFile))
         {
             Debug.LogError($"File no longer exists: {_lastOpenedFile}");
-            return;
+            yield break;
         }
+
+        yield return null;
 
         Debug.Log($"Reloading: {_lastOpenedFile}");
         LoadFile(_lastOpenedFile);
+
+        StartPlayback();
     }
     #endregion
 
@@ -453,7 +555,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         SceneManager.sceneLoaded += OnLoaded;
 
-        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(2.0f);
+        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(1.0f);
 
         GameManager.GM.TriggerScenePreUnload();
         GameManager.GM.GetComponent<SaveAndCheckpointManager>().RestartLevel();

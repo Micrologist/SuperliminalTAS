@@ -21,6 +21,7 @@ public sealed class DemoData
 {
     private readonly Dictionary<string, List<bool>> _button = [];
     private readonly Dictionary<string, List<float>> _axis = [];
+    private readonly List<float?> _speed = [];
 
     public int FrameCount => _button.TryGetValue("Jump", out var list) ? list.Count : 0;
 
@@ -64,17 +65,26 @@ public sealed class DemoData
 
     public float GetAxis(string actionName, int frame) => _axis[actionName][frame];
 
+    public float? GetSpeed(int frame) => frame < _speed.Count ? _speed[frame] : null;
+
     internal Dictionary<string, List<bool>> Buttons => _button;
     internal Dictionary<string, List<float>> Axes => _axis;
+    internal List<float?> Speeds => _speed;
 
     internal void ReplaceAll(
         Dictionary<string, List<float>> axes,
-        Dictionary<string, List<bool>> buttons)
+        Dictionary<string, List<bool>> buttons,
+        List<float?> speeds = null)
     {
         _axis.Clear();
         _button.Clear();
+        _speed.Clear();
 
         foreach (var kv in axes) _axis[kv.Key] = kv.Value;
         foreach (var kv in buttons) _button[kv.Key] = kv.Value;
+        if (speeds != null)
+        {
+            foreach (var s in speeds) _speed.Add(s);
+        }
     }
 }
