@@ -165,3 +165,33 @@ public class SaveGamePatch
         lastCheckpoint = checkpoint;
     }
 }
+
+[HarmonyPatch(typeof(PlayerLerpMantle), "Update")]
+public class LerpMantleUpdatePatch
+{
+    private static FieldInfo mantlingField;
+    private static FieldInfo jumpedWithoutMantleField;
+    private static FieldInfo stayingField;
+
+    static void Postfix(PlayerLerpMantle __instance)
+    {
+        if(mantlingField == null)
+        {
+            mantlingField = AccessTools.Field(typeof(PlayerLerpMantle), "currentlyMantling");
+            jumpedWithoutMantleField = AccessTools.Field(typeof(PlayerLerpMantle), "playerJumpedWithoutMantle");
+            stayingField = AccessTools.Field(typeof(PlayerLerpMantle), "staying");
+        }
+
+        var mantling = (bool)mantlingField.GetValue(__instance);
+        var jumpedWithoutMantle = (bool)jumpedWithoutMantleField.GetValue(__instance);
+        var staying = (bool)stayingField.GetValue(__instance);
+
+        var cjl = __instance.canJumpLerp;
+        var msc = __instance.playerMSC;
+
+        Debug.Log($"MSC onground: {msc.onGround} {msc.onGroundTime} justJumped: {msc.justJumped}" +
+        $"staying: {staying} mantling: {mantling} jumpedwithout: {jumpedWithoutMantle}" +
+        $"cjl: canlerp: {cjl.canLerp} ";
+    }
+    
+}
