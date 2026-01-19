@@ -248,6 +248,10 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_statusText == null) return;
 
         var frame = CurrentDemoFrame;
+        var time = TimeSpan.FromSeconds(CurrentDemoFrame * 0.02);
+        var timeString = time.ToString(@"mm\:ss\.ff");
+
+        var totalTime = _data.FrameCount * 0.02;
 
         float currentSpeedMult;
         if (_usingCustomSpeed)
@@ -264,14 +268,14 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (_playingBack)
         {
-            _statusText.text = $"playback: {frame} / {_data.FrameCount}";
+            _statusText.text = $"playback: {timeString} ({frame} / {_data.FrameCount})";
 
             _statusText.text += speedInfo;
             _statusText.text += "\n\n";
         }
         else
         {
-            string status = _recording ? $"recording: {frame} / ?" : $"stopped: 0 / {_data.FrameCount}";
+            string status = _recording ? $"recording: {timeString} ({frame} / ?)" : $"stopped: 0 / {_data.FrameCount}";
             _statusText.text = status + speedInfo + "\n\n";
         }
 
@@ -400,6 +404,13 @@ public sealed class DemoRecorder : MonoBehaviour
     private void StartPlayback()
     {
         if (_data.FrameCount < 1 || _recording || _playingBack || _resetting) return;
+
+        if (!string.IsNullOrEmpty(_data.LevelId) && SceneManager.GetActiveScene().name != _data.LevelId)
+        {
+            GameManager.GM.TriggerScenePreUnload();
+            SceneManager.LoadScene(_data.LevelId);
+            return;
+        }
 
         StartCoroutine(ResetLevelStateThen(() =>
         {
@@ -541,7 +552,7 @@ public sealed class DemoRecorder : MonoBehaviour
             _lastFileWriteTime = File.GetLastWriteTime(path);
 
             // Display level and checkpoint information
-            if (!string.IsNullOrEmpty(_data.LevelId))
+            if (!string.IsNullOrEmpty(_data.LevelId) && SceneManager.GetActiveScene().name != _data.LevelId)
             {
                 Debug.Log($"Demo Level: {_data.LevelId}");
                 GameManager.GM.TriggerScenePreUnload();
@@ -673,7 +684,11 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void OnLoadDisableFade(Scene scene, LoadSceneMode mode)
     {
-        var fade = GameManager.GM.player?.transform?.Find("GUI Camera/Canvas/Fade");
+        var guiCam = GameManager.GM.guiCamera;
+
+        if (guiCam == null) return;
+
+        var fade = guiCam.transform.Find("Canvas/Fade");
 
         if(fade != null)
             fade.localScale = Vector3.zero;
