@@ -144,11 +144,11 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_recording)
         {
-            if (Input.GetKeyDown(KeyCode.F6)) StopRecording();
+            if (Input.GetKeyDown(KeyCode.F7)) StopRecording();
         }
         else if (_playingBack)
         {
-            if (Input.GetKeyDown(KeyCode.F6)) StopPlayback();
+            if (Input.GetKeyDown(KeyCode.F5)) StopPlayback();
         }
         else
         {
@@ -166,11 +166,6 @@ public sealed class DemoRecorder : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F11))
         {
             WithUnlockedCursor(() => OpenDemo());
-        }
-
-        if (Input.GetKeyDown(KeyCode.F10))
-        {
-            WithUnlockedCursor(() => ExportCSV());
         }
 
         if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
@@ -352,9 +347,8 @@ public sealed class DemoRecorder : MonoBehaviour
             $"\nL: {TASInput.GetAxis("Look Horizontal", GameManager.GM.playerInput.GetAxis("Look Horizontal")): 0.000;-0.000} " +
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
-        _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
+        _statusText.text += "\n\nF5  - Play/Stop\nF7  - Record";
         _statusText.text += "\nF8  - Checkpoint Reset";
-        _statusText.text += "\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
         _statusText.text += "\n\n+/- - Speed Up/Down";
     }
@@ -473,37 +467,16 @@ public sealed class DemoRecorder : MonoBehaviour
 
         try
         {
-            if (!path.EndsWith(".slt", StringComparison.OrdinalIgnoreCase))
-                path += ".slt";
-
-            var bytes = DemoSerializer.Serialize(_data);
-            File.WriteAllBytes(path, bytes);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to save demo: {e}");
-        }
-    }
-
-    private void ExportCSV()
-    {
-        if (_data.FrameCount == 0) return;
-
-        var path = _fileDialog.SavePathCSV();
-        if (string.IsNullOrWhiteSpace(path)) return;
-
-        try
-        {
             if (!path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
                 path += ".csv";
 
             var csv = DemoCSVSerializer.Serialize(_data);
             File.WriteAllText(path, csv);
-            Debug.Log($"Exported CSV to: {path}");
+            Debug.Log($"Saved CSV to: {path}");
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to export CSV: {e}");
+            Debug.LogError($"Failed to save demo: {e}");
         }
     }
 
@@ -515,33 +488,25 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             var extension = Path.GetExtension(path).ToLowerInvariant();
 
-            if (extension == ".csv")
+            if (extension != ".csv")
             {
-                string csv;
-                using (var fs = new FileStream(
-                    path,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.ReadWrite))
-                using (var sr = new StreamReader(fs))
-                {
-                    csv = sr.ReadToEnd();
-                }
-
-                _data = DemoCSVSerializer.Deserialize(csv);
-                Debug.Log($"Loaded CSV from: {path} ({_data.FrameCount} frames)");
-            }
-            else if (extension == ".slt")
-            {
-                var bytes = File.ReadAllBytes(path);
-                _data = DemoSerializer.Deserialize(bytes);
-                Debug.Log($"Loaded SLT from: {path} ({_data.FrameCount} frames)");
-            }
-            else
-            {
-                Debug.LogError($"Unknown file type: {extension}");
+                Debug.LogError($"Unsupported file type: {extension}. Only CSV files are supported.");
                 return;
             }
+
+            string csv;
+            using (var fs = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite))
+            using (var sr = new StreamReader(fs))
+            {
+                csv = sr.ReadToEnd();
+            }
+
+            _data = DemoCSVSerializer.Deserialize(csv);
+            Debug.Log($"Loaded CSV from: {path} ({_data.FrameCount} frames)");
 
             if (_data.CheckpointId >= 0)
             {
