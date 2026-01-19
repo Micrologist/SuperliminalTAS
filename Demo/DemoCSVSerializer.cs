@@ -83,14 +83,20 @@ public static class DemoCSVSerializer
         // Check for Level metadata
         if (lines[currentLine].StartsWith("Level:", StringComparison.OrdinalIgnoreCase))
         {
-            levelId = lines[currentLine].Substring("Level:".Length).Trim();
+            // Extract level name, stopping at first comma if present (in case of malformed CSV)
+            var levelLine = lines[currentLine].Substring("Level:".Length).Trim();
+            var commaIndex = levelLine.IndexOf(',');
+            levelId = commaIndex >= 0 ? levelLine.Substring(0, commaIndex).Trim() : levelLine;
             currentLine++;
         }
 
         // Check for Checkpoint metadata
         if (currentLine < lines.Length && lines[currentLine].StartsWith("Checkpoint:", StringComparison.OrdinalIgnoreCase))
         {
-            var checkpointStr = lines[currentLine].Substring("Checkpoint:".Length).Trim();
+            // Extract checkpoint ID, stopping at first comma if present
+            var checkpointLine = lines[currentLine].Substring("Checkpoint:".Length).Trim();
+            var commaIndex = checkpointLine.IndexOf(',');
+            var checkpointStr = commaIndex >= 0 ? checkpointLine.Substring(0, commaIndex).Trim() : checkpointLine;
             if (int.TryParse(checkpointStr, out int parsed))
                 checkpointId = parsed;
             currentLine++;

@@ -19,6 +19,7 @@ public sealed class DemoRecorder : MonoBehaviour
     private bool _playingBack;
     private bool _resetting;
     private bool _lastUpdateWasFixed;
+    private bool _needsCheckpointReset;
 
     // Available playback speeds in FPS (base game is 50 FPS)
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
@@ -93,6 +94,13 @@ public sealed class DemoRecorder : MonoBehaviour
             Debug.Log(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
 
         _lastUpdateWasFixed = true;
+
+        // Handle checkpoint reset on main thread in FixedUpdate
+        if (_needsCheckpointReset)
+        {
+            _needsCheckpointReset = false;
+            ResetToCheckpoint();
+        }
     }
 
     private void LateUpdate()
@@ -111,12 +119,7 @@ public sealed class DemoRecorder : MonoBehaviour
             if (_data.GetCheckpointReset(CurrentDemoFrame))
             {
                 Debug.Log($"Checkpoint reset triggered at frame {CurrentDemoFrame}");
-                StartCoroutine(ResetToCheckpointThen(() =>
-                {
-                    // Resume playback after checkpoint reset (no frame adjustment needed since reset is synchronous)
-                    _demoStartFrame = Time.renderedFrameCount - CurrentDemoFrame;
-                }));
-                return;
+                _needsCheckpointReset = true;
             }
 
             // Check for speed change from CSV at current frame
@@ -140,6 +143,7 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_recording)
         {
             if (Input.GetKeyDown(KeyCode.F6)) StopRecording();
+            if (Input.GetKeyDown(KeyCode.F8)) TriggerCheckpointResetDuringRecording();
         }
         else if (_playingBack)
         {
@@ -342,6 +346,7 @@ public sealed class DemoRecorder : MonoBehaviour
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
         _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
+        _statusText.text += "\nF8  - Checkpoint Reset";
         _statusText.text += "\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
         _statusText.text += "\n\n+/- - Speed Up/Down";
@@ -376,6 +381,19 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         TASInput.disablePause = false;
         _recording = false;
+    }
+
+    private void TriggerCheckpointResetDuringRecording()
+    {
+        if (!_recording) return;
+
+        Debug.Log($"Triggering checkpoint reset at frame {CurrentDemoFrame}");
+
+        // Mark this frame as having a checkpoint reset
+        _data.SetCheckpointReset(CurrentDemoFrame, true);
+
+        // Trigger the actual reset (will happen in FixedUpdate)
+        _needsCheckpointReset = true;
     }
 
     private void StartPlayback()
@@ -642,29 +660,6 @@ public sealed class DemoRecorder : MonoBehaviour
     #endregion
 
     #region Scene Reset
-
-    private IEnumerator ResetToCheckpointThen(Action afterLoaded)
-    {
-        if (_resetting) yield break;
-
-        _resetting = true;
-        TASInput.blockAllInput = true;
-
-        // Stop player movement
-        GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
-        GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
-
-        yield return null;
-
-        // ResetToLastCheckpoint runs synchronously
-        ResetToCheckpoint();
-
-        yield return null;
-
-        TASInput.blockAllInput = false;
-        _resetting = false;
-        afterLoaded?.Invoke();
-    }
 
     private IEnumerator ResetLevelStateThen(Action afterLoaded)
     {
