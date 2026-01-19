@@ -26,7 +26,16 @@ public class StartVOPatch
     {
         if (VOProxy.VoicelineDurations.TryGetValue(__instance.name, out int frameDuration))
         {
-            VOProxy.VoicelineEndFrames.Add(__instance.name, Time.renderedFrameCount + frameDuration);
+            var endFrame = Time.renderedFrameCount + frameDuration;
+
+            if (VOProxy.VoicelineEndFrames.ContainsKey(__instance.name))
+            {
+                VOProxy.VoicelineEndFrames[__instance.name] = endFrame;
+            }
+            else
+            {
+                VOProxy.VoicelineEndFrames.Add(__instance.name, Time.renderedFrameCount + frameDuration);
+            }
 
             Debug.Log(
                 $"{__instance.name} started at {Time.timeSinceLevelLoad} will run for {frameDuration} frames via proxy."

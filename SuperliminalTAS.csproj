@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>micrologist.superliminaltas</AssemblyName>
     <Description>A plugin for Superliminal to allow the creation of tool-assisted speedruns.</Description>
-    <Version>0.3.0</Version>
+    <Version>0.3.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
