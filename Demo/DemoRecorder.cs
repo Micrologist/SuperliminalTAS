@@ -144,12 +144,12 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_recording)
         {
-            if (Input.GetKeyDown(KeyCode.F6)) StopRecording();
+            if (Input.GetKeyDown(KeyCode.F5)) StopRecording();
             if (Input.GetKeyDown(KeyCode.F7)) TriggerCheckpointReset();
         }
         else if (_playingBack)
         {
-            if (Input.GetKeyDown(KeyCode.F6)) StopPlayback();
+            if (Input.GetKeyDown(KeyCode.F5)) StopPlayback();
         }
         else
         {
@@ -350,11 +350,11 @@ public sealed class DemoRecorder : MonoBehaviour
         // Dynamic keybindings based on state
         if (_recording)
         {
-            _statusText.text += "\n\nF6 - Stop\nF7 - Reset CP";
+            _statusText.text += "\n\nF5 - Stop\nF7 - Reset CP";
         }
         else if (_playingBack)
         {
-            _statusText.text += "\n\nF6 - Stop";
+            _statusText.text += "\n\nF5 - Stop";
         }
         else
         {
@@ -419,44 +419,6 @@ public sealed class DemoRecorder : MonoBehaviour
         }));
     }
 
-    private int GetCurrentCheckpointIndex()
-    {
-        try
-        {
-            var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
-            if (saveManager == null)
-            {
-                Debug.LogWarning("SaveAndCheckpointManager not found, using checkpoint -1");
-                return -1;
-            }
-
-            // Use reflection to get the current checkpoint index
-            var checkpointIndexField = AccessTools.Field(typeof(SaveAndCheckpointManager), "currentCheckpointIndex");
-            if (checkpointIndexField != null)
-            {
-                var index = (int)checkpointIndexField.GetValue(saveManager);
-                Debug.Log($"Current checkpoint index: {index}");
-                return index;
-            }
-
-            // Try alternative field names
-            var lastCheckpointField = AccessTools.Field(typeof(SaveAndCheckpointManager), "lastCheckpointIndex");
-            if (lastCheckpointField != null)
-            {
-                var index = (int)lastCheckpointField.GetValue(saveManager);
-                Debug.Log($"Last checkpoint index: {index}");
-                return index;
-            }
-
-            Debug.LogWarning("Could not find checkpoint index field, using -1");
-            return -1;
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to get current checkpoint index: {e}");
-            return -1;
-        }
-    }
 
     private void StopRecording()
     {
@@ -552,6 +514,8 @@ public sealed class DemoRecorder : MonoBehaviour
             var csv = DemoCSVSerializer.Serialize(_data);
             File.WriteAllText(path, csv);
             Debug.Log($"Saved CSV to: {path}");
+
+            _lastOpenedFile = path;
         }
         catch (Exception e)
         {
