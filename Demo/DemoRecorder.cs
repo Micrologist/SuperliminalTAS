@@ -144,28 +144,28 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_recording)
         {
-            if (Input.GetKeyDown(KeyCode.F7)) StopRecording();
+            if (Input.GetKeyDown(KeyCode.F6)) StopRecording();
+            if (Input.GetKeyDown(KeyCode.F7)) TriggerCheckpointReset();
         }
         else if (_playingBack)
         {
-            if (Input.GetKeyDown(KeyCode.F5)) StopPlayback();
+            if (Input.GetKeyDown(KeyCode.F6)) StopPlayback();
         }
         else
         {
             if (Input.GetKeyDown(KeyCode.F5)) StartPlayback();
-            else if (Input.GetKeyDown(KeyCode.F7)) StartRecording();
-        }
+            else if (Input.GetKeyDown(KeyCode.F6)) StartRecording();
+            else if (Input.GetKeyDown(KeyCode.F7)) TriggerCheckpointReset();
 
-        if (!_playingBack && Input.GetKeyDown(KeyCode.F8)) TriggerCheckpointReset();
+            if (Input.GetKeyDown(KeyCode.F12))
+            {
+                WithUnlockedCursor(() => SaveDemo());
+            }
 
-        if (Input.GetKeyDown(KeyCode.F12))
-        {
-            WithUnlockedCursor(() => SaveDemo());
-        }
-
-        if (Input.GetKeyDown(KeyCode.F11))
-        {
-            WithUnlockedCursor(() => OpenDemo());
+            if (Input.GetKeyDown(KeyCode.F11))
+            {
+                WithUnlockedCursor(() => OpenDemo());
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
@@ -347,9 +347,21 @@ public sealed class DemoRecorder : MonoBehaviour
             $"\nL: {TASInput.GetAxis("Look Horizontal", GameManager.GM.playerInput.GetAxis("Look Horizontal")): 0.000;-0.000} " +
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
-        _statusText.text += "\n\nF5  - Play/Stop\nF7  - Record";
-        _statusText.text += "\nF8  - Checkpoint Reset";
-        _statusText.text += "\nF11 - Open\nF12 - Save";
+        // Dynamic keybindings based on state
+        if (_recording)
+        {
+            _statusText.text += "\n\nF6 - Stop\nF7 - Reset CP";
+        }
+        else if (_playingBack)
+        {
+            _statusText.text += "\n\nF6 - Stop";
+        }
+        else
+        {
+            _statusText.text += "\n\nF5  - Play\nF6  - Record\nF7  - Reset CP";
+            _statusText.text += "\nF11 - Open\nF12 - Save";
+        }
+
         _statusText.text += "\n\n+/- - Speed Up/Down";
     }
 
