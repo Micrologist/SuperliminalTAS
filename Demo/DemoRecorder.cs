@@ -428,8 +428,6 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
         _playingBack = false;
 
-        ApplyPlaybackSpeed();
-
         TASInput.disablePause = false;
         TASInput.StopPlayback();
     }
