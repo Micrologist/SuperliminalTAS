@@ -111,9 +111,9 @@ public sealed class DemoRecorder : MonoBehaviour
             if (_data.GetCheckpointReset(CurrentDemoFrame))
             {
                 Debug.Log($"Checkpoint reset triggered at frame {CurrentDemoFrame}");
-                StartCoroutine(ResetToCheckpointThen(_data.CheckpointId, () =>
+                StartCoroutine(ResetToCheckpointThen(() =>
                 {
-                    // Resume playback after checkpoint reset
+                    // Resume playback after checkpoint reset (no frame adjustment needed since reset is synchronous)
                     _demoStartFrame = Time.renderedFrameCount - CurrentDemoFrame;
                 }));
                 return;
@@ -384,6 +384,12 @@ public sealed class DemoRecorder : MonoBehaviour
 
         StartCoroutine(ResetLevelStateThen(() =>
         {
+            // If demo has a specific checkpoint, teleport to it
+            if (_data.CheckpointId >= 0)
+            {
+                TeleportToCheckpoint(_data.CheckpointId);
+            }
+
             _recording = false;
             _playingBack = true;
             _demoStartFrame = Time.renderedFrameCount;
@@ -592,7 +598,7 @@ public sealed class DemoRecorder : MonoBehaviour
         return -1; // Default to level start
     }
 
-    private void ResetToCheckpoint(int checkpointId)
+    private void ResetToCheckpoint()
     {
         try
         {
@@ -603,29 +609,33 @@ public sealed class DemoRecorder : MonoBehaviour
                 return;
             }
 
-            if (checkpointId < 0)
-            {
-                // Reset to level start
-                saveManager.RestartLevel();
-            }
-            else
-            {
-                // Try to load specific checkpoint
-                var loadCheckpointMethod = AccessTools.Method(typeof(SaveAndCheckpointManager), "LoadCheckpoint");
-                if (loadCheckpointMethod != null)
-                {
-                    loadCheckpointMethod.Invoke(saveManager, new object[] { checkpointId });
-                }
-                else
-                {
-                    Debug.LogWarning($"LoadCheckpoint method not found, using RestartLevel instead");
-                    saveManager.RestartLevel();
-                }
-            }
+            // Reset to last checkpoint - this runs synchronously
+            saveManager.ResetToLastCheckpoint();
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to reset to checkpoint {checkpointId}: {e}");
+            Debug.LogError($"Failed to reset to checkpoint: {e}");
+        }
+    }
+
+    private void TeleportToCheckpoint(int checkpointId)
+    {
+        try
+        {
+            var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
+            if (saveManager == null)
+            {
+                Debug.LogError("SaveAndCheckpointManager not found!");
+                return;
+            }
+
+            // Teleport to specific checkpoint index
+            saveManager.TeleportToCheckpointIndexDebug(checkpointId);
+            Debug.Log($"Teleported to checkpoint {checkpointId}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to teleport to checkpoint {checkpointId}: {e}");
         }
     }
 
@@ -633,40 +643,27 @@ public sealed class DemoRecorder : MonoBehaviour
 
     #region Scene Reset
 
-    private IEnumerator ResetToCheckpointThen(int checkpointId, Action afterLoaded)
+    private IEnumerator ResetToCheckpointThen(Action afterLoaded)
     {
         if (_resetting) yield break;
 
         _resetting = true;
         TASInput.blockAllInput = true;
 
-        Player player = ReInput.players.GetPlayer(0);
-        Player.ControllerHelper controllers = player.controllers;
-
-        controllers.maps.SetAllMapsEnabled(false);
-
+        // Stop player movement
         GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
         GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
 
         yield return null;
 
-        void OnLoaded(Scene scene, LoadSceneMode mode)
-        {
-            SceneManager.sceneLoaded -= OnLoaded;
+        // ResetToLastCheckpoint runs synchronously
+        ResetToCheckpoint();
 
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Mouse, "Default", "Default");
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Joystick, "Default", "Default");
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Keyboard, "Default");
+        yield return null;
 
-            StartCoroutine(AfterSceneLoadedPhaseLocked(afterLoaded));
-        }
-
-        SceneManager.sceneLoaded += OnLoaded;
-
-        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(1.0f);
-
-        GameManager.GM.TriggerScenePreUnload();
-        ResetToCheckpoint(checkpointId);
+        TASInput.blockAllInput = false;
+        _resetting = false;
+        afterLoaded?.Invoke();
     }
 
     private IEnumerator ResetLevelStateThen(Action afterLoaded)

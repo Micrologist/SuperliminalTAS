@@ -60,12 +60,19 @@ The deserializer automatically detects and handles both formats.
 
 #### Recording
 When starting a recording (F7):
+- Reloads the level to ensure consistent starting state
 - Automatically captures current scene name as `LevelId`
-- Attempts to read current checkpoint ID from `SaveAndCheckpointManager` using reflection
-- Stores both in the demo data
+- Captures checkpoint ID (will be -1 since level was just reloaded)
+- Note: Currently, recording always starts from level beginning. To create a demo starting from a checkpoint, you would need to:
+  1. Record a full run from level start
+  2. Export to CSV
+  3. Manually edit to add checkpoint metadata and trim frames before the checkpoint
+  4. Or, load an existing demo file that starts from a checkpoint
 
 #### Playback
 When playing back a demo (F5):
+- Reloads the level
+- If demo has a checkpoint ID >= 0, teleports to that checkpoint using `TeleportToCheckpointIndexDebug()`
 - Displays level and checkpoint info in debug log
 - Warns if current level doesn't match demo level
 - Checks for checkpoint reset flags each frame
@@ -74,9 +81,8 @@ When playing back a demo (F5):
 #### Checkpoint Reset Process
 1. Detects reset flag at current frame
 2. Pauses playback and blocks input
-3. Calls `ResetToCheckpoint(checkpointId)` which uses reflection to invoke game's checkpoint system
-4. Waits for scene reload
-5. Resumes playback from same frame
+3. Calls `SaveAndCheckpointManager.ResetToLastCheckpoint()` (runs synchronously)
+4. Resumes playback from same frame (no frame number adjustment needed)
 
 ## Testing Checkpoint Consistency
 
@@ -163,25 +169,35 @@ public int CheckpointId { get; set; }
 ### DemoRecorder Methods (Private)
 
 ```csharp
-// Get current checkpoint ID from game
+// Get current checkpoint ID from game (uses reflection)
 private int GetCurrentCheckpointId()
 
-// Reset to specific checkpoint
-private void ResetToCheckpoint(int checkpointId)
+// Reset to last checkpoint (synchronous, uses ResetToLastCheckpoint())
+private void ResetToCheckpoint()
 
-// Reset to checkpoint with callback
-private IEnumerator ResetToCheckpointThen(int checkpointId, Action afterLoaded)
+// Teleport to specific checkpoint index (uses TeleportToCheckpointIndexDebug())
+private void TeleportToCheckpoint(int checkpointId)
+
+// Reset to checkpoint with callback (coroutine for async handling)
+private IEnumerator ResetToCheckpointThen(Action afterLoaded)
 ```
 
 ## Limitations
 
 1. **Checkpoint determinism is untested:** This implementation assumes the game's checkpoint system provides deterministic state restoration. This needs to be verified through testing.
 
-2. **Reflection-based checkpoint access:** Uses reflection to access `SaveAndCheckpointManager` internals. May break if game updates change field/method names.
+2. **Checkpoint reset uses "last checkpoint":** The `ResetToLastCheckpoint()` method resets to whatever checkpoint the player last reached, not to a specific checkpoint ID. This means:
+   - The demo must naturally progress through checkpoints in order
+   - You cannot arbitrarily reset to any checkpoint during playback
+   - Checkpoint resets will go back to the most recently passed checkpoint
 
-3. **No automatic level loading:** When loading a demo from a different level, user must manually load the correct level first.
+3. **Recording starts from level beginning:** Currently, pressing F7 to record always resets the level first. There's no way to start recording from the middle of a level or from a specific checkpoint without manually editing the demo file afterward.
 
-4. **Single checkpoint ID per demo:** Each demo stores only one checkpoint ID. Demos with multiple checkpoint resets will reset to the same checkpoint each time.
+4. **Reflection-based checkpoint access:** Uses reflection to access `SaveAndCheckpointManager.checkpointNum`. May break if game updates change field/property names.
+
+5. **No automatic level loading:** When loading a demo from a different level, user must manually load the correct level first.
+
+6. **Single starting checkpoint per demo:** Each demo stores only one starting checkpoint ID (used when playback begins). Individual checkpoint reset events during playback reset to "last checkpoint" reached in that playback session.
 
 ## Future Enhancements
 
