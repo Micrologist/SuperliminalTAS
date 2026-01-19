@@ -79,10 +79,12 @@ When playing back a demo (F5):
 - Triggers checkpoint reset when flag is set
 
 #### Checkpoint Reset Process
-1. Detects reset flag at current frame
-2. Pauses playback and blocks input
-3. Calls `SaveAndCheckpointManager.ResetToLastCheckpoint()` (runs synchronously)
-4. Resumes playback from same frame (no frame number adjustment needed)
+1. **LateUpdate (Frame N):** Detects reset flag at current frame, saves the current demo frame number
+2. **FixedUpdate (Frame N+1):** Calls `SaveAndCheckpointManager.ResetToLastCheckpoint()` synchronously
+3. **FixedUpdate (Frame N+1):** Adjusts `_demoStartFrame` to resync frame counting, accounting for any frames elapsed during reset
+4. **FixedUpdate (Frame N+1):** Continues from the same demo frame number, ensuring inputs stay synchronized
+
+This frame adjustment is critical because even though the checkpoint reset is synchronous, `Time.renderedFrameCount` continues to increment. By adjusting `_demoStartFrame`, we ensure that `CurrentDemoFrame` returns to the correct value and inputs remain synchronized with the demo data.
 
 ## Testing Checkpoint Consistency
 

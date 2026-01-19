@@ -20,6 +20,7 @@ public sealed class DemoRecorder : MonoBehaviour
     private bool _resetting;
     private bool _lastUpdateWasFixed;
     private bool _needsCheckpointReset;
+    private int _frameAtCheckpointReset; // The demo frame when checkpoint reset was triggered
 
     // Available playback speeds in FPS (base game is 50 FPS)
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
@@ -99,7 +100,15 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_needsCheckpointReset)
         {
             _needsCheckpointReset = false;
+
+            // Call the synchronous reset
             ResetToCheckpoint();
+
+            // Adjust frame counting to account for any frames elapsed during reset
+            // We want CurrentDemoFrame to return to the same value it was when the reset was triggered
+            _demoStartFrame = Time.renderedFrameCount - _frameAtCheckpointReset;
+
+            Debug.Log($"Adjusted frame counting after checkpoint reset. CurrentDemoFrame: {CurrentDemoFrame}");
         }
     }
 
@@ -119,6 +128,7 @@ public sealed class DemoRecorder : MonoBehaviour
             if (_data.GetCheckpointReset(CurrentDemoFrame))
             {
                 Debug.Log($"Checkpoint reset triggered at frame {CurrentDemoFrame}");
+                _frameAtCheckpointReset = CurrentDemoFrame;
                 _needsCheckpointReset = true;
             }
 
@@ -393,6 +403,7 @@ public sealed class DemoRecorder : MonoBehaviour
         _data.SetCheckpointReset(CurrentDemoFrame, true);
 
         // Trigger the actual reset (will happen in FixedUpdate)
+        _frameAtCheckpointReset = CurrentDemoFrame;
         _needsCheckpointReset = true;
     }
 
