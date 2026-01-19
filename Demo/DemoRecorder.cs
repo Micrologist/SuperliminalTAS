@@ -673,7 +673,10 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void OnLoadDisableFade(Scene scene, LoadSceneMode mode)
     {
-        GameManager.GM.player.transform.Find("GUI Camera/Canvas/Fade").localScale = Vector3.zero;
+        var fade = GameManager.GM.player?.transform?.Find("GUI Camera/Canvas/Fade");
+
+        if(fade != null)
+            fade.localScale = Vector3.zero;
     }
 
     #endregion
