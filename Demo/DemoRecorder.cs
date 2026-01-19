@@ -75,14 +75,12 @@ public sealed class DemoRecorder : MonoBehaviour
             {
                 Debug.Log($"File change detected: {_lastOpenedFile}");
                 StopPlayback();
-                ReloadFile();
-                StartPlayback();
+                StartCoroutine(ReloadFile());
             }
         }
         catch (Exception e)
         {
             // Silently ignore errors (file might be temporarily locked during writing)
-            // Don't spam the console with errors during normal editing
         }
     }
 
@@ -151,13 +149,6 @@ public sealed class DemoRecorder : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F10))
         {
             WithUnlockedCursor(() => ExportCSV());
-        }
-
-        if (Input.GetKeyDown(KeyCode.F8))
-        {
-            StopPlayback();
-            ReloadFile();
-            StartPlayback();
         }
 
         if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
@@ -264,7 +255,10 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (GameManager.GM.player != null)
         {
-            var playerPos = GameManager.GM.player.transform.position;
+            var player = GameManager.GM.player;
+
+
+            var playerPos = player.transform.position;
             _statusText.text +=
                 $"P: {playerPos.x:0.00000}, " +
                 $"{playerPos.y:0.00000}, " +
@@ -274,9 +268,9 @@ public sealed class DemoRecorder : MonoBehaviour
 
             _statusText.text +=
                 $"R: {xRot:0.00000}, " +
-                $"{GameManager.GM.player.transform.rotation.eulerAngles.y:0.00000}\n";
+                $"{player.transform.rotation.eulerAngles.y:0.00000}\n";
 
-            var vel = GameManager.GM.player.GetComponent<CharacterController>().velocity;
+            var vel = player.GetComponent<CharacterController>().velocity;
             float horizontal = Mathf.Sqrt(vel.x * vel.x + vel.z * vel.z);
 
             _statusText.text +=
@@ -296,6 +290,23 @@ public sealed class DemoRecorder : MonoBehaviour
                     scale = (GameManager.GM.playerCamera.transform.position - grabbedObject.transform.position).magnitude;
 
                 _statusText.text += "O: " + scale.ToString("0.0000") + " " + grabbedObject.transform.localScale.x.ToString("0.0000") + "x\n";
+
+                if (grabbedObject.GetComponent<Collider>() != null)
+                {
+                    Collider playerCollider = player.GetComponent<Collider>();
+                    Collider objectCollider = grabbedObject.GetComponent<Collider>();
+                    if (
+                        Physics.ComputePenetration(playerCollider, playerCollider.transform.position, playerCollider.transform.rotation,
+                            objectCollider, objectCollider.transform.position, objectCollider.transform.rotation,
+                            out Vector3 direction, out float distance))
+                    {
+                        Vector3 warpPrediction = player.transform.position + direction * distance;
+                        if (distance > 5)
+                        {
+                            _statusText.text += "W: " + warpPrediction.x.ToString("0.0") + ", " + warpPrediction.y.ToString("0.0") + ", " + warpPrediction.z.ToString("0.0") + " ("+ distance.ToString("0.0") + ")\n";
+                        }
+                    }
+                }
             }
         }
 
@@ -316,7 +327,7 @@ public sealed class DemoRecorder : MonoBehaviour
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
         _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
-        _statusText.text += "\nF8  - Reload & Play\nF10 - Export CSV";
+        _statusText.text += "\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
         _statusText.text += "\n\n+/- - Speed Up/Down";
     }
@@ -487,22 +498,26 @@ public sealed class DemoRecorder : MonoBehaviour
 
 
 
-    private void ReloadFile()
+    private IEnumerator ReloadFile()
     {
         if (string.IsNullOrWhiteSpace(_lastOpenedFile))
         {
             Debug.LogWarning("No file to reload. Open a file first.");
-            return;
+            yield break;
         }
 
         if (!File.Exists(_lastOpenedFile))
         {
             Debug.LogError($"File no longer exists: {_lastOpenedFile}");
-            return;
+            yield break;
         }
+
+        yield return null;
 
         Debug.Log($"Reloading: {_lastOpenedFile}");
         LoadFile(_lastOpenedFile);
+
+        StartPlayback();
     }
     #endregion
 

@@ -143,3 +143,12 @@ public class ApplicationFocusPatch
         __instance.pauseWhenAltTabbed = false;
     }
 }
+
+[HarmonyPatch(typeof(PlayerLerpMantle), "LerpPlayer")]
+public class LerpPlayerMantlePatch
+{
+    static void Prefix()
+    {
+        Debug.Log("Mantling");
+    }
+}
