@@ -18,11 +18,18 @@ public static class DemoCSVSerializer
 
         var sb = new StringBuilder();
 
+        // Metadata rows
+        if (!string.IsNullOrEmpty(data.LevelId))
+            sb.AppendLine($"Level: {data.LevelId}");
+        if (data.CheckpointId >= 0)
+            sb.AppendLine($"Checkpoint: {data.CheckpointId}");
+
         // Header row
         foreach (var axis in DemoActions.Axes)
             sb.Append($"{axis},");
         foreach (var button in DemoActions.Buttons)
             sb.Append($"{button},");
+        sb.Append("Reset Checkpoint,");
         sb.Append("Speed");
         sb.AppendLine();
 
@@ -44,6 +51,10 @@ public static class DemoCSVSerializer
                 sb.Append(value ? "1," : "0,");
             }
 
+            // Reset Checkpoint flag
+            bool resetCheckpoint = data.GetCheckpointReset(frame);
+            sb.Append(resetCheckpoint ? "1," : "0,");
+
             // Speed (optional per-frame playback speed multiplier)
             var speed = data.GetSpeed(frame);
             if (speed.HasValue)
@@ -64,16 +75,58 @@ public static class DemoCSVSerializer
         if (lines.Length < 2)
             throw new InvalidDataException("CSV must have at least a header row and one data row.");
 
+        // Parse metadata rows
+        string levelId = "";
+        int checkpointId = -1;
+        int currentLine = 0;
+
+        // Check for Level metadata
+        if (lines[currentLine].StartsWith("Level:", StringComparison.OrdinalIgnoreCase))
+        {
+            // Extract level name, stopping at first comma if present (in case of malformed CSV)
+            var levelLine = lines[currentLine].Substring("Level:".Length).Trim();
+            var commaIndex = levelLine.IndexOf(',');
+            levelId = commaIndex >= 0 ? levelLine.Substring(0, commaIndex).Trim() : levelLine;
+            currentLine++;
+        }
+
+        // Check for Checkpoint metadata
+        if (currentLine < lines.Length && lines[currentLine].StartsWith("Checkpoint:", StringComparison.OrdinalIgnoreCase))
+        {
+            // Extract checkpoint ID, stopping at first comma if present
+            var checkpointLine = lines[currentLine].Substring("Checkpoint:".Length).Trim();
+            var commaIndex = checkpointLine.IndexOf(',');
+            var checkpointStr = commaIndex >= 0 ? checkpointLine.Substring(0, commaIndex).Trim() : checkpointLine;
+            if (int.TryParse(checkpointStr, out int parsed))
+                checkpointId = parsed;
+            currentLine++;
+        }
+
+        if (currentLine >= lines.Length - 1)
+            throw new InvalidDataException("CSV must have at least a header row and one data row after metadata.");
+
         // Parse header to validate structure
-        var header = lines[0].Split(',');
+        var header = lines[currentLine].Split(',');
         int requiredColumns = DemoActions.Axes.Length + DemoActions.Buttons.Length;
 
-        bool hasSpeedColumn = header.Length > requiredColumns;
+        // Check if we have the new format with Reset Checkpoint column
+        bool hasResetCheckpointColumn = false;
+        for (int i = 0; i < header.Length; i++)
+        {
+            if (header[i].Trim().Equals("Reset Checkpoint", StringComparison.OrdinalIgnoreCase))
+            {
+                hasResetCheckpointColumn = true;
+                break;
+            }
+        }
+
+        int minRequiredColumns = requiredColumns + (hasResetCheckpointColumn ? 1 : 0);
+        bool hasSpeedColumn = header.Length > minRequiredColumns;
 
         if (header.Length < requiredColumns)
             throw new InvalidDataException($"Expected at least {requiredColumns} columns, got {header.Length}.");
 
-        int frameCount = lines.Length - 1; // Exclude header
+        int frameCount = lines.Length - currentLine - 1; // Exclude header and metadata
 
         var axes = new Dictionary<string, List<float>>(DemoActions.Axes.Length);
         foreach (var axis in DemoActions.Axes)
@@ -84,13 +137,16 @@ public static class DemoCSVSerializer
             buttons[button] = new List<bool>(frameCount);
 
         var speeds = hasSpeedColumn ? new List<float?>(frameCount) : null;
+        var checkpointResets = hasResetCheckpointColumn ? new List<bool>(frameCount) : null;
 
         // Parse data rows
-        for (int i = 1; i < lines.Length; i++)
+        for (int i = currentLine + 1; i < lines.Length; i++)
         {
             var values = lines[i].Split(',');
             // Allow extra columns for notes/metadata, just check we have minimum required
-            int minimumColumns = hasSpeedColumn ? requiredColumns + 1 : requiredColumns;
+            int minimumColumns = minRequiredColumns;
+            if (hasSpeedColumn) minimumColumns++;
+
             if (values.Length < minimumColumns)
                 throw new InvalidDataException($"Row {i} has {values.Length} columns, expected at least {minimumColumns}.");
 
@@ -113,6 +169,14 @@ public static class DemoCSVSerializer
                 col++;
             }
 
+            // Parse checkpoint reset (if column exists)
+            if (hasResetCheckpointColumn)
+            {
+                bool resetValue = ParseBool(values[col], i, col);
+                checkpointResets.Add(resetValue);
+                col++;
+            }
+
             // Parse speed (if column exists)
             if (hasSpeedColumn)
             {
@@ -121,7 +185,7 @@ public static class DemoCSVSerializer
         }
 
         var data = DemoData.CreateEmpty();
-        data.ReplaceAll(axes, buttons, speeds);
+        data.ReplaceAll(axes, buttons, speeds, checkpointResets, levelId, checkpointId);
         return data;
     }
 

@@ -19,6 +19,8 @@ public sealed class DemoRecorder : MonoBehaviour
     private bool _playingBack;
     private bool _resetting;
     private bool _lastUpdateWasFixed;
+    private bool _needsCheckpointReset;
+    private int _frameAtCheckpointReset; // The demo frame when checkpoint reset was triggered
 
     // Available playback speeds in FPS (base game is 50 FPS)
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 200, 400 };
@@ -43,11 +45,12 @@ public sealed class DemoRecorder : MonoBehaviour
         _data = DemoData.CreateEmpty();
 
         Application.targetFrameRate = 50;
+        SceneManager.sceneLoaded += OnLoadDisableFade;
     }
 
     private void Update()
     {
-        if (!_lastUpdateWasFixed && (_recording || _playingBack) && CurrentDemoFrame > 1)
+        if (!_lastUpdateWasFixed && (_recording || _playingBack) && Time.timeSinceLevelLoad > float.Epsilon)
         {
             Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback, aborting!");
             StopPlayback();
@@ -107,6 +110,14 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         else if (_playingBack)
         {
+            // Check for checkpoint reset at current frame
+            if (_data.GetCheckpointReset(CurrentDemoFrame))
+            {
+                Debug.Log($"Checkpoint reset triggered at frame {CurrentDemoFrame}");
+                _frameAtCheckpointReset = CurrentDemoFrame;
+                _needsCheckpointReset = true;
+            }
+
             // Check for speed change from CSV at current frame
             var speed = _data.GetSpeed(CurrentDemoFrame);
             if (speed.HasValue)
@@ -118,6 +129,12 @@ public sealed class DemoRecorder : MonoBehaviour
 
             if (CurrentDemoFrame + 1 >= _data.FrameCount)
                 StopPlayback();
+        }
+
+        if (_needsCheckpointReset)
+        {
+            _needsCheckpointReset = false;
+            ResetToCheckpoint();
         }
     }
 
@@ -138,6 +155,8 @@ public sealed class DemoRecorder : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.F5)) StartPlayback();
             else if (Input.GetKeyDown(KeyCode.F7)) StartRecording();
         }
+
+        if (!_playingBack && Input.GetKeyDown(KeyCode.F8)) TriggerCheckpointReset();
 
         if (Input.GetKeyDown(KeyCode.F12))
         {
@@ -229,6 +248,10 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_statusText == null) return;
 
         var frame = CurrentDemoFrame;
+        var time = TimeSpan.FromSeconds(CurrentDemoFrame * 0.02);
+        var timeString = time.ToString(@"mm\:ss\.ff");
+
+        var totalTime = _data.FrameCount * 0.02;
 
         float currentSpeedMult;
         if (_usingCustomSpeed)
@@ -245,14 +268,14 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (_playingBack)
         {
-            _statusText.text = $"playback: {frame} / {_data.FrameCount}";
+            _statusText.text = $"playback: {timeString} ({frame} / {_data.FrameCount})";
 
             _statusText.text += speedInfo;
             _statusText.text += "\n\n";
         }
         else
         {
-            string status = _recording ? $"recording: {frame} / ?" : $"stopped: 0 / {_data.FrameCount}";
+            string status = _recording ? $"recording: {timeString} ({frame} / ?)" : $"stopped: 0 / {_data.FrameCount}";
             _statusText.text = status + speedInfo + "\n\n";
         }
 
@@ -330,6 +353,7 @@ public sealed class DemoRecorder : MonoBehaviour
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
         _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
+        _statusText.text += "\nF8  - Checkpoint Reset";
         _statusText.text += "\nF10 - Export CSV";
         _statusText.text += "\nF11 - Open\nF12 - Save";
         _statusText.text += "\n\n+/- - Speed Up/Down";
@@ -346,6 +370,10 @@ public sealed class DemoRecorder : MonoBehaviour
         StartCoroutine(ResetLevelStateThen(() =>
         {
             _data = DemoData.CreateEmpty();
+
+            _data.LevelId = SceneManager.GetActiveScene().name;
+            _data.CheckpointId = -1;
+
             _recording = true;
             _playingBack = false;
             _demoStartFrame = Time.renderedFrameCount;
@@ -361,12 +389,37 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
     }
 
+    private void TriggerCheckpointReset()
+    {
+        _needsCheckpointReset = true;
+
+        if (!_recording) return;
+
+        Debug.Log($"Triggering checkpoint reset at frame {CurrentDemoFrame}");
+
+        // Mark this frame as having a checkpoint reset
+        _data.SetCheckpointReset(CurrentDemoFrame, true);
+    }
+
     private void StartPlayback()
     {
         if (_data.FrameCount < 1 || _recording || _playingBack || _resetting) return;
 
+        if (!string.IsNullOrEmpty(_data.LevelId) && SceneManager.GetActiveScene().name != _data.LevelId)
+        {
+            GameManager.GM.TriggerScenePreUnload();
+            SceneManager.LoadScene(_data.LevelId);
+            return;
+        }
+
         StartCoroutine(ResetLevelStateThen(() =>
         {
+            // If demo has a specific checkpoint, teleport to it
+            if (_data.CheckpointId >= 0)
+            {
+                TeleportToCheckpoint(_data.CheckpointId);
+            }
+
             _recording = false;
             _playingBack = true;
             _demoStartFrame = Time.renderedFrameCount;
@@ -490,8 +543,21 @@ public sealed class DemoRecorder : MonoBehaviour
                 return;
             }
 
+            if (_data.CheckpointId >= 0)
+            {
+                Debug.Log($"Demo Checkpoint: {_data.CheckpointId}");
+            }
+
             _lastOpenedFile = path;
             _lastFileWriteTime = File.GetLastWriteTime(path);
+
+            // Display level and checkpoint information
+            if (!string.IsNullOrEmpty(_data.LevelId) && SceneManager.GetActiveScene().name != _data.LevelId)
+            {
+                Debug.Log($"Demo Level: {_data.LevelId}");
+                GameManager.GM.TriggerScenePreUnload();
+                SceneManager.LoadScene(_data.LevelId);
+            }
         }
         catch (Exception e)
         {
@@ -524,7 +590,52 @@ public sealed class DemoRecorder : MonoBehaviour
     }
     #endregion
 
+    #region Level and Checkpoint Management
+
+    private void ResetToCheckpoint()
+    {
+        try
+        {
+            var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
+            if (saveManager == null)
+            {
+                Debug.LogError("SaveAndCheckpointManager not found!");
+                return;
+            }
+
+            saveManager.ResetToLastCheckpoint();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to reset to checkpoint: {e}");
+        }
+    }
+
+    private void TeleportToCheckpoint(int checkpointId)
+    {
+        try
+        {
+            var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
+            if (saveManager == null)
+            {
+                Debug.LogError("SaveAndCheckpointManager not found!");
+                return;
+            }
+
+            // Teleport to specific checkpoint index
+            saveManager.TeleportToCheckpointIndexDebug(checkpointId);
+            Debug.Log($"Teleported to checkpoint {checkpointId}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to teleport to checkpoint {checkpointId}: {e}");
+        }
+    }
+
+    #endregion
+
     #region Scene Reset
+
     private IEnumerator ResetLevelStateThen(Action afterLoaded)
     {
         if (_resetting) yield break;
@@ -563,14 +674,24 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private IEnumerator AfterSceneLoadedPhaseLocked(Action afterLoaded)
     {
-        GameManager.GM.player.transform.Find("GUI Camera").GetComponent<FadeCameraToBlack>().enabled = false;
-        GameManager.GM.player.transform.Find("GUI Camera/Canvas/Fade").gameObject.SetActive(false);
-
         TASInput.blockAllInput = false;
+
         _resetting = false;
         afterLoaded?.Invoke();
 
         yield break;
+    }
+
+    private void OnLoadDisableFade(Scene scene, LoadSceneMode mode)
+    {
+        var guiCam = GameManager.GM.guiCamera;
+
+        if (guiCam == null) return;
+
+        var fade = guiCam.transform.Find("Canvas/Fade");
+
+        if(fade != null)
+            fade.localScale = Vector3.zero;
     }
 
     #endregion

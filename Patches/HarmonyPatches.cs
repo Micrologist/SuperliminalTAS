@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -149,6 +150,16 @@ public class LerpPlayerMantlePatch
 {
     static void Prefix()
     {
-        Debug.Log("Mantling");
+        Debug.Log("LerpPlayer()");
+    }
+}
+
+[HarmonyPatch(typeof(SaveAndCheckpointManager), "_SaveGame", [typeof(CheckPoint)])]
+public class SaveGamePatch
+{
+    static void Prefix(CheckPoint checkpoint)
+    {
+        Debug.Log("_SaveGame(): "+checkpoint?.name);
+
     }
 }
