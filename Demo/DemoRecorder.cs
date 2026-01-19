@@ -48,7 +48,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void Update()
     {
-        if (!_lastUpdateWasFixed && (_recording || _playingBack) && CurrentDemoFrame > 1)
+        if (!_lastUpdateWasFixed && (_recording || _playingBack) && Time.timeSinceLevelLoad > float.Epsilon)
         {
             Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback, aborting!");
             StopPlayback();
