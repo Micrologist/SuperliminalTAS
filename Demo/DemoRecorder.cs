@@ -107,6 +107,18 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         else if (_playingBack)
         {
+            // Check for checkpoint reset at current frame
+            if (_data.GetCheckpointReset(CurrentDemoFrame))
+            {
+                Debug.Log($"Checkpoint reset triggered at frame {CurrentDemoFrame}");
+                StartCoroutine(ResetToCheckpointThen(_data.CheckpointId, () =>
+                {
+                    // Resume playback after checkpoint reset
+                    _demoStartFrame = Time.renderedFrameCount - CurrentDemoFrame;
+                }));
+                return;
+            }
+
             // Check for speed change from CSV at current frame
             var speed = _data.GetSpeed(CurrentDemoFrame);
             if (speed.HasValue)
@@ -346,6 +358,11 @@ public sealed class DemoRecorder : MonoBehaviour
         StartCoroutine(ResetLevelStateThen(() =>
         {
             _data = DemoData.CreateEmpty();
+
+            // Capture level and checkpoint information
+            _data.LevelId = SceneManager.GetActiveScene().name;
+            _data.CheckpointId = GetCurrentCheckpointId();
+
             _recording = true;
             _playingBack = false;
             _demoStartFrame = Time.renderedFrameCount;
@@ -490,6 +507,22 @@ public sealed class DemoRecorder : MonoBehaviour
                 return;
             }
 
+            // Display level and checkpoint information
+            if (!string.IsNullOrEmpty(_data.LevelId))
+            {
+                Debug.Log($"Demo Level: {_data.LevelId}");
+                var currentScene = SceneManager.GetActiveScene().name;
+                if (_data.LevelId != currentScene)
+                {
+                    Debug.LogWarning($"Demo was recorded on level '{_data.LevelId}' but current level is '{currentScene}'");
+                }
+            }
+
+            if (_data.CheckpointId >= 0)
+            {
+                Debug.Log($"Demo Checkpoint: {_data.CheckpointId}");
+            }
+
             _lastOpenedFile = path;
             _lastFileWriteTime = File.GetLastWriteTime(path);
         }
@@ -524,7 +557,118 @@ public sealed class DemoRecorder : MonoBehaviour
     }
     #endregion
 
+    #region Level and Checkpoint Management
+
+    private int GetCurrentCheckpointId()
+    {
+        try
+        {
+            var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
+            if (saveManager == null) return -1;
+
+            // Use reflection to get the current checkpoint ID
+            var checkpointField = AccessTools.Field(typeof(SaveAndCheckpointManager), "checkpointNum");
+            if (checkpointField != null)
+            {
+                var value = checkpointField.GetValue(saveManager);
+                if (value is int checkpointId)
+                    return checkpointId;
+            }
+
+            // Fallback: try property if field doesn't exist
+            var checkpointProperty = AccessTools.Property(typeof(SaveAndCheckpointManager), "checkpointNum");
+            if (checkpointProperty != null)
+            {
+                var value = checkpointProperty.GetValue(saveManager);
+                if (value is int checkpointId)
+                    return checkpointId;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"Failed to get checkpoint ID: {e}");
+        }
+
+        return -1; // Default to level start
+    }
+
+    private void ResetToCheckpoint(int checkpointId)
+    {
+        try
+        {
+            var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
+            if (saveManager == null)
+            {
+                Debug.LogError("SaveAndCheckpointManager not found!");
+                return;
+            }
+
+            if (checkpointId < 0)
+            {
+                // Reset to level start
+                saveManager.RestartLevel();
+            }
+            else
+            {
+                // Try to load specific checkpoint
+                var loadCheckpointMethod = AccessTools.Method(typeof(SaveAndCheckpointManager), "LoadCheckpoint");
+                if (loadCheckpointMethod != null)
+                {
+                    loadCheckpointMethod.Invoke(saveManager, new object[] { checkpointId });
+                }
+                else
+                {
+                    Debug.LogWarning($"LoadCheckpoint method not found, using RestartLevel instead");
+                    saveManager.RestartLevel();
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to reset to checkpoint {checkpointId}: {e}");
+        }
+    }
+
+    #endregion
+
     #region Scene Reset
+
+    private IEnumerator ResetToCheckpointThen(int checkpointId, Action afterLoaded)
+    {
+        if (_resetting) yield break;
+
+        _resetting = true;
+        TASInput.blockAllInput = true;
+
+        Player player = ReInput.players.GetPlayer(0);
+        Player.ControllerHelper controllers = player.controllers;
+
+        controllers.maps.SetAllMapsEnabled(false);
+
+        GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
+        GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
+
+        yield return null;
+
+        void OnLoaded(Scene scene, LoadSceneMode mode)
+        {
+            SceneManager.sceneLoaded -= OnLoaded;
+
+            player.controllers.maps.SetMapsEnabled(true, ControllerType.Mouse, "Default", "Default");
+            player.controllers.maps.SetMapsEnabled(true, ControllerType.Joystick, "Default", "Default");
+            player.controllers.maps.SetMapsEnabled(true, ControllerType.Keyboard, "Default");
+
+            StartCoroutine(AfterSceneLoadedPhaseLocked(afterLoaded));
+        }
+
+        SceneManager.sceneLoaded += OnLoaded;
+
+        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(1.0f);
+
+        GameManager.GM.TriggerScenePreUnload();
+        ResetToCheckpoint(checkpointId);
+    }
+
     private IEnumerator ResetLevelStateThen(Action afterLoaded)
     {
         if (_resetting) yield break;

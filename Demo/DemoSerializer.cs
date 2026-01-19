@@ -10,19 +10,32 @@ namespace SuperliminalTAS.Demo;
 /// </summary>
 public static class DemoSerializer
 {
-    private const string Magic = "SUPERLIMINALTAS1";
+    private const string MagicV1 = "SUPERLIMINALTAS1";
+    private const string MagicV2 = "SUPERLIMINALTAS2"; // Supports level/checkpoint metadata and checkpoint resets
 
     public static byte[] Serialize(DemoData data)
     {
         if (data == null || data.FrameCount < 1) return null;
 
-        var magicBytes = Encoding.ASCII.GetBytes(Magic);
-        var lengthBytes = BitConverter.GetBytes(data.FrameCount);
+        // Use V2 format which includes metadata
+        var magicBytes = Encoding.ASCII.GetBytes(MagicV2);
+        var levelIdBytes = Encoding.UTF8.GetBytes(data.LevelId ?? "");
 
-        using var ms = new MemoryStream(capacity: 16 + 4 + data.FrameCount * (4 * DemoActions.Axes.Length + DemoActions.Buttons.Length)); // rough
+        using var ms = new MemoryStream(capacity: 16 + 4 + 4 + levelIdBytes.Length + 4 + data.FrameCount * (4 * DemoActions.Axes.Length + DemoActions.Buttons.Length + 1)); // rough
 
+        // Magic header
         ms.Write(magicBytes, 0, magicBytes.Length);
-        ms.Write(lengthBytes, 0, lengthBytes.Length);
+
+        // Frame count
+        ms.Write(BitConverter.GetBytes(data.FrameCount), 0, 4);
+
+        // Level ID (length + string)
+        ms.Write(BitConverter.GetBytes(levelIdBytes.Length), 0, 4);
+        if (levelIdBytes.Length > 0)
+            ms.Write(levelIdBytes, 0, levelIdBytes.Length);
+
+        // Checkpoint ID
+        ms.Write(BitConverter.GetBytes(data.CheckpointId), 0, 4);
 
         // Axes (float32 * length)
         foreach (var a in DemoActions.Axes)
@@ -31,6 +44,9 @@ public static class DemoSerializer
         // Buttons (bool * length)
         foreach (var b in DemoActions.Buttons)
             WriteBoolList(ms, data.Buttons[b]);
+
+        // Checkpoint resets (bool * length)
+        WriteBoolList(ms, data.CheckpointResets);
 
         return ms.ToArray();
     }
@@ -45,9 +61,23 @@ public static class DemoSerializer
 
         var magicBytes = br.ReadBytes(16);
         var magic = Encoding.ASCII.GetString(magicBytes);
-        if (magic != Magic)
-            throw new InvalidDataException($"Bad magic header: '{magic}'.");
 
+        if (magic == MagicV2)
+        {
+            return DeserializeV2(br);
+        }
+        else if (magic == MagicV1)
+        {
+            return DeserializeV1(br);
+        }
+        else
+        {
+            throw new InvalidDataException($"Bad magic header: '{magic}'.");
+        }
+    }
+
+    private static DemoData DeserializeV1(BinaryReader br)
+    {
         int length = br.ReadInt32();
         if (length < 0) throw new InvalidDataException("Negative length.");
 
@@ -61,6 +91,39 @@ public static class DemoSerializer
 
         var data = DemoData.CreateEmpty();
         data.ReplaceAll(axes, buttons);
+        return data;
+    }
+
+    private static DemoData DeserializeV2(BinaryReader br)
+    {
+        int length = br.ReadInt32();
+        if (length < 0) throw new InvalidDataException("Negative length.");
+
+        // Read level ID
+        int levelIdLength = br.ReadInt32();
+        string levelId = "";
+        if (levelIdLength > 0)
+        {
+            var levelIdBytes = br.ReadBytes(levelIdLength);
+            levelId = Encoding.UTF8.GetString(levelIdBytes);
+        }
+
+        // Read checkpoint ID
+        int checkpointId = br.ReadInt32();
+
+        var axes = new Dictionary<string, List<float>>(DemoActions.Axes.Length);
+        foreach (var a in DemoActions.Axes)
+            axes[a] = ReadFloatList(br, length);
+
+        var buttons = new Dictionary<string, List<bool>>(DemoActions.Buttons.Length);
+        foreach (var b in DemoActions.Buttons)
+            buttons[b] = ReadBoolList(br, length);
+
+        // Read checkpoint resets
+        var checkpointResets = ReadBoolList(br, length);
+
+        var data = DemoData.CreateEmpty();
+        data.ReplaceAll(axes, buttons, null, checkpointResets, levelId, checkpointId);
         return data;
     }
 
