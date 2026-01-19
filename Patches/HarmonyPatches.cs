@@ -157,9 +157,11 @@ public class LerpPlayerMantlePatch
 [HarmonyPatch(typeof(SaveAndCheckpointManager), "_SaveGame", [typeof(CheckPoint)])]
 public class SaveGamePatch
 {
+    public static CheckPoint lastCheckpoint;
+
     static void Prefix(CheckPoint checkpoint)
     {
         Debug.Log("_SaveGame(): "+checkpoint?.name);
-
+        lastCheckpoint = checkpoint;
     }
 }

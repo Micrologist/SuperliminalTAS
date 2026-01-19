@@ -1,3 +1,5 @@
+Level: TestChamber_Live
+Checkpoint: -1
 Move Horizontal,Move Vertical,Look Horizontal,Look Vertical,Jump,Grab,Rotate,Speed
 0,1,180,0,0,0,0,
 0,-1,180,0,0,0,0,

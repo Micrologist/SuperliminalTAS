@@ -144,33 +144,28 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (_recording)
         {
-            if (Input.GetKeyDown(KeyCode.F6)) StopRecording();
+            if (Input.GetKeyDown(KeyCode.F5)) StopRecording();
+            if (Input.GetKeyDown(KeyCode.F7)) TriggerCheckpointReset();
         }
         else if (_playingBack)
         {
-            if (Input.GetKeyDown(KeyCode.F6)) StopPlayback();
+            if (Input.GetKeyDown(KeyCode.F5)) StopPlayback();
         }
         else
         {
             if (Input.GetKeyDown(KeyCode.F5)) StartPlayback();
-            else if (Input.GetKeyDown(KeyCode.F7)) StartRecording();
-        }
+            else if (Input.GetKeyDown(KeyCode.F6)) StartRecording();
+            else if (Input.GetKeyDown(KeyCode.F7)) StartRecordingFromCheckpoint();
 
-        if (!_playingBack && Input.GetKeyDown(KeyCode.F8)) TriggerCheckpointReset();
+            if (Input.GetKeyDown(KeyCode.F12))
+            {
+                WithUnlockedCursor(() => SaveDemo());
+            }
 
-        if (Input.GetKeyDown(KeyCode.F12))
-        {
-            WithUnlockedCursor(() => SaveDemo());
-        }
-
-        if (Input.GetKeyDown(KeyCode.F11))
-        {
-            WithUnlockedCursor(() => OpenDemo());
-        }
-
-        if (Input.GetKeyDown(KeyCode.F10))
-        {
-            WithUnlockedCursor(() => ExportCSV());
+            if (Input.GetKeyDown(KeyCode.F11))
+            {
+                WithUnlockedCursor(() => OpenDemo());
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
@@ -352,10 +347,21 @@ public sealed class DemoRecorder : MonoBehaviour
             $"\nL: {TASInput.GetAxis("Look Horizontal", GameManager.GM.playerInput.GetAxis("Look Horizontal")): 0.000;-0.000} " +
             $"{TASInput.GetAxis("Look Vertical", GameManager.GM.playerInput.GetAxis("Look Vertical")): 0.000;-0.000}";
 
-        _statusText.text += "\n\nF5  - Play\nF6  - Stop\nF7  - Record";
-        _statusText.text += "\nF8  - Checkpoint Reset";
-        _statusText.text += "\nF10 - Export CSV";
-        _statusText.text += "\nF11 - Open\nF12 - Save";
+        // Dynamic keybindings based on state
+        if (_recording)
+        {
+            _statusText.text += "\n\nF5 - Stop\nF7 - Reset CP";
+        }
+        else if (_playingBack)
+        {
+            _statusText.text += "\n\nF5 - Stop";
+        }
+        else
+        {
+            _statusText.text += "\n\nF5  - Play\nF6  - Record\nF7  - Record from CP";
+            _statusText.text += "\nF11 - Open\nF12 - Save";
+        }
+
         _statusText.text += "\n\n+/- - Speed Up/Down";
     }
 
@@ -382,6 +388,37 @@ public sealed class DemoRecorder : MonoBehaviour
             TASInput.StopPlayback();
         }));
     }
+
+    private void StartRecordingFromCheckpoint()
+    {
+        if (_recording || _playingBack || _resetting) return;
+
+        int checkpointId = GetCurrentCheckpointIndex();
+
+        StartCoroutine(ResetLevelStateThen(() =>
+        {
+            // Teleport to the checkpoint first
+            if (checkpointId >= 0)
+            {
+                TeleportToCheckpoint(checkpointId);
+            }
+
+            _data = DemoData.CreateEmpty();
+
+            _data.LevelId = SceneManager.GetActiveScene().name;
+            _data.CheckpointId = checkpointId;
+
+            _recording = true;
+            _playingBack = false;
+            _demoStartFrame = Time.renderedFrameCount;
+
+            TASInput.disablePause = true;
+            TASInput.StopPlayback();
+
+            Debug.Log($"Started recording from checkpoint {checkpointId}");
+        }));
+    }
+
 
     private void StopRecording()
     {
@@ -434,8 +471,6 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
         _playingBack = false;
 
-        ApplyPlaybackSpeed();
-
         TASInput.disablePause = false;
         TASInput.StopPlayback();
     }
@@ -473,37 +508,18 @@ public sealed class DemoRecorder : MonoBehaviour
 
         try
         {
-            if (!path.EndsWith(".slt", StringComparison.OrdinalIgnoreCase))
-                path += ".slt";
-
-            var bytes = DemoSerializer.Serialize(_data);
-            File.WriteAllBytes(path, bytes);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to save demo: {e}");
-        }
-    }
-
-    private void ExportCSV()
-    {
-        if (_data.FrameCount == 0) return;
-
-        var path = _fileDialog.SavePathCSV();
-        if (string.IsNullOrWhiteSpace(path)) return;
-
-        try
-        {
             if (!path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
                 path += ".csv";
 
             var csv = DemoCSVSerializer.Serialize(_data);
             File.WriteAllText(path, csv);
-            Debug.Log($"Exported CSV to: {path}");
+            Debug.Log($"Saved CSV to: {path}");
+
+            _lastOpenedFile = path;
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to export CSV: {e}");
+            Debug.LogError($"Failed to save demo: {e}");
         }
     }
 
@@ -515,33 +531,25 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             var extension = Path.GetExtension(path).ToLowerInvariant();
 
-            if (extension == ".csv")
+            if (extension != ".csv")
             {
-                string csv;
-                using (var fs = new FileStream(
-                    path,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.ReadWrite))
-                using (var sr = new StreamReader(fs))
-                {
-                    csv = sr.ReadToEnd();
-                }
-
-                _data = DemoCSVSerializer.Deserialize(csv);
-                Debug.Log($"Loaded CSV from: {path} ({_data.FrameCount} frames)");
-            }
-            else if (extension == ".slt")
-            {
-                var bytes = File.ReadAllBytes(path);
-                _data = DemoSerializer.Deserialize(bytes);
-                Debug.Log($"Loaded SLT from: {path} ({_data.FrameCount} frames)");
-            }
-            else
-            {
-                Debug.LogError($"Unknown file type: {extension}");
+                Debug.LogError($"Unsupported file type: {extension}. Only CSV files are supported.");
                 return;
             }
+
+            string csv;
+            using (var fs = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite))
+            using (var sr = new StreamReader(fs))
+            {
+                csv = sr.ReadToEnd();
+            }
+
+            _data = DemoCSVSerializer.Deserialize(csv);
+            Debug.Log($"Loaded CSV from: {path} ({_data.FrameCount} frames)");
 
             if (_data.CheckpointId >= 0)
             {
@@ -630,6 +638,25 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             Debug.LogError($"Failed to teleport to checkpoint {checkpointId}: {e}");
         }
+    }
+
+    private int GetCurrentCheckpointIndex()
+    {
+        var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
+        if (saveManager == null) return -1;
+
+        if (SaveGamePatch.lastCheckpoint == null) return -1;
+
+        CheckPoint[] array = global::UnityEngine.Object.FindObjectsOfType<CheckPoint>();
+        RoomOrder roomOrder = global::UnityEngine.Object.FindObjectOfType<RoomOrder>();
+        if (roomOrder)
+        {
+            Array.Sort<CheckPoint>(array, (CheckPoint x, CheckPoint y) => Array.IndexOf<Transform>(roomOrder.TopLevelRoomOrder, x.transform.root).CompareTo(Array.IndexOf<Transform>(roomOrder.TopLevelRoomOrder, y.transform.root)));
+            return Array.IndexOf(array, SaveGamePatch.lastCheckpoint);
+        }
+
+        return -1;
+
     }
 
     #endregion
