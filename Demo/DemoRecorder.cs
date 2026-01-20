@@ -675,6 +675,8 @@ public sealed class DemoRecorder : MonoBehaviour
         _resetting = true;
         TASInput.blockAllInput = true;
 
+        Time.timeScale = 1;
+
         Player player = ReInput.players.GetPlayer(0);
         Player.ControllerHelper controllers = player.controllers;
 
