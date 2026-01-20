@@ -46,6 +46,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         Application.targetFrameRate = 50;
         SceneManager.sceneLoaded += OnLoadDisableFade;
+        SceneManager.sceneLoaded += OnLoadDisableCulling;
     }
 
     private void Update()
@@ -726,6 +727,16 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if(fade != null)
             fade.localScale = Vector3.zero;
+    }
+
+    private void OnLoadDisableCulling(Scene scene, LoadSceneMode mode)
+    {
+        var playerCamera = GameManager.GM.playerCamera;
+        if (playerCamera == null) return;
+
+        playerCamera.cullingMatrix = new Matrix4x4(Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity);
+        playerCamera.GetComponent<CameraSettingsLayer>().enabled = false;
+		playerCamera.farClipPlane = 10000f;
     }
 
     #endregion
