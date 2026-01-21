@@ -1,14 +1,11 @@
-﻿using HarmonyLib;
-using Rewired;
+﻿using Rewired;
 using SuperliminalTAS.Patches;
 using System;
 using System.Collections;
 using System.IO;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Screen = UnityEngine.Screen;
 
 namespace SuperliminalTAS.Demo;
 
@@ -603,9 +600,9 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void OnLoadSetup(Scene scene, LoadSceneMode mode)
     {
-        if(scene.name == "LoadScene15_FinalOneCompletelyNormal")
+        if (scene.name == "LoadScene15_FinalOneCompletelyNormal")
         {
-            if(_playingBack)
+            if (_playingBack)
             {
                 Debug.LogWarning("Level was finished on frame " + CurrentFrame + " with " + (DemoTotalFrames - CurrentFrame - 1) + " frames remaining in the demo.");
             }
@@ -619,7 +616,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var fade = guiCam.transform.Find("Canvas/Fade");
 
-        if(fade != null)
+        if (fade != null)
             fade.localScale = Vector3.zero;
     }
 

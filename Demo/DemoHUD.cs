@@ -18,7 +18,7 @@ namespace SuperliminalTAS.Demo
 
         private readonly Dictionary<string, FieldInfo> _mantleFields = [];
         private readonly Dictionary<string, FieldInfo> _resizeFields = [];
-        
+
         private void Awake()
         {
             SceneManager.sceneLoaded += OnSceneLoadEnsureStatusText;
@@ -86,7 +86,7 @@ namespace SuperliminalTAS.Demo
 
             var gameSpeedString = "";
 
-            if(Application.targetFrameRate != 50)
+            if (Application.targetFrameRate != 50)
             {
                 var timeMult = Application.targetFrameRate / 50.0;
                 gameSpeedString = $"({timeMult:0.00}x)";
@@ -157,10 +157,10 @@ namespace SuperliminalTAS.Demo
             output += $"V {horizontal:0.0000} {playerVel.y:0.0000}\n";
 
             if (_showLess) return output;
-            
+
             var playerScale = player.transform.localScale.x;
             output += $"S {playerScale:0.00000}x\n";
-            
+
             if (!player.TryGetComponent<CharacterMotor>(out var playerMotor)) return output;
 
             var isJumping = playerMotor.jumping.jumping;
@@ -176,7 +176,7 @@ namespace SuperliminalTAS.Demo
             int jumpsWithout = (int)_mantleFields["playerJumpedWithoutMantle"].GetValue(playerMantle);
             var groundedTime = Time.time - playerMantle.playerMSC.onGroundTime;
             var mantleResetCD = Mathf.Max(0.1f - groundedTime, 0f);
-            
+
             output += $"M {mantling} {staying} {canMantle} {jumpsWithout} {mantleResetCD:0.00}\n";
 
             return output;
@@ -187,13 +187,13 @@ namespace SuperliminalTAS.Demo
             var output = "";
 
             var playerCamera = GameManager.GM.playerCamera;
-            if (playerCamera == null || !playerCamera.TryGetComponent<ResizeScript>(out var resizeScript)) 
+            if (playerCamera == null || !playerCamera.TryGetComponent<ResizeScript>(out var resizeScript))
                 return output;
 
             var grabbedObject = resizeScript.GetGrabbedObject();
             //var isLerping = (bool)_resizeFields["isLerpingToPosition"].GetValue(resizeScript);
 
-            if(grabbedObject != null)
+            if (grabbedObject != null)
             {
                 output += $"G {resizeScript.isGrabbing} {resizeScript.isReadyToGrab}\n";
 
@@ -203,7 +203,7 @@ namespace SuperliminalTAS.Demo
                 var objectScale = grabbedObject.transform.localScale.x;
                 float objectMinScale;
 
-                if(resizeScript.isGrabbing)
+                if (resizeScript.isGrabbing)
                 {
                     objectMinScale = ((Vector3)(_resizeFields["scaleAtMinDistance"].GetValue(resizeScript))).x;
                 }
@@ -224,7 +224,7 @@ namespace SuperliminalTAS.Demo
                 var objectRot = grabbedObject.transform.rotation.eulerAngles;
                 output += $"R {objectRot.x:0.0000} {objectRot.y:0.0000} {objectRot.z:0.0000}\n";
             }
-           
+
 
             return output;
         }

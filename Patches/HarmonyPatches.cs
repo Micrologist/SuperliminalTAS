@@ -1,7 +1,4 @@
 ﻿using HarmonyLib;
-using System;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -150,7 +147,7 @@ public class LerpPlayerMantlePatch
 {
     static void Prefix()
     {
-        Debug.Log(Time.time +": LerpPlayer()");
+        Debug.Log(Time.time + ": LerpPlayer()");
     }
 }
 
