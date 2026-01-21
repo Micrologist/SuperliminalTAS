@@ -16,5 +16,6 @@ public class SuperliminalTASPlugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
         TimeManagerPatcher.Patch(Process.GetCurrentProcess());
         this.gameObject.AddComponent<DemoRecorder>();
+        this.gameObject.AddComponent<DemoHUD>();
     }
 }
