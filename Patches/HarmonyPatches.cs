@@ -1,7 +1,4 @@
 ﻿using HarmonyLib;
-using System;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -150,7 +147,7 @@ public class LerpPlayerMantlePatch
 {
     static void Prefix()
     {
-        Debug.Log("LerpPlayer()");
+        Debug.Log(Time.time + ": LerpPlayer()");
     }
 }
 
@@ -161,7 +158,7 @@ public class SaveGamePatch
 
     static void Prefix(CheckPoint checkpoint)
     {
-        Debug.Log("_SaveGame(): "+checkpoint?.name);
+        Debug.Log(Time.time + ": _SaveGame()" + checkpoint?.name);
         lastCheckpoint = checkpoint;
     }
 }
@@ -173,5 +170,15 @@ public class TimeTimePatch
     static void Postfix(ref float __result)
     {
         __result = Time.timeSinceLevelLoad;
+    }
+}
+
+[HarmonyPatch(typeof(LevelInformation), nameof(LevelInformation.GetLoadingSceneIndex))]
+[HarmonyPatch([typeof(string), typeof(int)])]
+public class LoadingScenePatch
+{
+    static void Prefix(string scenePath, ref int? debugOverride)
+    {
+        debugOverride = -1;
     }
 }
