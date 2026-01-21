@@ -28,11 +28,9 @@ public sealed class DemoRecorder : MonoBehaviour
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 };
     private int _playbackSpeedIndex = 5; // Start at 50 FPS (1x speed)
 
-    // Track if we're using a custom speed from CSV
     private bool _usingCustomSpeed;
     private float _customSpeedMultiplier = 1f;
 
-    private Text _statusText;
     private DemoData _data;
     private DemoFileDialog _fileDialog;
     private string _lastOpenedFile;
@@ -618,16 +616,6 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (fade != null)
             fade.localScale = Vector3.zero;
-    }
-
-    private void OnLoadDisableCulling(Scene scene, LoadSceneMode mode)
-    {
-        var playerCamera = GameManager.GM.playerCamera;
-        if (playerCamera == null) return;
-
-        playerCamera.cullingMatrix = new Matrix4x4(Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity);
-        playerCamera.GetComponent<CameraSettingsLayer>().enabled = false;
-		playerCamera.farClipPlane = 10000f;
     }
 
     #endregion
