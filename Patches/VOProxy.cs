@@ -16,7 +16,7 @@ internal static class VOProxy
         ["VoiceTrigger_Current_13E"] = 716, // 14.32s
     };
 
-    public static Dictionary<string, int> VoicelineEndFrames = [];
+    public static readonly Dictionary<string, int> VoicelineEndFrames = new();
 }
 
 [HarmonyPatch(typeof(MOSTEventVOPlayer), "StartVOandSubtitles")]

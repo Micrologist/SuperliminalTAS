@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,9 +14,13 @@ namespace SuperliminalTAS.Demo
 {
     class DemoHUD : MonoBehaviour
     {
+        private const float FRAME_TIME = 0.02f; // 1/50 seconds
+        private const int TARGET_FPS = 50;
+
         private Text _hudText;
         private DemoRecorder _recorder;
         private bool _showLess = true;
+        private readonly StringBuilder _hudBuilder = new StringBuilder(1024);
 
         private readonly Dictionary<string, FieldInfo> _mantleFields = [];
         private readonly Dictionary<string, FieldInfo> _resizeFields = [];
@@ -42,9 +47,6 @@ namespace SuperliminalTAS.Demo
         {
             if (_hudText != null) return;
 
-            //var mainCanvas = GameObject.Find("UI_PAUSE_MENU")?.transform.Find("Canvas");
-            //if (mainCanvas == null) return;
-
             _hudText = CreateStatusText(
                 parent: gameObject.transform,
                 fontName: "NotoMono-Regular",
@@ -63,112 +65,113 @@ namespace SuperliminalTAS.Demo
 
             _recorder = DemoRecorder.Instance;
 
-            var hudLines = "";
+            _hudBuilder.Clear();
 
-            hudLines += GetPlaybackLines() + "\n";
-            hudLines += GetInputLines() + "\n";
-            hudLines += GetPlayerLines() + "\n";
-            hudLines += GetObjectLines() + "\n";
-            hudLines += GetHotkeyLines() + "\n";
+            GetPlaybackLines(_hudBuilder);
+            _hudBuilder.Append('\n');
+            GetInputLines(_hudBuilder);
+            _hudBuilder.Append('\n');
+            GetPlayerLines(_hudBuilder);
+            _hudBuilder.Append('\n');
+            GetObjectLines(_hudBuilder);
+            _hudBuilder.Append('\n');
+            GetHotkeyLines(_hudBuilder);
+            _hudBuilder.Append('\n');
 
-            _hudText.text = hudLines;
+            _hudText.text = _hudBuilder.ToString();
         }
 
-        private string GetPlaybackLines()
+        private void GetPlaybackLines(StringBuilder sb)
         {
-            var output = "";
-
             // For IGT consistency: The speedrun timer increases on the first frame
-            var currentTime = TimeSpan.FromSeconds((_recorder.CurrentFrame + 1) * 0.02);
-            var totalTime = TimeSpan.FromSeconds((_recorder.DemoTotalFrames + 1) * 0.02);
+            var currentTime = TimeSpan.FromSeconds((_recorder.CurrentFrame + 1) * FRAME_TIME);
+            var totalTime = TimeSpan.FromSeconds((_recorder.DemoTotalFrames + 1) * FRAME_TIME);
 
             var currentTimeString = currentTime.ToString(@"mm\:ss\.ff");
             var totalTimeString = totalTime.ToString(@"mm\:ss\.ff");
 
             var gameSpeedString = "";
 
-            if (Application.targetFrameRate != 50)
+            if (Application.targetFrameRate != TARGET_FPS)
             {
-                var timeMult = Application.targetFrameRate / 50.0;
+                var timeMult = Application.targetFrameRate / (double)TARGET_FPS;
                 gameSpeedString = $"{timeMult:0.00}x";
             }
 
             switch (_recorder.State)
             {
                 case PlaybackState.Stopped:
-                    output += $"00:00.00 / {totalTimeString} ■ {gameSpeedString}\n";
+                    sb.Append($"00:00.00 / {totalTimeString} ■ {gameSpeedString}\n");
                     break;
                 case PlaybackState.Playing:
-                    output += $"{currentTimeString} / {totalTimeString} ▶ {gameSpeedString}\n";
+                    sb.Append($"{currentTimeString} / {totalTimeString} ▶ {gameSpeedString}\n");
                     break;
                 case PlaybackState.Recording:
-                    output += $"{currentTimeString} ● {gameSpeedString}\n";
+                    sb.Append($"{currentTimeString} ● {gameSpeedString}\n");
                     break;
             }
 
-            output += _recorder.State == PlaybackState.Stopped ? "0" : _recorder.CurrentFrame;
-            if (_showLess) return output+"\n";
-            output += " / " + _recorder.DemoTotalFrames;
-            output += " " + Time.time.ToString("0.00") + " " + Time.renderedFrameCount + "\n";
-
-            return output;
+            sb.Append(_recorder.State == PlaybackState.Stopped ? "0" : _recorder.CurrentFrame.ToString());
+            if (_showLess)
+            {
+                sb.Append('\n');
+                return;
+            }
+            sb.Append(" / ").Append(_recorder.DemoTotalFrames);
+            sb.Append(' ').Append(Time.time.ToString("0.00")).Append(' ').Append(Time.renderedFrameCount).Append('\n');
         }
 
-        private string GetInputLines()
+        private void GetInputLines(StringBuilder sb)
         {
-            var output = "";
             var playerInput = GameManager.GM.playerInput;
 
-            if (playerInput == null) return output;
+            if (playerInput == null) return;
 
             var moveH = playerInput.GetAxis("Move Horizontal");
             var moveV = playerInput.GetAxis("Move Vertical");
-            output += $"M {moveV:0.000} {moveH:0.000}\n";
+            sb.Append($"M {moveV:0.000} {moveH:0.000}\n");
 
             var lookH = GameManager.GM.playerInput.GetAxis("Look Horizontal");
             var lookV = GameManager.GM.playerInput.GetAxis("Look Vertical");
-            output += $"L {lookH:000.000} {lookV:000.000}\n";
+            sb.Append($"L {lookH:000.000} {lookV:000.000}\n");
 
-            output += "B ";
-            if (playerInput.GetButton("Jump")) output += "Jump ";
-            if (playerInput.GetButton("Grab")) output += "Grab ";
-            if (playerInput.GetButton("Rotate")) output += "Rotate ";
-            output += "\n";
-
-            return output;
+            sb.Append("B ");
+            if (playerInput.GetButton("Jump")) sb.Append("Jump ");
+            if (playerInput.GetButton("Grab")) sb.Append("Grab ");
+            if (playerInput.GetButton("Rotate")) sb.Append("Rotate ");
+            sb.Append('\n');
         }
 
-        private string GetPlayerLines()
+        private void GetPlayerLines(StringBuilder sb)
         {
-            var output = "";
             var player = GameManager.GM.player;
 
-            if (player == null) return output;
+            if (player == null) return;
 
             var playerPos = player.transform.position;
-            output += $"P {playerPos.x:0.0000} {playerPos.y:0.0000} {playerPos.z:0.0000}\n";
+            sb.Append($"P {playerPos.x:0.0000} {playerPos.y:0.0000} {playerPos.z:0.0000}\n");
 
             var playerRotH = player.transform.rotation.eulerAngles.y;
             var playerRotV = GameManager.GM.playerCamera.transform.rotation.eulerAngles.x;
-            output += $"R {playerRotH:000.00000} {playerRotV:000.00000}\n";
+            sb.Append($"R {playerRotH:000.00000} {playerRotV:000.00000}\n");
 
             var playerVel = player.GetComponent<CharacterController>().velocity;
             double horizontal = Math.Sqrt((playerVel.x * playerVel.x) + (playerVel.z * playerVel.z));
-            output += $"V {horizontal:0.0000} {playerVel.y:0.0000}\n";
+            sb.Append($"V {horizontal:0.0000} {playerVel.y:0.0000}\n");
 
-            if (_showLess) return output;
+            if (_showLess) return;
 
             var playerScale = player.transform.localScale.x;
-            output += $"S {playerScale:0.00000}x\n";
+            sb.Append($"S {playerScale:0.00000}x\n");
 
-            if (!player.TryGetComponent<CharacterMotor>(out var playerMotor)) return output;
+            if (!player.TryGetComponent<CharacterMotor>(out var playerMotor)) return;
 
             var isJumping = playerMotor.jumping.jumping;
             var jumpCd = playerMotor.timeOnGroundBeforeCanJump;
-            output += $"\nJ {playerMotor.grounded} {isJumping} {jumpCd:0.00}\n";
+            sb.Append($"\nJ {playerMotor.grounded} {isJumping} {jumpCd:0.00}\n");
 
             var playerMantle = player.GetComponentInChildren<PlayerLerpMantle>();
-            if (playerMantle == null) return output;
+            if (playerMantle == null) return;
 
             bool mantling = (bool)_mantleFields["currentlyMantling"].GetValue(playerMantle);
             bool staying = (bool)_mantleFields["staying"].GetValue(playerMantle);
@@ -177,27 +180,22 @@ namespace SuperliminalTAS.Demo
             var groundedTime = Time.time - playerMantle.playerMSC.onGroundTime;
             var mantleResetCD = Mathf.Max(0.1f - groundedTime, 0f);
 
-            output += $"M {mantling} {staying} {canMantle} {jumpsWithout} {mantleResetCD:0.00}\n";
-
-            return output;
+            sb.Append($"M {mantling} {staying} {canMantle} {jumpsWithout} {mantleResetCD:0.00}\n");
         }
 
-        private string GetObjectLines()
+        private void GetObjectLines(StringBuilder sb)
         {
-            var output = "";
-
             var player = GameManager.GM.player;
             var playerCamera = GameManager.GM.playerCamera;
 
             if (playerCamera == null || !playerCamera.TryGetComponent<ResizeScript>(out var resizeScript))
-                return output;
+                return;
 
             var grabbedObject = resizeScript.GetGrabbedObject();
-            //var isLerping = (bool)_resizeFields["isLerpingToPosition"].GetValue(resizeScript);
 
             if (grabbedObject != null)
             {
-                output += $"G {resizeScript.isGrabbing} {resizeScript.isReadyToGrab}\n";
+                sb.Append($"G {resizeScript.isGrabbing} {resizeScript.isReadyToGrab}\n");
 
                 var objectDir = grabbedObject.transform.position - resizeScript.transform.position;
                 var objectDistance = objectDir.magnitude;
@@ -216,21 +214,21 @@ namespace SuperliminalTAS.Demo
                     objectMinScale = objectScale * scaleRatio;
                 }
 
-                output += $"S {objectMinScale:0.0000}x {objectScale:0.0000}x";
+                sb.Append($"S {objectMinScale:0.0000}x {objectScale:0.0000}x");
 
                 if (_showLess)
                 {
-                    output += "\n";
+                    sb.Append('\n');
                 }
                 else
                 {
-                    output += $" {objectDistance:0.000}\n";
+                    sb.Append($" {objectDistance:0.000}\n");
 
                     var objectPos = grabbedObject.transform.position;
-                    output += $"P {objectPos.x:0.0000} {objectPos.y:0.0000} {objectPos.z:0.0000}\n";
+                    sb.Append($"P {objectPos.x:0.0000} {objectPos.y:0.0000} {objectPos.z:0.0000}\n");
 
                     var objectRot = grabbedObject.transform.rotation.eulerAngles;
-                    output += $"R {objectRot.x:0.0000} {objectRot.y:0.0000} {objectRot.z:0.0000}\n";
+                    sb.Append($"R {objectRot.x:0.0000} {objectRot.y:0.0000} {objectRot.z:0.0000}\n");
                 }
 
                 if (grabbedObject.GetComponent<Collider>() != null)
@@ -245,43 +243,39 @@ namespace SuperliminalTAS.Demo
                         Vector3 warpPrediction = player.transform.position + direction * distance;
                         if (distance > 5)
                         {
-                            output += "W " + warpPrediction.x.ToString("0.0") + ", " + warpPrediction.y.ToString("0.0") + ", " + warpPrediction.z.ToString("0.0") + " (" + distance.ToString("0.0") + ")\n";
+                            sb.Append("W ").Append(warpPrediction.x.ToString("0.0")).Append(", ")
+                              .Append(warpPrediction.y.ToString("0.0")).Append(", ")
+                              .Append(warpPrediction.z.ToString("0.0")).Append(" (")
+                              .Append(distance.ToString("0.0")).Append(")\n");
                         }
                     }
                 }
             }
-
-
-            return output;
         }
 
-        private string GetHotkeyLines()
+        private void GetHotkeyLines(StringBuilder sb)
         {
-            var output = "";
-
             var detailString = _showLess ? "Show More" : "Show Less";
 
-            output += "F1  - " + detailString + "\n";
+            sb.Append("F1  - ").Append(detailString).Append('\n');
 
-            if (_showLess) return output;
+            if (_showLess) return;
 
             switch (DemoRecorder.Instance.State)
             {
                 case PlaybackState.Recording:
-                    output += "F5  - Stop\nF7  - Reset CP\n";
+                    sb.Append("F5  - Stop\nF7  - Reset CP\n");
                     break;
                 case PlaybackState.Playing:
-                    output += "F5  - Stop\n";
+                    sb.Append("F5  - Stop\n");
                     break;
                 case PlaybackState.Stopped:
-                    output += "F5  - Play\nF6  - Record\nF7  - Record from CP\n";
-                    output += "F11 - Open\nF12 - Save\n";
+                    sb.Append("F5  - Play\nF6  - Record\nF7  - Record from CP\n");
+                    sb.Append("F11 - Open\nF12 - Save\n");
                     break;
             }
 
-            output += "+/- - Speed Up/Down";
-
-            return output;
+            sb.Append("+/- - Speed Up/Down");
         }
 
         public static Text CreateStatusText(

@@ -11,7 +11,7 @@ internal static class TimeManagerPatcher
         var unityPlayerPtr = IntPtr.Zero;
         foreach (ProcessModule module in proc.Modules)
         {
-            if (module.FileName.Contains("UnityPlayer"))
+            if (module.FileName.Contains("UnityPlayer", StringComparison.OrdinalIgnoreCase))
             {
                 unityPlayerPtr = module.BaseAddress;
             }

@@ -11,6 +11,12 @@ namespace SuperliminalTAS.Demo;
 
 public sealed class DemoRecorder : MonoBehaviour
 {
+    // Constants
+    private const int TARGET_FPS = 50;
+    private const float FRAME_TIME = 0.02f; // 1/50 seconds
+    private const float FILE_CHECK_INTERVAL = 0.5f; // Check file changes every 500ms
+    private const int DEFAULT_PLAYBACK_SPEED_INDEX = 5; // 50 FPS (1x speed)
+
     public static DemoRecorder Instance { get; private set; }
 
     public PlaybackState State => _recording ? PlaybackState.Recording : _playingBack ? PlaybackState.Playing : PlaybackState.Stopped;
@@ -26,7 +32,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
     // Available playback speeds in FPS (base game is 50 FPS)
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 };
-    private int _playbackSpeedIndex = 5; // Start at 50 FPS (1x speed)
+    private int _playbackSpeedIndex = DEFAULT_PLAYBACK_SPEED_INDEX;
 
     private bool _usingCustomSpeed;
     private float _customSpeedMultiplier = 1f;
@@ -35,6 +41,12 @@ public sealed class DemoRecorder : MonoBehaviour
     private DemoFileDialog _fileDialog;
     private string _lastOpenedFile;
     private DateTime _lastFileWriteTime;
+    private float _fileCheckCooldown = 0f;
+
+    // Checkpoint caching
+    private CheckPoint[] _cachedCheckpoints;
+    private RoomOrder _cachedRoomOrder;
+    private string _lastSceneName;
 
     private void Awake()
     {
@@ -43,7 +55,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         DemoRecorder.Instance = this;
 
-        Application.targetFrameRate = 50;
+        Application.targetFrameRate = TARGET_FPS;
         SceneManager.sceneLoaded += OnLoadSetup;
     }
 
@@ -57,7 +69,13 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         _lastUpdateWasFixed = false;
 
-        CheckForFileChanges();
+        // Throttle file checking to reduce filesystem calls
+        _fileCheckCooldown -= Time.deltaTime;
+        if (_fileCheckCooldown <= 0f)
+        {
+            CheckForFileChanges();
+            _fileCheckCooldown = FILE_CHECK_INTERVAL;
+        }
     }
 
     private void FixedUpdate()
@@ -216,7 +234,7 @@ public sealed class DemoRecorder : MonoBehaviour
     private void StopRecording()
     {
         TASInput.disablePause = false;
-        _playbackSpeedIndex = 5;
+        _playbackSpeedIndex = DEFAULT_PLAYBACK_SPEED_INDEX;
         ApplyPlaybackSpeed();
         _recording = false;
     }
@@ -266,7 +284,7 @@ public sealed class DemoRecorder : MonoBehaviour
         _recording = false;
         _playingBack = false;
 
-        _playbackSpeedIndex = 5;
+        _playbackSpeedIndex = DEFAULT_PLAYBACK_SPEED_INDEX;
         ApplyPlaybackSpeed();
 
         TASInput.disablePause = false;
@@ -295,12 +313,12 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void ApplyPlaybackSpeed()
     {
-        ApplySpeed(PlaybackSpeeds[_playbackSpeedIndex] / 50f);
+        ApplySpeed(PlaybackSpeeds[_playbackSpeedIndex] / (float)TARGET_FPS);
     }
 
     private void ApplySpeed(float multiplier)
     {
-        int targetFps = Mathf.RoundToInt(50f * multiplier);
+        int targetFps = Mathf.RoundToInt(TARGET_FPS * multiplier);
         targetFps = Mathf.Max(1, targetFps);
         Application.targetFrameRate = targetFps;
 
@@ -319,7 +337,7 @@ public sealed class DemoRecorder : MonoBehaviour
             playerCamera.farClipPlane = .1f;
             playerCamera.ResetCullingMatrix();
         }
-        else if (Application.targetFrameRate <= 50)
+        else if (Application.targetFrameRate <= TARGET_FPS)
         {
             playerCamera.cullingMatrix = new Matrix4x4(Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity);
             playerCamera.farClipPlane = 100000f;
@@ -532,16 +550,27 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (SaveGamePatch.lastCheckpoint == null) return -1;
 
-        CheckPoint[] array = global::UnityEngine.Object.FindObjectsOfType<CheckPoint>();
-        RoomOrder roomOrder = global::UnityEngine.Object.FindObjectOfType<RoomOrder>();
-        if (roomOrder)
+        // Use cached checkpoint array to avoid expensive FindObjectsOfType calls
+        if (_cachedCheckpoints == null || SceneManager.GetActiveScene().name != _lastSceneName)
         {
-            Array.Sort<CheckPoint>(array, (CheckPoint x, CheckPoint y) => Array.IndexOf<Transform>(roomOrder.TopLevelRoomOrder, x.transform.root).CompareTo(Array.IndexOf<Transform>(roomOrder.TopLevelRoomOrder, y.transform.root)));
-            return Array.IndexOf(array, SaveGamePatch.lastCheckpoint);
+            _cachedCheckpoints = global::UnityEngine.Object.FindObjectsOfType<CheckPoint>();
+            _cachedRoomOrder = global::UnityEngine.Object.FindObjectOfType<RoomOrder>();
+            _lastSceneName = SceneManager.GetActiveScene().name;
+
+            if (_cachedRoomOrder != null)
+            {
+                Array.Sort<CheckPoint>(_cachedCheckpoints, (CheckPoint x, CheckPoint y) =>
+                    Array.IndexOf<Transform>(_cachedRoomOrder.TopLevelRoomOrder, x.transform.root)
+                    .CompareTo(Array.IndexOf<Transform>(_cachedRoomOrder.TopLevelRoomOrder, y.transform.root)));
+            }
+        }
+
+        if (_cachedRoomOrder != null)
+        {
+            return Array.IndexOf(_cachedCheckpoints, SaveGamePatch.lastCheckpoint);
         }
 
         return -1;
-
     }
 
     #endregion
@@ -598,6 +627,11 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void OnLoadSetup(Scene scene, LoadSceneMode mode)
     {
+        // Invalidate checkpoint cache on scene change
+        _lastSceneName = scene.name;
+        _cachedCheckpoints = null;
+        _cachedRoomOrder = null;
+
         if (scene.name != _data.LevelId)
         {
             if (_playingBack)
