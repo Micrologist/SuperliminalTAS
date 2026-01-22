@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Rewired;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,7 +90,7 @@ namespace SuperliminalTAS.Demo
             if (Application.targetFrameRate != 50)
             {
                 var timeMult = Application.targetFrameRate / 50.0;
-                gameSpeedString = $"({timeMult:0.00}x)";
+                gameSpeedString = $"{timeMult:0.00}x";
             }
 
             switch (_recorder.State)
@@ -101,13 +102,12 @@ namespace SuperliminalTAS.Demo
                     output += $"{currentTimeString} / {totalTimeString} ▶ {gameSpeedString}\n";
                     break;
                 case PlaybackState.Recording:
-                    output += $"{currentTimeString} ● ({gameSpeedString})\n";
+                    output += $"{currentTimeString} ● {gameSpeedString}\n";
                     break;
             }
 
-            if (_showLess) return output;
-
             output += _recorder.State == PlaybackState.Stopped ? "0" : _recorder.CurrentFrame;
+            if (_showLess) return output+"\n";
             output += " / " + _recorder.DemoTotalFrames;
             output += " " + Time.time.ToString("0.00") + " " + Time.renderedFrameCount + "\n";
 
@@ -186,7 +186,9 @@ namespace SuperliminalTAS.Demo
         {
             var output = "";
 
+            var player = GameManager.GM.player;
             var playerCamera = GameManager.GM.playerCamera;
+
             if (playerCamera == null || !playerCamera.TryGetComponent<ResizeScript>(out var resizeScript))
                 return output;
 
@@ -214,15 +216,39 @@ namespace SuperliminalTAS.Demo
                     objectMinScale = objectScale * scaleRatio;
                 }
 
-                output += $"S {objectMinScale:0.0000}x {objectScale:0.0000}x\n";
+                output += $"S {objectMinScale:0.0000}x {objectScale:0.0000}x";
 
-                if (_showLess) return output;
+                if (_showLess)
+                {
+                    output += "\n";
+                }
+                else
+                {
+                    output += $" {objectDistance:0.000}\n";
 
-                var objectPos = grabbedObject.transform.position;
-                output += $"P {objectPos.x:0.0000} {objectPos.y:0.0000} {objectPos.z:0.0000}\n";
+                    var objectPos = grabbedObject.transform.position;
+                    output += $"P {objectPos.x:0.0000} {objectPos.y:0.0000} {objectPos.z:0.0000}\n";
 
-                var objectRot = grabbedObject.transform.rotation.eulerAngles;
-                output += $"R {objectRot.x:0.0000} {objectRot.y:0.0000} {objectRot.z:0.0000}\n";
+                    var objectRot = grabbedObject.transform.rotation.eulerAngles;
+                    output += $"R {objectRot.x:0.0000} {objectRot.y:0.0000} {objectRot.z:0.0000}\n";
+                }
+
+                if (grabbedObject.GetComponent<Collider>() != null)
+                {
+                    Collider playerCollider = player.GetComponent<Collider>();
+                    Collider objectCollider = grabbedObject.GetComponent<Collider>();
+                    if (
+                        Physics.ComputePenetration(playerCollider, playerCollider.transform.position, playerCollider.transform.rotation,
+                            objectCollider, objectCollider.transform.position, objectCollider.transform.rotation,
+                            out Vector3 direction, out float distance))
+                    {
+                        Vector3 warpPrediction = player.transform.position + direction * distance;
+                        if (distance > 5)
+                        {
+                            output += "W " + warpPrediction.x.ToString("0.0") + ", " + warpPrediction.y.ToString("0.0") + ", " + warpPrediction.z.ToString("0.0") + " (" + distance.ToString("0.0") + ")\n";
+                        }
+                    }
+                }
             }
 
 

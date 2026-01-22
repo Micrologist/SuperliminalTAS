@@ -332,16 +332,16 @@ public sealed class DemoRecorder : MonoBehaviour
     }
 
     internal bool GetRecordedButton(string actionName) =>
-        _data.GetButton(actionName, CurrentFrame);
+        _data.GetButton(actionName, Math.Min(CurrentFrame, _data.FrameCount -1));
 
     internal bool GetRecordedButtonDown(string actionName) =>
-        _data.GetButtonDown(actionName, CurrentFrame);
+        _data.GetButtonDown(actionName, Math.Min(CurrentFrame, _data.FrameCount - 1));
 
     internal bool GetRecordedButtonUp(string actionName) =>
-        _data.GetButtonUp(actionName, CurrentFrame);
+        _data.GetButtonUp(actionName, Math.Min(CurrentFrame, _data.FrameCount - 1));
 
     internal float GetRecordedAxis(string actionName) =>
-        _data.GetAxis(actionName, CurrentFrame);
+        _data.GetAxis(actionName, Math.Min(CurrentFrame, _data.FrameCount - 1));
 
     #endregion
 
@@ -598,11 +598,12 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void OnLoadSetup(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "LoadScene15_FinalOneCompletelyNormal")
+        if (scene.name != _data.LevelId)
         {
             if (_playingBack)
             {
                 Debug.LogWarning("Level was finished on frame " + CurrentFrame + " with " + (DemoTotalFrames - CurrentFrame - 1) + " frames remaining in the demo.");
+                StopPlayback();
             }
         }
 
