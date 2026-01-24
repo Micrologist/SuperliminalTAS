@@ -747,6 +747,8 @@ public sealed class DemoRecorder : MonoBehaviour
             }
         }
 
+        SetTriggerBoxMaterial();
+
         ApplyPlaybackSpeed();
         SetGizmos();
 
@@ -762,8 +764,46 @@ public sealed class DemoRecorder : MonoBehaviour
             fade.localScale = Vector3.zero;
     }
 
+    private void SetTriggerBoxMaterial()
+    {
+        Material mat = new Material(Shader.Find("Standard"));
+
+        // Set rendering mode to transparent
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        mat.DisableKeyword("_ALPHATEST_ON");
+        mat.EnableKeyword("_ALPHABLEND_ON");
+        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        mat.renderQueue = 3000;
+
+        var color = UnityEngine.Color.yellow;
+        color.a = 0.15f;
+        mat.color = color;
+
+        mat.EnableKeyword("_EMISSION");
+        mat.SetColor("_EmissionColor", color);
+
+        var objs = GameObject.FindGameObjectsWithTag("_Interactive");
+
+        foreach (var obj in objs)
+        {
+
+            foreach (var renderer in obj.GetComponentsInChildren<MeshRenderer>())
+            {
+
+                if (renderer.gameObject.layer == LayerMask.NameToLayer("NoClipCamera"))
+                {
+
+                    renderer.material = mat;
+                }
+            }
+        }
+    }
+
     #endregion
 }
+
 
 public enum PlaybackState
 {

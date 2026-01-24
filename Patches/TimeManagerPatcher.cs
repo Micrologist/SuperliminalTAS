@@ -16,7 +16,7 @@ internal static class TimeManagerPatcher
                 unityPlayerPtr = module.BaseAddress;
             }
         }
-
+        
         // This nasty hack will convince the TimeManager that Time.fixedTimeStep amount of time has elapsed
         // between the previous frame and this frame.
         // Effectively this should (and in most cases does!) force Unity to run Update() and FixedUpdate() in perfect sync.

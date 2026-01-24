@@ -227,3 +227,14 @@ public class GBKinematicPatch
         //Debug.Log($"{Time.time}: {__instance.gameObject.name} isKinematic set to {value}");
     }
 }
+
+[HarmonyPatch(typeof(WarningController), "Start")]
+public class WarningScreenPatch
+{
+    static void Prefix()
+    {
+        var showedWarningField = AccessTools.Field(typeof(WarningController), "ShowedWarning");
+
+        showedWarningField.SetValue(null, true);
+    }
+}
