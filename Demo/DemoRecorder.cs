@@ -58,6 +58,16 @@ public sealed class DemoRecorder : MonoBehaviour
 
         Application.targetFrameRate = 50;
         SceneManager.sceneLoaded += OnLoadSetup;
+        SceneManager.sceneUnloaded += OnUnloadCleanUp;
+    }
+
+    private void OnUnloadCleanUp(Scene arg0)
+    {
+        if(GameManager.GM.TryGetComponent<LevelJumpingScript>(out var jumpingScript) && jumpingScript.noClip)
+        {
+            Destroy(jumpingScript.instanceCameraNoClip);
+            jumpingScript.noClip = false;
+        }
     }
 
     private void Update()
