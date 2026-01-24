@@ -158,7 +158,7 @@ public class SaveGamePatch
 
     static void Prefix(CheckPoint checkpoint)
     {
-        Debug.Log(Time.time + ": _SaveGame()" + checkpoint?.name);
+        Debug.Log(Time.time + ": _SaveGame() " + checkpoint?.name);
         lastCheckpoint = checkpoint;
     }
 }
@@ -180,5 +180,50 @@ public class LoadingScenePatch
     static void Prefix(string scenePath, ref int? debugOverride)
     {
         debugOverride = -1;
+    }
+}
+
+[HarmonyPatch(typeof(FMODUnity.StudioEventEmitter),"OnEnable")]
+public class EventEmitterPlayPatch
+{
+    static void Prefix(FMODUnity.StudioEventEmitter __instance)
+    {
+        if(__instance.name == "AlarmSound")
+        {
+            GameObject.Destroy(__instance.gameObject);
+        }
+        return;
+    }
+}
+
+[HarmonyPatch(typeof(UnityEngine.Collider), nameof(UnityEngine.Collider.enabled))]
+[HarmonyPatch(MethodType.Setter)]
+public class ColliderEnabledPatch
+{
+    static void Prefix(ref bool value, UnityEngine.Collider __instance)
+    {
+        var name = __instance.gameObject.name;
+        if (name == "SecretTriggerObject") return;
+        //Debug.Log($"{Time.time}: {name} collider enabled set to {value}");
+    }
+}
+
+[HarmonyPatch(typeof(UnityEngine.Collider), nameof(UnityEngine.Collider.isTrigger))]
+[HarmonyPatch(MethodType.Setter)]
+public class ColliderIsTriggerPatch
+{
+    static void Prefix(ref bool value, UnityEngine.Collider __instance)
+    {
+        //Debug.Log($"{Time.time}: {__instance.gameObject.name} isTrigger set to {value}");
+    }
+}
+
+[HarmonyPatch(typeof(UnityEngine.Rigidbody), nameof(UnityEngine.Rigidbody.isKinematic))]
+[HarmonyPatch(MethodType.Setter)]
+public class GBKinematicPatch
+{
+    static void Prefix(ref bool value, UnityEngine.Rigidbody __instance)
+    {
+        //Debug.Log($"{Time.time}: {__instance.gameObject.name} isKinematic set to {value}");
     }
 }

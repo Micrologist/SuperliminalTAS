@@ -1,8 +1,11 @@
-﻿using Rewired;
+﻿using HarmonyLib;
+using Rewired;
 using SuperliminalTAS.Patches;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -28,13 +31,23 @@ public sealed class DemoRecorder : MonoBehaviour
     private static readonly int[] PlaybackSpeeds = { 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 };
     private int _playbackSpeedIndex = 5; // Start at 50 FPS (1x speed)
 
+    private bool _unlimitedRenderDistance = false;
+    private bool _showGizmos = false;
+
     private bool _usingCustomSpeed;
     private float _customSpeedMultiplier = 1f;
+
+    private PathProjector _pathProjector;
 
     private DemoData _data;
     private DemoFileDialog _fileDialog;
     private string _lastOpenedFile;
     private DateTime _lastFileWriteTime;
+
+    private MethodInfo _createNoClipCamera;
+    private MethodInfo _endNoClip;
+
+    private readonly List<ColliderVisualizer> _colliders = [];
 
     private void Awake()
     {
@@ -51,7 +64,7 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (!_lastUpdateWasFixed && (_recording || _playingBack) && Time.timeSinceLevelLoad > float.Epsilon)
         {
-            Debug.Log(Time.timeSinceLevelLoad + ": Double Update() during recording/playback, aborting!");
+            Debug.LogError(Time.timeSinceLevelLoad + ": Double Update() during recording/playback, aborting!");
             StopPlayback();
             StopRecording();
         }
@@ -63,7 +76,7 @@ public sealed class DemoRecorder : MonoBehaviour
     private void FixedUpdate()
     {
         if (_lastUpdateWasFixed && _recording && _playingBack)
-            Debug.Log(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
+            Debug.LogError(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
 
         _lastUpdateWasFixed = true;
     }
@@ -83,7 +96,7 @@ public sealed class DemoRecorder : MonoBehaviour
             // Check for checkpoint reset at current frame
             if (_data.GetCheckpointReset(CurrentFrame))
             {
-                Debug.Log($"Checkpoint reset triggered at frame {CurrentFrame}");
+                Debug.Log($"{Time.time}: Checkpoint reset triggered on frame {CurrentFrame}");
                 _needsCheckpointReset = true;
             }
 
@@ -122,6 +135,7 @@ public sealed class DemoRecorder : MonoBehaviour
         }
         else
         {
+            if (Input.GetKeyDown(KeyCode.F4)) ToggleNoclip();
             if (Input.GetKeyDown(KeyCode.F5)) StartPlayback();
             else if (Input.GetKeyDown(KeyCode.F6)) StartRecording();
             else if (Input.GetKeyDown(KeyCode.F7)) StartRecordingFromCheckpoint();
@@ -137,6 +151,20 @@ public sealed class DemoRecorder : MonoBehaviour
             }
         }
 
+        if(Input.GetKeyDown(KeyCode.F2))
+        {
+            _unlimitedRenderDistance = !_unlimitedRenderDistance;
+            SetRenderDistance();
+        }
+
+        if (Input.GetKeyDown(KeyCode.F3))
+        {
+            _showGizmos = !_showGizmos;
+            SetGizmos();
+        }
+
+
+
         if (Input.GetKeyDown(KeyCode.RightBracket) || Input.GetKeyDown(KeyCode.Equals))
         {
             IncreasePlaybackSpeed();
@@ -145,6 +173,83 @@ public sealed class DemoRecorder : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftBracket) || Input.GetKeyDown(KeyCode.Minus))
         {
             DecreasePlaybackSpeed();
+        }
+    }
+
+    private void SetGizmos()
+    {
+        var pm = PortalInstanceTracker.instance.PortalManager;
+        if (pm != null)
+        {
+            var prti = pm.GetComponentInChildren<PortalRenderTextureImplementation>();
+            if(prti != null)
+            {
+                var cullingMaskField = AccessTools.Field(typeof(PortalRenderTextureImplementation), "defaultMainCameraCullingMask");
+
+                var cullingMask = _showGizmos ? -1 : -32969;
+                cullingMaskField.SetValue(prti, cullingMask);
+                GameManager.GM.playerCamera.cullingMask = cullingMask;
+            }
+        }
+
+        if (_pathProjector != null)
+        {
+            _pathProjector.enabled = _showGizmos;
+        }
+    }
+
+    private void ToggleNoclip()
+    {
+        if (GameManager.GM.player == null || !GameManager.GM.TryGetComponent<LevelJumpingScript>(out var jumpingScript)) return;
+
+        if(_createNoClipCamera == null)
+        {
+            _createNoClipCamera = typeof(LevelJumpingScript).GetMethod(
+                "CreateNoClipCamera",
+                BindingFlags.NonPublic | BindingFlags.Instance
+            );
+
+            _endNoClip = typeof(LevelJumpingScript).GetMethod(
+                "EndNoClip",
+                BindingFlags.NonPublic | BindingFlags.Instance
+            );
+        }
+
+        if (!jumpingScript.noClip)
+        {
+            _createNoClipCamera.Invoke(jumpingScript, null);
+            var cam = jumpingScript.instanceCameraNoClip.GetComponentInChildren<Camera>();
+            cam.backgroundColor = new Color(.1f, .1f, .1f);
+            cam.farClipPlane = 100000;
+            cam.fieldOfView = 90;
+            cam.cullingMatrix = new Matrix4x4(Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity);
+
+            GameManager.GM.player.SetActive(true);
+            TogglePlayerComponents(false);
+        }
+        else
+        {
+            _endNoClip.Invoke(jumpingScript, null);
+            TogglePlayerComponents(true);
+        }
+    }
+
+    private static void TogglePlayerComponents(bool newActive)
+    {
+        if (GameManager.GM.player.TryGetComponent<FPSInputController>(out var inputController))
+        {
+            inputController.enabled = newActive;
+            inputController.motor.enabled = newActive;
+        }
+
+        if (GameManager.GM.player.TryGetComponent<MouseLook>(out var mouseLookP))
+        {
+            mouseLookP.enabled = newActive;
+        }
+
+        if (GameManager.GM.playerCamera.TryGetComponent<MouseLook>(out var mouseLookC))
+        {
+            mouseLookC.enabled = newActive;
         }
     }
 
@@ -227,7 +332,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         if (!_recording) return;
 
-        Debug.Log($"Triggering checkpoint reset at frame {CurrentFrame}");
+        Debug.Log($"Triggering checkpoint reset on frame {CurrentFrame}");
 
         // Mark this frame as having a checkpoint reset
         _data.SetCheckpointReset(CurrentFrame, true);
@@ -314,18 +419,23 @@ public sealed class DemoRecorder : MonoBehaviour
 
         playerCamera.GetComponent<CameraSettingsLayer>().enabled = false;
 
-        if (Application.targetFrameRate > 500)
+        if (Application.targetFrameRate > 999)
         {
             playerCamera.farClipPlane = .1f;
             playerCamera.ResetCullingMatrix();
         }
-        else if (Application.targetFrameRate <= 50)
+        else if (Application.targetFrameRate <= 50 && _unlimitedRenderDistance)
         {
             playerCamera.cullingMatrix = new Matrix4x4(Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity);
             playerCamera.farClipPlane = 100000f;
+
+            playerCamera.clearFlags = CameraClearFlags.SolidColor;
+            playerCamera.backgroundColor = new Color(.1f, .1f, .1f);
         }
         else
         {
+            playerCamera.clearFlags = CameraClearFlags.Skybox;
+
             playerCamera.farClipPlane = 1000f;
             playerCamera.ResetCullingMatrix();
         }
@@ -408,9 +518,9 @@ public sealed class DemoRecorder : MonoBehaviour
         }
     }
 
-    private void LoadFile(string path)
+    private bool LoadFile(string path)
     {
-        if (string.IsNullOrWhiteSpace(path)) return;
+        if (string.IsNullOrWhiteSpace(path)) return false;
 
         try
         {
@@ -419,7 +529,7 @@ public sealed class DemoRecorder : MonoBehaviour
             if (extension != ".csv")
             {
                 Debug.LogError($"Unsupported file type: {extension}. Only CSV files are supported.");
-                return;
+                return false;
             }
 
             string csv;
@@ -451,11 +561,15 @@ public sealed class DemoRecorder : MonoBehaviour
                 GameManager.GM.TriggerScenePreUnload();
                 SceneManager.LoadScene(_data.LevelId);
             }
+
+            return true;
         }
         catch (Exception e)
         {
             Debug.LogError($"Failed to load file: {e}");
         }
+
+        return false;
     }
 
 
@@ -477,9 +591,8 @@ public sealed class DemoRecorder : MonoBehaviour
         yield return null;
 
         Debug.Log($"Reloading: {_lastOpenedFile}");
-        LoadFile(_lastOpenedFile);
-
-        StartPlayback();
+        if(LoadFile(_lastOpenedFile))
+            StartPlayback();
     }
     #endregion
 
@@ -607,7 +720,27 @@ public sealed class DemoRecorder : MonoBehaviour
             }
         }
 
+        _colliders.Clear();
+
+        var player = GameManager.GM.player;
+
+        if(player != null && !player.TryGetComponent<ColliderVisualizer>(out _))
+        {
+            player.AddComponent<ColliderVisualizer>();
+            _pathProjector = player.AddComponent<PathProjector>();
+
+            var lerpMantle = player.GetComponentInChildren<PlayerLerpMantle>();
+            if (lerpMantle != null)
+            {
+                lerpMantle.gameObject.AddComponent<ColliderVisualizer>();
+                lerpMantle.transform.parent.gameObject.AddComponent<ColliderVisualizer>();
+            }
+        }
+
         ApplyPlaybackSpeed();
+        SetGizmos();
+
+        QualitySettings.vSyncCount = 0;
 
         var guiCam = GameManager.GM.guiCamera;
 

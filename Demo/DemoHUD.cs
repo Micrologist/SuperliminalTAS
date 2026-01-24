@@ -80,7 +80,7 @@ namespace SuperliminalTAS.Demo
 
             // For IGT consistency: The speedrun timer increases on the first frame
             var currentTime = TimeSpan.FromSeconds((_recorder.CurrentFrame + 1) * 0.02);
-            var totalTime = TimeSpan.FromSeconds((_recorder.DemoTotalFrames + 1) * 0.02);
+            var totalTime = TimeSpan.FromSeconds((_recorder.DemoTotalFrames) * 0.02);
 
             var currentTimeString = currentTime.ToString(@"mm\:ss\.ff");
             var totalTimeString = totalTime.ToString(@"mm\:ss\.ff");
@@ -96,13 +96,13 @@ namespace SuperliminalTAS.Demo
             switch (_recorder.State)
             {
                 case PlaybackState.Stopped:
-                    output += $"00:00.00 / {totalTimeString} ■ {gameSpeedString}\n";
+                    output += $"■ 00:00.00 / {totalTimeString} {gameSpeedString}\n";
                     break;
                 case PlaybackState.Playing:
-                    output += $"{currentTimeString} / {totalTimeString} ▶ {gameSpeedString}\n";
+                    output += $"▶ {currentTimeString} / {totalTimeString} {gameSpeedString}\n";
                     break;
                 case PlaybackState.Recording:
-                    output += $"{currentTimeString} ● {gameSpeedString}\n";
+                    output += $"● {currentTimeString} {gameSpeedString}\n";
                     break;
             }
 
@@ -154,9 +154,17 @@ namespace SuperliminalTAS.Demo
 
             var playerVel = player.GetComponent<CharacterController>().velocity;
             double horizontal = Math.Sqrt((playerVel.x * playerVel.x) + (playerVel.z * playerVel.z));
-            output += $"V {horizontal:0.0000} {playerVel.y:0.0000}\n";
+            if (_showLess)
+            {
+                output += $"V {horizontal:0.0000} {playerVel.y:0.0000}\n";
+                return output;
+            }
+            else
+            {
+                output += $"V {horizontal:0.0000}\n";
+                output += $"V {playerVel.x:0.0000} {playerVel.y:0.0000} {playerVel.z:0.0000}\n";
+            }
 
-            if (_showLess) return output;
 
             var playerScale = player.transform.localScale.x;
             output += $"S {playerScale:0.00000}x\n";
@@ -261,25 +269,29 @@ namespace SuperliminalTAS.Demo
 
             var detailString = _showLess ? "Show More" : "Show Less";
 
-            output += "F1  - " + detailString + "\n";
+            output += "F1  " + detailString + "\n";
 
             if (_showLess) return output;
+
+            output += "F2  Render Distance\n";
+            output += "F3  Show Gizmos\n";
 
             switch (DemoRecorder.Instance.State)
             {
                 case PlaybackState.Recording:
-                    output += "F5  - Stop\nF7  - Reset CP\n";
+                    output += "F5  Stop\nF7  Reset CP\n";
                     break;
                 case PlaybackState.Playing:
-                    output += "F5  - Stop\n";
+                    output += "F5  Stop\n";
                     break;
                 case PlaybackState.Stopped:
-                    output += "F5  - Play\nF6  - Record\nF7  - Record from CP\n";
-                    output += "F11 - Open\nF12 - Save\n";
+                    output += "F4  NoClip\n";
+                    output += "F5  Play\nF6  Record\nF7  Record from CP\n";
+                    output += "F11 Open\nF12 Save\n";
                     break;
             }
 
-            output += "+/- - Speed Up/Down";
+            output += "+/- Speed Up/Down";
 
             return output;
         }
@@ -295,6 +307,7 @@ namespace SuperliminalTAS.Demo
             root.transform.SetParent(parent, worldPositionStays: false);
             var canvas = root.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 9;
 
             var scaler = root.AddComponent<CanvasScaler>();
             scaler.referenceResolution = new Vector2(1920, 1080);
