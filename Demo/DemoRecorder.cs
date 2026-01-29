@@ -97,6 +97,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
         HandleHotkeys();
 
+
         if (_recording)
         {
             _data.RecordFrameFrom(GameManager.GM.playerInput);
@@ -250,6 +251,8 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             inputController.enabled = newActive;
             inputController.motor.enabled = newActive;
+            inputController.motor.grounded = true;
+            inputController.motor.movement.velocity = Vector3.zero;
         }
 
         if (GameManager.GM.player.TryGetComponent<MouseLook>(out var mouseLookP))
@@ -429,18 +432,18 @@ public sealed class DemoRecorder : MonoBehaviour
 
         playerCamera.GetComponent<CameraSettingsLayer>().enabled = false;
 
-        if (Application.targetFrameRate > 999)
+        if (Application.targetFrameRate > 999 && State == PlaybackState.Playing)
         {
             playerCamera.farClipPlane = .1f;
             playerCamera.ResetCullingMatrix();
         }
-        else if (Application.targetFrameRate <= 50 && _unlimitedRenderDistance)
+        else if ((State == PlaybackState.Stopped || Application.targetFrameRate <= 50) && _unlimitedRenderDistance)
         {
             playerCamera.cullingMatrix = new Matrix4x4(Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity, Vector4.positiveInfinity);
             playerCamera.farClipPlane = 100000f;
 
             playerCamera.clearFlags = CameraClearFlags.SolidColor;
-            playerCamera.backgroundColor = new Color(.1f, .1f, .1f);
+            playerCamera.backgroundColor = new Color(.15f, .15f, .15f, 15f);
         }
         else
         {
@@ -778,7 +781,7 @@ public sealed class DemoRecorder : MonoBehaviour
         mat.renderQueue = 3000;
 
         var color = UnityEngine.Color.yellow;
-        color.a = 0.15f;
+        color.a = 0.1f;
         mat.color = color;
 
         mat.EnableKeyword("_EMISSION");
@@ -788,13 +791,10 @@ public sealed class DemoRecorder : MonoBehaviour
 
         foreach (var obj in objs)
         {
-
             foreach (var renderer in obj.GetComponentsInChildren<MeshRenderer>())
             {
-
                 if (renderer.gameObject.layer == LayerMask.NameToLayer("NoClipCamera"))
                 {
-
                     renderer.material = mat;
                 }
             }

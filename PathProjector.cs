@@ -8,7 +8,7 @@ public class PathProjector : MonoBehaviour
     [SerializeField] private float radiusMultiplier = 1f;
 
     [SerializeField] private Color hitColor = new Color(1f, 0f, 1f, .25f);
-    [SerializeField] private Color noHitColor = new Color(0f, 1f, 0f, 1f);
+    [SerializeField] private Color noHitColor = new Color(0f, 1f, 0f, 0f);
     [SerializeField] private Material visualizationMaterial;
 
     private CharacterController characterController;
@@ -120,12 +120,14 @@ public class PathProjector : MonoBehaviour
             // Use the actual hit distance
             projectionDistance = lastHit.distance;
             capsuleRenderer.material.color = hitColor;
+            capsuleRenderer.enabled = true;
         }
         else
         {
             // Use max distance
             projectionDistance = maxDistance;
             capsuleRenderer.material.color = noHitColor;
+            capsuleRenderer.enabled = false;
         }
 
         // Position capsule projected forward from character's position

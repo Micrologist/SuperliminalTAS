@@ -54,7 +54,7 @@ namespace SuperliminalTAS.Demo
             );
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             if (DemoRecorder.Instance == null || _hudText == null) return;
 
@@ -154,17 +154,12 @@ namespace SuperliminalTAS.Demo
 
             var playerVel = player.GetComponent<CharacterController>().velocity;
             double horizontal = Math.Sqrt((playerVel.x * playerVel.x) + (playerVel.z * playerVel.z));
+            output += $"V {horizontal:0.0000} {playerVel.y:0.0000}\n";
             if (_showLess)
-            {
-                output += $"V {horizontal:0.0000} {playerVel.y:0.0000}\n";
                 return output;
-            }
-            else
-            {
-                output += $"V {horizontal:0.0000}\n";
-                output += $"V {playerVel.x:0.0000} {playerVel.y:0.0000} {playerVel.z:0.0000}\n";
-            }
 
+
+            output += $"V {playerVel.x:0.0000} {playerVel.y:0.0000} {playerVel.z:0.0000}\n";
 
             var playerScale = player.transform.localScale.x;
             output += $"S {playerScale:0.00000}x\n";
@@ -173,7 +168,7 @@ namespace SuperliminalTAS.Demo
 
             var isJumping = playerMotor.jumping.jumping;
             var jumpCd = playerMotor.timeOnGroundBeforeCanJump;
-            output += $"\nJ {playerMotor.grounded} {isJumping} {jumpCd:0.00}\n";
+            output += $"\nJ {(playerMotor.grounded ? 1 : 0)} {(isJumping ? 1 : 0)} {jumpCd:0.00}\n";
 
             var playerMantle = player.GetComponentInChildren<PlayerLerpMantle>();
             if (playerMantle == null) return output;
@@ -185,7 +180,7 @@ namespace SuperliminalTAS.Demo
             var groundedTime = Time.time - playerMantle.playerMSC.onGroundTime;
             var mantleResetCD = Mathf.Max(0.1f - groundedTime, 0f);
 
-            output += $"M {mantling} {staying} {canMantle} {jumpsWithout} {mantleResetCD:0.00}\n";
+            output += $"M {(mantling ? 1 : 0)} {(staying ? 1 : 0)} {(canMantle ? 1 : 0)} {jumpsWithout} {mantleResetCD:0.00}\n";
 
             return output;
         }
