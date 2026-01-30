@@ -759,8 +759,11 @@ public sealed class DemoRecorder : MonoBehaviour
 
         controllers.maps.SetAllMapsEnabled(false);
 
-        GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
-        GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
+        if (GameManager.GM.player != null)
+        {
+            GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
+            GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
+        }
 
         yield return null;
 

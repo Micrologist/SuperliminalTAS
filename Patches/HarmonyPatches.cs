@@ -1,6 +1,4 @@
 using HarmonyLib;
-using System;
-using System.Reflection;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -152,12 +150,12 @@ public class LoadingScenePatch
 }
 #endif
 
-[HarmonyPatch(typeof(FMODUnity.StudioEventEmitter),"OnEnable")]
+[HarmonyPatch(typeof(FMODUnity.StudioEventEmitter), "OnEnable")]
 public class EventEmitterPlayPatch
 {
     static void Prefix(FMODUnity.StudioEventEmitter __instance)
     {
-        if(__instance.name == "AlarmSound")
+        if (__instance.name == "AlarmSound")
         {
             GameObject.Destroy(__instance.gameObject);
         }
@@ -223,7 +221,7 @@ public class Debug_LogError_FilterPatch
         // Only suppress if the message is a string and matches exactly
         if (message != null && message.ToString() == SuppressedMessage)
         {
-                return false; // skip original => don't print
+            return false; // skip original => don't print
         }
 
         return true;

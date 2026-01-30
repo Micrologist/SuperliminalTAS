@@ -1,9 +1,11 @@
+using BepInEx;
 using HarmonyLib;
-using Rewired;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using UnityEngine;
 #if LEGACY
 using UnityEngine.Events;
@@ -46,6 +48,7 @@ namespace SuperliminalTAS.Demo
 #endif
 
         private Text _hudText;
+        private Font _notoMonoFont;
         private DemoRecorder _recorder;
         private bool _showLess = true;
 
@@ -56,6 +59,7 @@ namespace SuperliminalTAS.Demo
 #else
             SceneManager.sceneLoaded += OnSceneLoadEnsureStatusText;
 #endif
+            _notoMonoFont = GetNotoSansMonoFont();
         }
 
         private void OnSceneLoadEnsureStatusText(Scene _, LoadSceneMode __)
@@ -64,11 +68,6 @@ namespace SuperliminalTAS.Demo
 
             _hudText = CreateStatusText(
                 parent: gameObject.transform,
-#if LEGACY
-                fontName: "SourceSansPro-Regular",
-#else
-                fontName: "NotoMono-Regular",
-#endif
                 fontSize: 26,
                 anchoredPosition: new Vector2(25f, -25f),
                 size: new Vector2(Screen.currentResolution.width / 3f, Screen.currentResolution.height)
@@ -128,7 +127,7 @@ namespace SuperliminalTAS.Demo
             }
 
             output += _recorder.State == PlaybackState.Stopped ? "0" : _recorder.CurrentFrame;
-            if (_showLess) return output+"\n";
+            if (_showLess) return output + "\n";
             output += " / " + _recorder.DemoTotalFrames;
             output += " " + Time.time.ToString("0.00") + " " + Time.renderedFrameCount + "\n";
 
@@ -224,16 +223,13 @@ namespace SuperliminalTAS.Demo
             var player = GameManager.GM.player;
             var playerCamera = GameManager.GM.playerCamera;
 
-#if LEGACY
+
             var resizeScript = playerCamera != null ? playerCamera.GetComponent<ResizeScript>() : null;
             if (resizeScript == null)
                 return output;
-
+#if LEGACY
             var grabbedObject = resizeScript.grabbedObject;
 #else
-            if (playerCamera == null || !playerCamera.TryGetComponent<ResizeScript>(out var resizeScript))
-                return output;
-
             var grabbedObject = (GameObject)_resizeFields["grabbedObject"].GetValue(resizeScript);
 #endif
 
@@ -334,9 +330,8 @@ namespace SuperliminalTAS.Demo
             return output;
         }
 
-        public static Text CreateStatusText(
+        private Text CreateStatusText(
            Transform parent,
-           string fontName,
            int fontSize,
            Vector2 anchoredPosition,
            Vector2 size)
@@ -359,8 +354,7 @@ namespace SuperliminalTAS.Demo
             var text = child.AddComponent<Text>();
             text.fontSize = fontSize;
 
-            var font = Resources.FindObjectsOfTypeAll<Font>().FirstOrDefault(f => f != null && f.name == fontName);
-            if (font != null) text.font = font;
+            text.font = _notoMonoFont;
 
             var rect = text.GetComponent<RectTransform>();
             rect.sizeDelta = size;
@@ -370,6 +364,15 @@ namespace SuperliminalTAS.Demo
             rect.anchoredPosition = anchoredPosition;
 
             return text;
+        }
+
+        public Font GetNotoSansMonoFont()
+        {
+#if LEGACY
+            return LegacyFontAssetLoader.GetFontOrDefault();
+#else
+            return Resources.FindObjectsOfTypeAll<Font>().FirstOrDefault(f => f != null && f.name == "NotoMono-Regular");
+#endif
         }
     }
 }

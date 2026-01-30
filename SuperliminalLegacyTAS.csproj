@@ -42,6 +42,7 @@
   <ItemGroup>
     <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.1" IncludeAssets="compile" />
 		<PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+		<PackageReference Include="rainbowblood.UniverseLib.IL2CPP" Version="1.2.*" />
   </ItemGroup>
 
   <ItemGroup>
