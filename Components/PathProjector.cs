@@ -1,15 +1,19 @@
-﻿using UnityEngine;
+using System;
+using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
 public class PathProjector : MonoBehaviour
 {
-    [SerializeField] private float maxDistance = 100f;
-    [SerializeField] private LayerMask collisionLayers = -1;
-    [SerializeField] private float radiusMultiplier = 1f;
+#if LEGACY
+    public PathProjector(IntPtr ptr) : base(ptr) { }
+#endif
+    private float maxDistance = 100f;
+    private LayerMask collisionLayers = -1;
+    private float radiusMultiplier = 1f;
 
-    [SerializeField] private Color hitColor = new Color(1f, 0f, 1f, .25f);
-    [SerializeField] private Color noHitColor = new Color(0f, 1f, 0f, 0f);
-    [SerializeField] private Material visualizationMaterial;
+    private Color hitColor = new Color(1f, 0f, 1f, .25f);
+    private Color noHitColor = new Color(0f, 1f, 0f, 0f);
+    private Material visualizationMaterial;
+
 
     private CharacterController characterController;
     private GameObject visualCapsule;

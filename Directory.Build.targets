@@ -1,0 +1,10 @@
+<Project>
+  <Target Name="ForcePrivateOnAllReferences"
+          BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Update="@(Reference)">
+        <Private>true</Private>
+      </Reference>
+    </ItemGroup>
+  </Target>
+</Project>
