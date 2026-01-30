@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,6 +19,9 @@ internal static class VOProxy
     public static Dictionary<string, int> VoicelineEndFrames = [];
 }
 
+#if !LEGACY
+// VO patches are disabled for IL2CPP (LEGACY) because MOSTEventVOPlayer patching
+// encounters marshaling issues under the IL2CPP runtime.
 [HarmonyPatch(typeof(MOSTEventVOPlayer), "StartVOandSubtitles")]
 public class StartVOPatch
 {
@@ -71,3 +74,4 @@ public class VOHasEndedPatch
         }
     }
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+using HarmonyLib;
+using System;
 using System.Reflection;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -47,27 +48,7 @@ public class GetAxisPatch
     }
 }
 
-[HarmonyPatch]
-public class RewiredDeltaTimePatch
-{
-    private static FieldInfo fieldInfo;
 
-    static MethodBase TargetMethod()
-    {
-        return AccessTools.Method(
-            "Rewired.ReInput+YADQJtjjsJnFpIRXsWZbJAPaLFd+WJEYbcppSteIUfAbygiJwLxOmigk:AgiDzcfIDplWkWrlRVaBMFfZJjUH");
-    }
-
-    static void Postfix()
-    {
-        if (fieldInfo == null)
-        {
-            fieldInfo = AccessTools.Field(typeof(Rewired.ReInput), "unscaledDeltaTime");
-        }
-
-        fieldInfo?.SetValue(null, Time.fixedDeltaTime);
-    }
-}
 #endregion
 
 #region RNG Patches
@@ -122,25 +103,9 @@ public class RandomRangeFloatPatch
     }
 }
 
-[HarmonyPatch(typeof(System.Random), "InternalSample")]
-public class InternalSamplePatch
-{
-    static void Postfix(ref int __result)
-    {
-        __result = 0;
-    }
-}
-
 #endregion
 
-[HarmonyPatch(typeof(PauseMenu), "OnApplicationFocus")]
-public class ApplicationFocusPatch
-{
-    static void Prefix(bool focus, PauseMenu __instance)
-    {
-        __instance.pauseWhenAltTabbed = false;
-    }
-}
+
 
 [HarmonyPatch(typeof(PlayerLerpMantle), "LerpPlayer")]
 public class LerpPlayerMantlePatch
@@ -173,8 +138,11 @@ public class TimeTimePatch
     }
 }
 
+#if !LEGACY
+// In IL2CPP, ref Il2CppSystem.Nullable<int> causes AccessViolationException in the
+// il2cpp_value_box trampoline. HarmonyX cannot safely marshal ref nullable value types.
 [HarmonyPatch(typeof(LevelInformation), nameof(LevelInformation.GetLoadingSceneIndex))]
-[HarmonyPatch([typeof(string), typeof(int)])]
+[HarmonyPatch([typeof(string), typeof(int?)])]
 public class LoadingScenePatch
 {
     static void Prefix(string scenePath, ref int? debugOverride)
@@ -182,6 +150,7 @@ public class LoadingScenePatch
         debugOverride = -1;
     }
 }
+#endif
 
 [HarmonyPatch(typeof(FMODUnity.StudioEventEmitter),"OnEnable")]
 public class EventEmitterPlayPatch
@@ -228,13 +197,53 @@ public class GBKinematicPatch
     }
 }
 
+#if !LEGACY
+// In IL2CPP, the field may be exposed as a property by Il2CppInterop, requiring
+// a different access pattern that isn't straightforward with Harmony.
 [HarmonyPatch(typeof(WarningController), "Start")]
 public class WarningScreenPatch
 {
     static void Prefix()
     {
-        var showedWarningField = AccessTools.Field(typeof(WarningController), "ShowedWarning");
-
-        showedWarningField.SetValue(null, true);
+        AccessTools.Field(typeof(WarningController), "ShowedWarning").SetValue(null, true);
     }
+}
+#endif
+
+#if LEGACY
+[HarmonyPatch(typeof(UnityEngine.Debug))]
+[HarmonyPatch(nameof(Debug.LogError), new[] { typeof(Il2CppSystem.Object) })]
+public class Debug_LogError_FilterPatch
+{
+    // Change this to whatever exact message you want to suppress.
+    private const string SuppressedMessage = "No save name found for current scene.";
+
+    private static bool Prefix(Il2CppSystem.Object message)
+    {
+        // Only suppress if the message is a string and matches exactly
+        if (message != null && message.ToString() == SuppressedMessage)
+        {
+                return false; // skip original => don't print
+        }
+
+        return true;
+    }
+}
+#endif
+
+[HarmonyPatch(typeof(PauseMenu), "OnApplicationFocus")]
+public class ApplicationFocusPatch
+{
+#if LEGACY
+    static bool Prefix(bool focus)
+    {
+        // Only run when focus is true
+        return focus;
+    }
+#else
+    static void Prefix(PauseMenu __instance)
+    {
+        __instance.pauseWhenAltTabbed = false;
+    }
+#endif
 }
