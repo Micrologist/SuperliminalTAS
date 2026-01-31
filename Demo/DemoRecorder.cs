@@ -1,11 +1,16 @@
 #if LEGACY
 using BepInEx.Unity.IL2CPP.Utils;
 using Il2CppInterop.Runtime.Attributes;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppSystem.Collections.Generic;
+#else
+using System.Collections.Generic;
 #endif
 using Rewired;
 using SuperliminalTAS.Patches;
 using System;
 using System.Collections;
+
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -74,7 +79,7 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (!_lastUpdateWasFixed && (_recording || _playingBack) && Time.timeSinceLevelLoad > float.Epsilon)
         {
-            Debug.LogError(Time.timeSinceLevelLoad + ": Double Update() during recording/playback, aborting!");
+            Debug.LogError(Time.timeSinceLevelLoad + ": Double Update() on frame "+Time.renderedFrameCount+" during recording/playback, aborting!");
             StopPlayback();
             StopRecording();
         }
@@ -538,33 +543,47 @@ public sealed class DemoRecorder : MonoBehaviour
         var saveManager = GameManager.GM.GetComponent<SaveAndCheckpointManager>();
         if (saveManager == null) return -1;
 
-        if (SaveGamePatch.lastCheckpoint == null) return -1;
+        if (SaveGamePatch.currentCheckpoint == null) return -1;
 
 #if LEGACY
-        // IL2CPP: FindObjectsOfType returns Il2CppArrayBase, convert to managed arrays for sorting
-        CheckPoint[] array = global::UnityEngine.Object.FindObjectsOfType<CheckPoint>().ToArray();
-        RoomOrder roomOrder = global::UnityEngine.Object.FindObjectOfType<RoomOrder>();
-        if (roomOrder != null)
+        Il2CppArrayBase<CheckPoint> il2cppArray = global::UnityEngine.GameObject.FindObjectsOfType<CheckPoint>();
+        CheckPoint[] array = new CheckPoint[il2cppArray.Length];
+        for (int i = 0; i < il2cppArray.Length; i++)
         {
-            Transform[] topLevelOrder = roomOrder.TopLevelRoomOrder.ToArray();
-            Array.Sort<CheckPoint>(array, (CheckPoint x, CheckPoint y) => Array.IndexOf<Transform>(topLevelOrder, x.transform.root).CompareTo(Array.IndexOf<Transform>(topLevelOrder, y.transform.root)));
-            return Array.IndexOf(array, SaveGamePatch.lastCheckpoint);
+            array[i] = il2cppArray[i].GetComponent<CheckPoint>();
         }
 #else
-        CheckPoint[] array = global::UnityEngine.Object.FindObjectsOfType<CheckPoint>();
-        RoomOrder roomOrder = global::UnityEngine.Object.FindObjectOfType<RoomOrder>();
-        if (roomOrder)
-        {
-            Array.Sort<CheckPoint>(array, (CheckPoint x, CheckPoint y) => Array.IndexOf<Transform>(roomOrder.TopLevelRoomOrder, x.transform.root).CompareTo(Array.IndexOf<Transform>(roomOrder.TopLevelRoomOrder, y.transform.root)));
-            return Array.IndexOf(array, SaveGamePatch.lastCheckpoint);
-        }
+        CheckPoint[] array = GameObject.FindObjectsOfType<CheckPoint>();
 #endif
 
-        return -1;
+        RoomOrder roomOrder = GameObject.FindObjectOfType<RoomOrder>();
+        if (roomOrder)
+        {
+            // Manual bubble sort - IL2CPP compatible
+            for (int i = 0; i < array.Length - 1; i++)
+            {
+                Debug.Log(array[i].transform.name);
+                for (int j = i + 1; j < array.Length; j++)
+                {
+                    int iOrder = roomOrder.GetRoomIndex(array[i].transform.parent);
+                    int jOrder = roomOrder.GetRoomIndex(array[j].transform.parent);
 
+                    if (iOrder > jOrder)
+                    {
+                        CheckPoint temp = array[i];
+                        array[i] = array[j];
+                        array[j] = temp;
+                    }
+                }
+            }
+
+            return Array.IndexOf(array, SaveGamePatch.currentCheckpoint);
+        }
+
+        return -1;
     }
 
-    #endregion
+#endregion
 
     #region Scene Reset
 

@@ -1,5 +1,7 @@
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 namespace SuperliminalTAS.Patches;
@@ -117,12 +119,12 @@ public class LerpPlayerMantlePatch
 [HarmonyPatch(typeof(SaveAndCheckpointManager), "_SaveGame", [typeof(CheckPoint)])]
 public class SaveGamePatch
 {
-    public static CheckPoint lastCheckpoint;
+    public static CheckPoint currentCheckpoint;
 
     static void Prefix(CheckPoint checkpoint)
     {
         Debug.Log(Time.time + ": _SaveGame() " + checkpoint?.name);
-        lastCheckpoint = checkpoint;
+        currentCheckpoint = checkpoint;
     }
 }
 
@@ -245,3 +247,23 @@ public class ApplicationFocusPatch
     }
 #endif
 }
+
+#if LEGACY
+[HarmonyPatch(typeof(SaveAndCheckpointManager), nameof(SaveAndCheckpointManager.ResetToLastCheckpoint))]
+public class ResetCheckPointPatch
+{
+    static bool Prefix(SaveAndCheckpointManager __instance)
+    {
+        if (__instance.lastSaveGameState != null)
+        {
+            GameObject gameObject = GameObject.Find("UI_PAUSE_MENU");
+            if (gameObject)
+            {
+                gameObject.transform.Find("Canvas").gameObject.transform.Find("ResettingToCheckpoint").gameObject.GetComponent<Text>().enabled = true;
+            }
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Single);
+        }
+        return false;
+    }
+}
+#endif
