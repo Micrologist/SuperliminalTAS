@@ -577,61 +577,56 @@ public sealed class DemoRecorder : MonoBehaviour
 
         _resetting = true;
         TASInput.blockAllInput = true;
-
         Time.timeScale = 1;
 
         Player player = ReInput.players.GetPlayer(0);
-        Player.ControllerHelper controllers = player.controllers;
-
-        controllers.maps.SetAllMapsEnabled(false);
+        player.controllers.maps.SetAllMapsEnabled(false);
 
         if (GameManager.GM.player != null)
         {
-            GameManager.GM.player.GetComponent<CharacterMotor>().ChangeGravity(0f);
-            GameManager.GM.player.GetComponent<CharacterController>().SimpleMove(Vector3.zero);
+            var motor = GameManager.GM.player.GetComponent<CharacterMotor>();
+            var controller = GameManager.GM.player.GetComponent<CharacterController>();
+            motor.ChangeGravity(0f);
+            controller.SimpleMove(Vector3.zero);
         }
 
         yield return null;
 
 #if LEGACY
-        // IL2CPP: SceneManager.sceneLoaded expects UnityAction, not System.Action
+        // IL2CPP requires UnityAction, not System.Action
         UnityAction<Scene, LoadSceneMode> onLoaded = null;
-        Action<Scene, LoadSceneMode> action = (scene, mode) =>
+        Action<Scene, LoadSceneMode> sceneLoadedHandler = (scene, mode) =>
         {
             SceneManager.sceneLoaded -= onLoaded;
-
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Mouse, "Default", "Default");
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Joystick, "Default", "Default");
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Keyboard, "Default");
-
-            this.StartCoroutine(AfterSceneLoadedPhaseLocked(afterLoaded));
+            EnablePlayerControls(player);
+            StartCoroutine(AfterSceneLoadedPhaseLocked(afterLoaded));
         };
-        onLoaded = action;
-
+        onLoaded = sceneLoadedHandler;
         SceneManager.sceneLoaded += onLoaded;
-
-        GameManager.GM.GetComponent<PlayerSettingsManager>().SetMouseSensitivity(1f);
-
-        GameManager.GM.GetComponent<SaveAndCheckpointManager>().RestartLevel();
 #else
         void OnLoaded(Scene scene, LoadSceneMode mode)
         {
             SceneManager.sceneLoaded -= OnLoaded;
-
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Mouse, "Default", "Default");
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Joystick, "Default", "Default");
-            player.controllers.maps.SetMapsEnabled(true, ControllerType.Keyboard, "Default");
-
+            EnablePlayerControls(player);
             StartCoroutine(AfterSceneLoadedPhaseLocked(afterLoaded));
         }
-
         SceneManager.sceneLoaded += OnLoaded;
-
-        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(1.0f);
-
-        GameManager.GM.TriggerScenePreUnload();
-        GameManager.GM.GetComponent<SaveAndCheckpointManager>().RestartLevel();
 #endif
+
+        GameManager.GM.GetComponent<PlayerSettingsManager>()?.SetMouseSensitivity(1f);
+
+#if !LEGACY
+        GameManager.GM.TriggerScenePreUnload();
+#endif
+        GameManager.GM.GetComponent<SaveAndCheckpointManager>().RestartLevel();
+    }
+
+    private void EnablePlayerControls(Player player)
+    {
+        var maps = player.controllers.maps;
+        maps.SetMapsEnabled(true, ControllerType.Mouse, "Default", "Default");
+        maps.SetMapsEnabled(true, ControllerType.Joystick, "Default", "Default");
+        maps.SetMapsEnabled(true, ControllerType.Keyboard, "Default");
     }
 
 #if LEGACY
@@ -653,7 +648,7 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             if (_playingBack)
             {
-                Debug.LogWarning("Level was finished on frame " + CurrentFrame + " with " + (DemoTotalFrames - CurrentFrame - 1) + " frames remaining in the demo.");
+                Debug.LogWarning("Level was finished after "+Time.time+" on frame " + CurrentFrame + " with " + (DemoTotalFrames - CurrentFrame - 1) + " frames remaining in the demo.");
                 StopPlayback();
             }
         }
