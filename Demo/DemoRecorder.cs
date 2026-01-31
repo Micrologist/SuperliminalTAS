@@ -329,7 +329,7 @@ public sealed class DemoRecorder : MonoBehaviour
         targetFps = Mathf.Max(1, targetFps);
         Application.targetFrameRate = targetFps;
 
-        ToolAssist.Instance.SetRenderDistance();
+        TASTools.Instance.SetRenderDistance();
     }
 
     internal bool GetRecordedButton(string actionName) =>
@@ -656,6 +656,12 @@ public sealed class DemoRecorder : MonoBehaviour
                 Debug.LogWarning("Level was finished on frame " + CurrentFrame + " with " + (DemoTotalFrames - CurrentFrame - 1) + " frames remaining in the demo.");
                 StopPlayback();
             }
+        }
+
+        if(GameManager.GM.player != null)
+        {
+            GameManager.GM.player.GetComponent<MouseLook>().sensitivityX = 1.0f;
+            GameManager.GM.playerCamera.GetComponent<MouseLook>().sensitivityY = 1.0f;
         }
 
         ApplyPlaybackSpeed();

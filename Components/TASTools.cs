@@ -15,13 +15,13 @@ using UnityEngine.SceneManagement;
 
 namespace SuperliminalTAS;
 
-public sealed class ToolAssist : MonoBehaviour
+public sealed class TASTools : MonoBehaviour
 {
 #if LEGACY
-    public ToolAssist(IntPtr ptr) : base(ptr) { }
+    public TASTools(IntPtr ptr) : base(ptr) { }
 #endif
 
-    public static ToolAssist Instance { get; private set; }
+    public static TASTools Instance { get; private set; }
 
     private bool _unlimitedRenderDistance;
     private bool _showGizmos;
@@ -223,12 +223,6 @@ public sealed class ToolAssist : MonoBehaviour
         _colliders.Clear();
 
         var player = GameManager.GM.player;
-
-        if (player != null)
-        {
-            GameManager.GM.player.GetComponent<MouseLook>().sensitivityX = 1.0f;
-            GameManager.GM.playerCamera.GetComponent<MouseLook>().sensitivityY = 1.0f;
-        }
 
         if (player != null && player.GetComponent<ColliderVisualizer>() == null)
         {
