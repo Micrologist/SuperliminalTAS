@@ -1,4 +1,4 @@
-#if !LEGACY
+#if HAS_VO_PLAYER
 
 using HarmonyLib;
 using System.Collections.Generic;

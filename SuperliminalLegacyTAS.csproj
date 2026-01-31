@@ -8,7 +8,6 @@
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
-    <DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
     <RestoreAdditionalProjectSources>
       https://api.nuget.org/v3/index.json;
       https://nuget.bepinex.dev/v3/index.json;
@@ -20,8 +19,9 @@
 
 		<OutputPath>bin\$(GameVersion)\</OutputPath>
 		<GameVersion Condition="'$(GameVersion)' == ''">1.10.2020.7.6</GameVersion>
+		<DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
 		<DefineConstants Condition="'$(GameVersion)' == '1.10.2020.7.6'">$(DefineConstants);HAS_LEVELINFO</DefineConstants>
-
+		<DefineConstants Condition="'$(GameVersion)' == '1.10.2020.7.6'">$(DefineConstants);HAS_VO_PLAYER</DefineConstants>
 		<GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
   </PropertyGroup>
 

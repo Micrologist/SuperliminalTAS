@@ -22,6 +22,7 @@
 
 		<OutputPath>bin\$(GameVersion)\</OutputPath>
 		<GameVersion Condition="'$(GameVersion)' == ''">1.10.2023.2.17</GameVersion>
+		<DefineConstants>$(DefineConstants);HAS_VO_PLAYER</DefineConstants>
 		<DefineConstants Condition="'$(GameVersion)' == '1.10.2023.2.17'">$(DefineConstants);HAS_WARNING_CONTROLLER</DefineConstants>
 
 		<GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
