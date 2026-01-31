@@ -7,4 +7,76 @@
       </Reference>
     </ItemGroup>
   </Target>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <StagingRoot>$(RepoRoot)Staging\</StagingRoot>
+    <ReleaseOut>$(RepoRoot)Releases\</ReleaseOut>
+
+    <PackageVersion Condition="'$(Version)' == ''">0.0.0</PackageVersion>
+    <PackageVersion Condition="'$(Version)' != ''">$(Version)</PackageVersion>
+  </PropertyGroup>
+
+  <Target Name="PackageBepInExZips"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release'">
+
+    <MakeDir Directories="$(ReleaseOut)" />
+
+    <!-- =========================
+         Modern: copy dll+pdb + zip
+         ========================= -->
+    <PropertyGroup>
+      <ModernOutDir>$(RepoRoot)obj\SuperliminalModernTAS\Release\netstandard2.0\</ModernOutDir>
+      <ModernStage>$(StagingRoot)Modern\BepInEx\plugins\SuperliminalTAS\</ModernStage>
+      <ModernStageRoot>$(StagingRoot)Modern\</ModernStageRoot>
+      <ModernZip>$(ReleaseOut)micrologist.superliminaltas.$(PackageVersion).zip</ModernZip>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(ModernStage)" />
+
+    <ItemGroup>
+      <_ModernArtifacts Include="$(ModernOutDir)micrologist.superliminaltas.dll" />
+      <_ModernArtifacts Include="$(ModernOutDir)micrologist.superliminaltas.pdb" />
+    </ItemGroup>
+
+    <!-- Copy both; silently skips ones that don't exist -->
+    <Copy SourceFiles="@(_ModernArtifacts)"
+          DestinationFolder="$(ModernStage)"
+          SkipUnchangedFiles="true"
+          Condition=" '@(_ModernArtifacts)' != '' " />
+
+    <Delete Files="$(ModernZip)" Condition="Exists('$(ModernZip)')" />
+    <ZipDirectory SourceDirectory="$(ModernStageRoot)"
+                  DestinationFile="$(ModernZip)" />
+
+    <!-- =========================
+         Legacy: copy dll+pdb + zip
+         ========================= -->
+    <PropertyGroup>
+      <LegacyOutDir>$(RepoRoot)bin\SuperliminalLegacyTAS\Release\net6.0\</LegacyOutDir>
+      <LegacyStage>$(StagingRoot)Legacy\BepInEx\plugins\SuperliminalLegacyTAS\</LegacyStage>
+      <LegacyStageRoot>$(StagingRoot)Legacy\</LegacyStageRoot>
+      <LegacyZip>$(ReleaseOut)micrologist.superliminaltas.legacy.$(PackageVersion).zip</LegacyZip>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(LegacyStage)" />
+
+    <ItemGroup>
+      <_LegacyArtifacts Include="$(LegacyOutDir)micrologist.superliminaltas.legacy.dll" />
+      <_LegacyArtifacts Include="$(LegacyOutDir)micrologist.superliminaltas.legacy.pdb" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(_LegacyArtifacts)"
+          DestinationFolder="$(LegacyStage)"
+          SkipUnchangedFiles="true"
+          Condition=" '@(_LegacyArtifacts)' != '' " />
+
+    <Delete Files="$(LegacyZip)" Condition="Exists('$(LegacyZip)')" />
+    <ZipDirectory SourceDirectory="$(LegacyStageRoot)"
+                  DestinationFile="$(LegacyZip)" />
+
+    <Message Importance="High"
+             Text="Packaged: $(ModernZip) and $(LegacyZip) (DLL+PDB copied)" />
+  </Target>
 </Project>
