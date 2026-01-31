@@ -127,7 +127,7 @@ public sealed class DemoRecorder : MonoBehaviour
         if (_resetting) return;
 
         HandleHotkeys();
-
+        SetGizmos();
 
         if (_recording)
         {
@@ -224,7 +224,7 @@ public sealed class DemoRecorder : MonoBehaviour
         if (pm != null)
         {
             var prti = pm.GetComponentInChildren<PortalRenderTextureImplementation>();
-            if(prti != null)
+            if (prti != null)
             {
 #if LEGACY
                 prti.defaultMainCameraCullingMask = _showGizmos ? -1 : -32969;
@@ -236,7 +236,7 @@ public sealed class DemoRecorder : MonoBehaviour
 #endif
             }
         }
-
+        
         if (_pathProjector != null)
         {
             _pathProjector.enabled = _showGizmos;
@@ -836,7 +836,6 @@ public sealed class DemoRecorder : MonoBehaviour
 
         var player = GameManager.GM.player;
 
-#if LEGACY
         if(player != null)
         {
             GameManager.GM.player.GetComponent<MouseLook>().sensitivityX = 1.0f;
@@ -844,18 +843,6 @@ public sealed class DemoRecorder : MonoBehaviour
         }
 
         if(player != null && player.GetComponent<ColliderVisualizer>() == null)
-        {
-            player.AddComponent<ColliderVisualizer>();
-
-            var lerpMantle = player.GetComponentInChildren<PlayerLerpMantle>();
-            if (lerpMantle != null)
-            {
-                lerpMantle.gameObject.AddComponent<ColliderVisualizer>();
-                lerpMantle.transform.parent.gameObject.AddComponent<ColliderVisualizer>();
-            }
-        }
-#else
-        if(player != null && !player.TryGetComponent<ColliderVisualizer>(out _))
         {
             player.AddComponent<ColliderVisualizer>();
             _pathProjector = player.AddComponent<PathProjector>();
@@ -867,10 +854,8 @@ public sealed class DemoRecorder : MonoBehaviour
                 lerpMantle.transform.parent.gameObject.AddComponent<ColliderVisualizer>();
             }
         }
-#endif
 
         SetTriggerBoxMaterial();
-
         ApplyPlaybackSpeed();
         SetGizmos();
 

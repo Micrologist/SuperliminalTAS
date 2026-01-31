@@ -5,7 +5,7 @@
     <AssemblyName>micrologist.superliminaltas.legacy</AssemblyName>
     <Product>SuperliminalLegacyTAS</Product>
 		<Description>A plugin for legacy versions of Superliminal to allow the creation of tool-assisted speedruns.</Description>
-    <Version>0.7.1</Version>
+    <Version>0.7.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
