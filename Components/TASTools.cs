@@ -282,7 +282,7 @@ public sealed class TASTools : MonoBehaviour
         mat.renderQueue = 3000;
 
         var color = UnityEngine.Color.yellow;
-        color.a = 0.1f;
+        color.a = 0.05f;
         mat.color = color;
 
         mat.EnableKeyword("_EMISSION");
