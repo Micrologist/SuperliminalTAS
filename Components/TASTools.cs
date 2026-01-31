@@ -1,17 +1,14 @@
-#if LEGACY
-using BepInEx.Unity.IL2CPP.Utils;
-using Il2CppInterop.Runtime.Attributes;
-#endif
-using HarmonyLib;
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using SuperliminalTAS.Demo;
 using UnityEngine;
-#if LEGACY
-using UnityEngine.Events;
-#endif
 using UnityEngine.SceneManagement;
+#if LEGACY
+using System;
+using UnityEngine.Events;
+#else
+using HarmonyLib;
+#endif
 
 namespace SuperliminalTAS;
 

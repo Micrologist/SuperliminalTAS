@@ -1,51 +1,49 @@
-using System;
 using UnityEngine;
+#if LEGACY
+using System;
+#endif
 
+/// <summary>
+/// This component can be added to a game object with a box- or capsule-collider
+/// to create a visual representation "gizmo" that is only visible to the NoClip camera
+/// </summary>
 public class ColliderVisualizer : MonoBehaviour
 {
 #if LEGACY
     public ColliderVisualizer(IntPtr ptr) : base(ptr) { }
 #endif
-    private bool showOnAwake = true;
-    private GameObject visualRepresentation;
+    private GameObject _visualObj;
 
     private void Awake()
     {
-        if (showOnAwake)
-        {
-            GenerateColliderVisualization();
-        }
+        GenerateColliderVisualization();
     }
 
     public void GenerateColliderVisualization()
     {
-        // Clean up existing visualization
-        if (visualRepresentation != null)
+        if (_visualObj != null)
         {
-            Destroy(visualRepresentation);
+            Destroy(_visualObj);
         }
 
-        // Try to get BoxCollider
         BoxCollider boxCollider = GetComponent<BoxCollider>();
         if (boxCollider != null)
         {
-            visualRepresentation = CreateBoxVisualization(boxCollider);
+            _visualObj = CreateBoxVisualization(boxCollider);
             return;
         }
 
-        // Try to get CapsuleCollider
         CapsuleCollider capsuleCollider = GetComponent<CapsuleCollider>();
         if (capsuleCollider != null)
         {
-            visualRepresentation = CreateCapsuleVisualization(capsuleCollider);
+            _visualObj = CreateCapsuleVisualization(capsuleCollider);
             return;
         }
 
-        // Try to get CharacterController
         CharacterController characterController = GetComponent<CharacterController>();
         if (characterController != null)
         {
-            visualRepresentation = CreateCharacterControllerVisualization(characterController);
+            _visualObj = CreateCharacterControllerVisualization(characterController);
             return;
         }
 
@@ -199,26 +197,26 @@ public class ColliderVisualizer : MonoBehaviour
 
     public void HideVisualization()
     {
-        if (visualRepresentation != null)
+        if (_visualObj != null)
         {
-            visualRepresentation.SetActive(false);
+            _visualObj.SetActive(false);
         }
     }
 
     public void ShowVisualization()
     {
-        if (visualRepresentation != null)
+        if (_visualObj != null)
         {
-            visualRepresentation.SetActive(true);
+            _visualObj.SetActive(true);
         }
     }
 
     public void DestroyVisualization()
     {
-        if (visualRepresentation != null)
+        if (_visualObj != null)
         {
-            Destroy(visualRepresentation);
-            visualRepresentation = null;
+            Destroy(_visualObj);
+            _visualObj = null;
         }
     }
 

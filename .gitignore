@@ -26,3 +26,5 @@ bld/
 
 /GameLibs/Legacy/
 /GameLibs/Modern/
+*.dll
+*.db

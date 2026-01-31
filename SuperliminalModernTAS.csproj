@@ -2,24 +2,29 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>micrologist.superliminaltas</AssemblyName>
+    <AssemblyName>$(GameVersion).superliminaltas</AssemblyName>
     <Description>A plugin for Superliminal to allow the creation of tool-assisted speedruns.</Description>
-    <Version>0.7.2</Version>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
-    <RestoreAdditionalProjectSources>
-      https://api.nuget.org/v3/index.json;
-      https://nuget.bepinex.dev/v3/index.json;
-      https://nuget.samboy.dev/v3/index.json
-    </RestoreAdditionalProjectSources>
-    <RootNamespace>SuperliminalTAS</RootNamespace>
-    <OutputType>Library</OutputType>
-    <IsPublishable>True</IsPublishable>
-    <Product>SuperliminalModernTAS</Product>
+
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>latest</LangVersion>
+		<RestoreAdditionalProjectSources>
+			https://api.nuget.org/v3/index.json;
+			https://nuget.bepinex.dev/v3/index.json;
+			https://nuget.samboy.dev/v3/index.json
+		</RestoreAdditionalProjectSources>
+		<RootNamespace>SuperliminalTAS</RootNamespace>
+		<OutputType>Library</OutputType>
+		<IsPublishable>True</IsPublishable>
+		<Product>SuperliminalModernTAS</Product>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<AutoUnifyAssemblyReferences>false</AutoUnifyAssemblyReferences>
-		<GameLibDir>$(MSBuildProjectDirectory)\GameLibs\Modern</GameLibDir>
+
+		<OutputPath>bin\$(GameVersion)\</OutputPath>
+		<GameVersion Condition="'$(GameVersion)' == ''">1.10.2023.2.17</GameVersion>
+		<DefineConstants Condition="'$(GameVersion)' == '1.10.2023.2.17'">$(DefineConstants);HAS_WARNING_CONTROLLER</DefineConstants>
+
+		<GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
   </PropertyGroup>
 
 	
@@ -27,14 +32,17 @@
 	  <Compile Remove="bin\**" />
 	  <Compile Remove="GameLibs\**" />
 	  <Compile Remove="obj\**" />
+	  <Compile Remove="Releases\**" />
 	  <Compile Remove="Staging\**" />
 	  <EmbeddedResource Remove="bin\**" />
 	  <EmbeddedResource Remove="GameLibs\**" />
 	  <EmbeddedResource Remove="obj\**" />
+	  <EmbeddedResource Remove="Releases\**" />
 	  <EmbeddedResource Remove="Staging\**" />
 	  <None Remove="bin\**" />
 	  <None Remove="GameLibs\**" />
 	  <None Remove="obj\**" />
+	  <None Remove="Releases\**" />
 	  <None Remove="Staging\**" />
 	</ItemGroup>
 
@@ -70,6 +78,9 @@
       <HintPath>$(GameLibDir)\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
-  
 
+	<Target Name="BuildAllVersions" AfterTargets="Build">
+		<MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2020.12.10;IsRecursiveBuild=true" Targets="Build" />
+		<MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2023.2.17;IsRecursiveBuild=true" Targets="Build" />
+	</Target>
 </Project>

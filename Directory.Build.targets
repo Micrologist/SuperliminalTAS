@@ -1,82 +1,109 @@
 <Project>
-  <Target Name="ForcePrivateOnAllReferences"
-          BeforeTargets="ResolveAssemblyReferences">
-    <ItemGroup>
-      <Reference Update="@(Reference)">
-        <Private>true</Private>
-      </Reference>
-    </ItemGroup>
-  </Target>
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+		<StagingRoot>$(RepoRoot)Staging\</StagingRoot>
+		<ReleaseOut>$(RepoRoot)Releases\</ReleaseOut>
+		<PackageVersion Condition="'$(Version)' == ''">0.0.0</PackageVersion>
+		<PackageVersion Condition="'$(Version)' != ''">$(Version)</PackageVersion>
+	</PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
-    <StagingRoot>$(RepoRoot)Staging\</StagingRoot>
-    <ReleaseOut>$(RepoRoot)Releases\</ReleaseOut>
+	<!-- Legacy project packages net6.0 versions -->
+	<Target Name="PackageLegacyVersions"
+          AfterTargets="BuildAllVersions"
+          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalLegacyTAS'">
+		<MakeDir Directories="$(ReleaseOut)" />
 
-    <PackageVersion Condition="'$(Version)' == ''">0.0.0</PackageVersion>
-    <PackageVersion Condition="'$(Version)' != ''">$(Version)</PackageVersion>
-  </PropertyGroup>
-
-  <Target Name="PackageBepInExZips"
-          AfterTargets="Build"
-          Condition="'$(Configuration)' == 'Release'">
-
-    <MakeDir Directories="$(ReleaseOut)" />
-
-    <!-- =========================
-         Modern: copy dll+pdb + zip
-         ========================= -->
-    <PropertyGroup>
-      <ModernOutDir>$(RepoRoot)obj\SuperliminalModernTAS\Release\netstandard2.0\</ModernOutDir>
-      <ModernStage>$(StagingRoot)Modern\BepInEx\plugins\SuperliminalTAS\</ModernStage>
-      <ModernStageRoot>$(StagingRoot)Modern\</ModernStageRoot>
-      <ModernZip>$(ReleaseOut)micrologist.superliminaltas.$(PackageVersion).zip</ModernZip>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(ModernStage)" />
-
-    <ItemGroup>
-      <_ModernArtifacts Include="$(ModernOutDir)micrologist.superliminaltas.dll" />
-      <_ModernArtifacts Include="$(ModernOutDir)micrologist.superliminaltas.pdb" />
-    </ItemGroup>
-
-    <!-- Copy both; silently skips ones that don't exist -->
-    <Copy SourceFiles="@(_ModernArtifacts)"
-          DestinationFolder="$(ModernStage)"
+		<!-- Version 1.0.2019.11.12 -->
+		<PropertyGroup>
+			<V1OutDir>$(RepoRoot)bin\1.0.2019.11.12\net6.0\</V1OutDir>
+			<V1Stage>$(StagingRoot)1.0.2019.11.12\BepInEx\plugins\SuperliminalTAS\</V1Stage>
+			<V1StageRoot>$(StagingRoot)1.0.2019.11.12\</V1StageRoot>
+			<V1Zip>$(ReleaseOut)1.0.2019.11.12.superliminaltas.$(PackageVersion).zip</V1Zip>
+		</PropertyGroup>
+		<MakeDir Directories="$(V1Stage)" />
+		<ItemGroup>
+			<_V1Artifacts Include="$(V1OutDir)1.0.2019.11.12.superliminaltas.dll" />
+			<_V1Artifacts Include="$(V1OutDir)1.0.2019.11.12.superliminaltas.pdb" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_V1Artifacts)"
+          DestinationFolder="$(V1Stage)"
           SkipUnchangedFiles="true"
-          Condition=" '@(_ModernArtifacts)' != '' " />
+          Condition=" '@(_V1Artifacts)' != '' " />
+		<ZipDirectory SourceDirectory="$(V1StageRoot)"
+                  DestinationFile="$(V1Zip)"
+                  Overwrite="true" />
 
-    <Delete Files="$(ModernZip)" Condition="Exists('$(ModernZip)')" />
-    <ZipDirectory SourceDirectory="$(ModernStageRoot)"
-                  DestinationFile="$(ModernZip)" />
-
-    <!-- =========================
-         Legacy: copy dll+pdb + zip
-         ========================= -->
-    <PropertyGroup>
-      <LegacyOutDir>$(RepoRoot)bin\SuperliminalLegacyTAS\Release\net6.0\</LegacyOutDir>
-      <LegacyStage>$(StagingRoot)Legacy\BepInEx\plugins\SuperliminalLegacyTAS\</LegacyStage>
-      <LegacyStageRoot>$(StagingRoot)Legacy\</LegacyStageRoot>
-      <LegacyZip>$(ReleaseOut)micrologist.superliminaltas.legacy.$(PackageVersion).zip</LegacyZip>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(LegacyStage)" />
-
-    <ItemGroup>
-      <_LegacyArtifacts Include="$(LegacyOutDir)micrologist.superliminaltas.legacy.dll" />
-      <_LegacyArtifacts Include="$(LegacyOutDir)micrologist.superliminaltas.legacy.pdb" />
-    </ItemGroup>
-
-    <Copy SourceFiles="@(_LegacyArtifacts)"
-          DestinationFolder="$(LegacyStage)"
+		<!-- Version 1.10.2020.7.6 -->
+		<PropertyGroup>
+			<V2OutDir>$(RepoRoot)bin\1.10.2020.7.6\net6.0\</V2OutDir>
+			<V2Stage>$(StagingRoot)1.10.2020.7.6\BepInEx\plugins\SuperliminalTAS\</V2Stage>
+			<V2StageRoot>$(StagingRoot)1.10.2020.7.6\</V2StageRoot>
+			<V2Zip>$(ReleaseOut)1.10.2020.7.6.superliminaltas.$(PackageVersion).zip</V2Zip>
+		</PropertyGroup>
+		<MakeDir Directories="$(V2Stage)" />
+		<ItemGroup>
+			<_V2Artifacts Include="$(V2OutDir)1.10.2020.7.6.superliminaltas.dll" />
+			<_V2Artifacts Include="$(V2OutDir)1.10.2020.7.6.superliminaltas.pdb" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_V2Artifacts)"
+          DestinationFolder="$(V2Stage)"
           SkipUnchangedFiles="true"
-          Condition=" '@(_LegacyArtifacts)' != '' " />
+          Condition=" '@(_V2Artifacts)' != '' " />
+		<ZipDirectory SourceDirectory="$(V2StageRoot)"
+                  DestinationFile="$(V2Zip)"
+                  Overwrite="true" />
 
-    <Delete Files="$(LegacyZip)" Condition="Exists('$(LegacyZip)')" />
-    <ZipDirectory SourceDirectory="$(LegacyStageRoot)"
-                  DestinationFile="$(LegacyZip)" />
+		<Message Importance="High"
+             Text="Packaged Legacy versions: $(V1Zip), $(V2Zip)" />
+	</Target>
 
-    <Message Importance="High"
-             Text="Packaged: $(ModernZip) and $(LegacyZip) (DLL+PDB copied)" />
-  </Target>
+	<!-- Modern project packages netstandard2.0 versions -->
+	<Target Name="PackageModernVersions"
+          AfterTargets="BuildAllVersions"
+          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalModernTAS'">
+		<MakeDir Directories="$(ReleaseOut)" />
+
+		<!-- Version 1.10.2020.12.10 -->
+		<PropertyGroup>
+			<V3OutDir>$(RepoRoot)bin\1.10.2020.12.10\netstandard2.0\</V3OutDir>
+			<V3Stage>$(StagingRoot)1.10.2020.12.10\BepInEx\plugins\SuperliminalTAS\</V3Stage>
+			<V3StageRoot>$(StagingRoot)1.10.2020.12.10\</V3StageRoot>
+			<V3Zip>$(ReleaseOut)1.10.2020.12.10.superliminaltas.$(PackageVersion).zip</V3Zip>
+		</PropertyGroup>
+		<MakeDir Directories="$(V3Stage)" />
+		<ItemGroup>
+			<_V3Artifacts Include="$(V3OutDir)1.10.2020.12.10.superliminaltas.dll" />
+			<_V3Artifacts Include="$(V3OutDir)1.10.2020.12.10.superliminaltas.pdb" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_V3Artifacts)"
+          DestinationFolder="$(V3Stage)"
+          SkipUnchangedFiles="true"
+          Condition=" '@(_V3Artifacts)' != '' " />
+		<ZipDirectory SourceDirectory="$(V3StageRoot)"
+                  DestinationFile="$(V3Zip)"
+                  Overwrite="true" />
+
+		<!-- Version 1.10.2023.2.17 -->
+		<PropertyGroup>
+			<V4OutDir>$(RepoRoot)bin\1.10.2023.2.17\netstandard2.0\</V4OutDir>
+			<V4Stage>$(StagingRoot)1.10.2023.2.17\BepInEx\plugins\SuperliminalTAS\</V4Stage>
+			<V4StageRoot>$(StagingRoot)1.10.2023.2.17\</V4StageRoot>
+			<V4Zip>$(ReleaseOut)1.10.2023.2.17.superliminaltas.$(PackageVersion).zip</V4Zip>
+		</PropertyGroup>
+		<MakeDir Directories="$(V4Stage)" />
+		<ItemGroup>
+			<_V4Artifacts Include="$(V4OutDir)1.10.2023.2.17.superliminaltas.dll" />
+			<_V4Artifacts Include="$(V4OutDir)1.10.2023.2.17.superliminaltas.pdb" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_V4Artifacts)"
+          DestinationFolder="$(V4Stage)"
+          SkipUnchangedFiles="true"
+          Condition=" '@(_V4Artifacts)' != '' " />
+		<ZipDirectory SourceDirectory="$(V4StageRoot)"
+                  DestinationFile="$(V4Zip)"
+                  Overwrite="true" />
+
+		<Message Importance="High"
+             Text="Packaged Modern versions: $(V3Zip), $(V4Zip)" />
+	</Target>
 </Project>

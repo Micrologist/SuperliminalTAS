@@ -1,8 +1,13 @@
-﻿using SuperliminalTAS.Demo;
+﻿using HarmonyLib;
+using SuperliminalTAS.Demo;
 using System.Linq;
 
 namespace SuperliminalTAS.Patches;
 
+/// <summary>
+/// Static class that intercepts all game input polling and changes results via the hooked-up
+/// DemoRecorder.
+/// </summary>
 internal static class TASInput
 {
     public static bool blockAllInput = false;
@@ -58,5 +63,45 @@ internal static class TASInput
     {
         recording = null;
         passthrough = true;
+    }
+}
+
+[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetButton))]
+[HarmonyPatch([typeof(string)])]
+public class GetButtonPatch
+{
+    static void Postfix(string actionName, ref bool __result)
+    {
+        __result = TASInput.GetButton(actionName, __result);
+    }
+}
+
+[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetButtonDown))]
+[HarmonyPatch([typeof(string)])]
+public class GetButtonDownPatch
+{
+    static void Postfix(string actionName, ref bool __result)
+    {
+        __result = TASInput.GetButtonDown(actionName, __result);
+    }
+}
+
+[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetButtonUp))]
+[HarmonyPatch([typeof(string)])]
+public class GetButtonUpPatch
+{
+    static void Postfix(string actionName, ref bool __result)
+    {
+        __result = TASInput.GetButtonUp(actionName, __result);
+    }
+}
+
+[HarmonyPatch(typeof(Rewired.Player), nameof(Rewired.Player.GetAxis))]
+[HarmonyPatch([typeof(string)])]
+public class GetAxisPatch
+{
+    static void Postfix(string actionName, ref float __result)
+    {
+        __result = TASInput.GetAxis(actionName, __result);
     }
 }

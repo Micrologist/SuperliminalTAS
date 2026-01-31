@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>micrologist.superliminaltas.legacy</AssemblyName>
+    <AssemblyName>$(GameVersion).superliminaltas</AssemblyName>
     <Product>SuperliminalLegacyTAS</Product>
 		<Description>A plugin for legacy versions of Superliminal to allow the creation of tool-assisted speedruns.</Description>
-    <Version>0.7.2</Version>
+
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
@@ -17,21 +17,29 @@
     <RootNamespace>SuperliminalTAS</RootNamespace>
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<AutoUnifyAssemblyReferences>false</AutoUnifyAssemblyReferences>
-		<GameLibDir>$(MSBuildProjectDirectory)\GameLibs\Legacy</GameLibDir>
+
+		<OutputPath>bin\$(GameVersion)\</OutputPath>
+		<GameVersion Condition="'$(GameVersion)' == ''">1.10.2020.7.6</GameVersion>
+		<DefineConstants Condition="'$(GameVersion)' == '1.10.2020.7.6'">$(DefineConstants);HAS_LEVELINFO</DefineConstants>
+
+		<GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="bin\**" />
     <Compile Remove="GameLibs\**" />
     <Compile Remove="obj\**" />
+    <Compile Remove="Releases\**" />
     <Compile Remove="Staging\**" />
     <EmbeddedResource Remove="bin\**" />
     <EmbeddedResource Remove="GameLibs\**" />
     <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="Releases\**" />
     <EmbeddedResource Remove="Staging\**" />
     <None Remove="bin\**" />
     <None Remove="GameLibs\**" />
     <None Remove="obj\**" />
+    <None Remove="Releases\**" />
     <None Remove="Staging\**" />
   </ItemGroup>
 
@@ -306,5 +314,8 @@
     </Reference>
   </ItemGroup>
 
-
+	<Target Name="BuildAllVersions" AfterTargets="Build">
+		<MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.0.2019.11.12;IsRecursiveBuild=true" Targets="Build" />
+		<MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2020.7.6;IsRecursiveBuild=true" Targets="Build" />
+	</Target>
 </Project>

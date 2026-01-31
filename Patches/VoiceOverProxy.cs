@@ -1,10 +1,16 @@
+#if !LEGACY
+
 using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace SuperliminalTAS.Patches;
 
-internal static class VOProxy
+/// <summary>
+/// Proxy class for making labyrinth voice lines run synced to game time.
+/// Only required in non-legacy versions.
+/// </summary>
+internal static class VoiceOverProxy
 {
     public static readonly Dictionary<string, int> VoicelineDurations = new()
     {
@@ -19,25 +25,22 @@ internal static class VOProxy
     public static Dictionary<string, int> VoicelineEndFrames = [];
 }
 
-#if !LEGACY
-// VO patches are disabled for IL2CPP (LEGACY) because MOSTEventVOPlayer patching
-// encounters marshaling issues under the IL2CPP runtime.
 [HarmonyPatch(typeof(MOSTEventVOPlayer), "StartVOandSubtitles")]
-public class StartVOPatch
+public class VoiceOverStartProxyPatch
 {
     static void Prefix(MOSTEventVOPlayer __instance)
     {
-        if (VOProxy.VoicelineDurations.TryGetValue(__instance.name, out int frameDuration))
+        if (VoiceOverProxy.VoicelineDurations.TryGetValue(__instance.name, out int frameDuration))
         {
             var endFrame = Time.renderedFrameCount + frameDuration;
 
-            if (VOProxy.VoicelineEndFrames.ContainsKey(__instance.name))
+            if (VoiceOverProxy.VoicelineEndFrames.ContainsKey(__instance.name))
             {
-                VOProxy.VoicelineEndFrames[__instance.name] = endFrame;
+                VoiceOverProxy.VoicelineEndFrames[__instance.name] = endFrame;
             }
             else
             {
-                VOProxy.VoicelineEndFrames.Add(__instance.name, Time.renderedFrameCount + frameDuration);
+                VoiceOverProxy.VoicelineEndFrames.Add(__instance.name, Time.renderedFrameCount + frameDuration);
             }
 
             Debug.Log(
@@ -53,18 +56,18 @@ public class StartVOPatch
 }
 
 [HarmonyPatch(typeof(MOSTEventVOPlayer), nameof(MOSTEventVOPlayer.HasEnded))]
-public class VOHasEndedPatch
+public class VoiceOverHasEndedProxyPatch
 {
     static void Postfix(MOSTEventVOPlayer __instance, ref bool __result)
     {
-        if (!__instance.VOBeganPlaying || !VOProxy.VoicelineEndFrames.TryGetValue(__instance.name, out int endFrame))
+        if (!__instance.VOBeganPlaying || !VoiceOverProxy.VoicelineEndFrames.TryGetValue(__instance.name, out int endFrame))
         {
             return;
         }
         if (Time.renderedFrameCount >= endFrame)
         {
             __result = true;
-            VOProxy.VoicelineEndFrames.Remove(__instance.name);
+            VoiceOverProxy.VoicelineEndFrames.Remove(__instance.name);
 
             Debug.Log($"{__instance.name} proxy finished at {Time.timeSinceLevelLoad}.");
         }

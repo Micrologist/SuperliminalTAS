@@ -1,16 +1,14 @@
 ﻿#if LEGACY
-
 using System;
 using System.IO;
 using UnityEngine;
-using UnityEngine.UI;
-using UniverseLib;
 
-internal static class LegacyFontAssetLoader
+/// <summary>
+/// Static class for loading the Noto-Mono font via UniverseLib asset loading.
+/// </summary>
+internal static class LegacyNotoMonoAssetLoader
 {
     private static UnityEngine.Font _cached;
-
-
 
     public static UnityEngine.Font GetFontOrDefault()
 
@@ -20,7 +18,7 @@ internal static class LegacyFontAssetLoader
 
         try
         {
-            var modDir = Path.GetDirectoryName(typeof(LegacyFontAssetLoader).Assembly.Location);
+            var modDir = Path.GetDirectoryName(typeof(LegacyNotoMonoAssetLoader).Assembly.Location);
             var bundlePath = Path.Combine(modDir, "notomono");
             bundlePath = Path.GetFullPath(bundlePath);
 
@@ -73,7 +71,6 @@ internal static class LegacyFontAssetLoader
             return GetBuiltinArial();
         }
     }
-
 
     private static Font GetBuiltinArial()
     {

@@ -544,7 +544,8 @@ public sealed class DemoRecorder : MonoBehaviour
         if (saveManager == null) return -1;
 
         if (SaveGamePatch.currentCheckpoint == null) return -1;
-
+        
+        // TODO: This can probably go back to LINQ as long as we make sure to GetComponent<CheckPoint> on Legacy
 #if LEGACY
         Il2CppArrayBase<CheckPoint> il2cppArray = global::UnityEngine.GameObject.FindObjectsOfType<CheckPoint>();
         CheckPoint[] array = new CheckPoint[il2cppArray.Length];

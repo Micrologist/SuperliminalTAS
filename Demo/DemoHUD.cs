@@ -21,6 +21,7 @@ namespace SuperliminalTAS.Demo
 #if LEGACY
         public DemoHUD(IntPtr ptr) : base(ptr) { }
 #else
+        // Modern versions require Reflection to get some of the relevant private fields
         private static readonly Dictionary<string, FieldInfo> _mantleFields = new()
         {
             ["currentlyMantling"] = AccessTools.Field(typeof(PlayerLerpMantle), "currentlyMantling"),
@@ -369,7 +370,7 @@ namespace SuperliminalTAS.Demo
         public Font GetNotoSansMonoFont()
         {
 #if LEGACY
-            return LegacyFontAssetLoader.GetFontOrDefault();
+            return LegacyNotoMonoAssetLoader.GetFontOrDefault();
 #else
             return Resources.FindObjectsOfTypeAll<Font>().FirstOrDefault(f => f != null && f.name == "NotoMono-Regular");
 #endif
