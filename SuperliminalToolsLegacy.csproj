@@ -6,7 +6,7 @@
     <OutputPath>bin\$(GameVersion)\</OutputPath>
     <GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
     <AssemblyName>$(GameVersion).superliminaltools</AssemblyName>
-    <Product>SuperliminalLegacyTools</Product>
+    <Product>SuperliminalToolsLegacy</Product>
     <Description>A plugin for legacy versions of Superliminal to allow the creation of tool-assisted speedruns.</Description>
 
     <DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
@@ -19,7 +19,6 @@
     <PackageReference Include="rainbowblood.UniverseLib.IL2CPP" Version="1.2.*" />
   </ItemGroup>
 
-  <!-- All DLLs in the version-specific GameLibs folder are referenced -->
   <ItemGroup>
 		<Reference Include="Assembly-CSharp">
 			<HintPath>$(GameLibDir)\Assembly-CSharp.dll</HintPath>
