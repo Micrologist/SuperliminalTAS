@@ -49,8 +49,17 @@ public class SuperliminalToolsPlugin : BasePlugin
         ClassInjector.RegisterTypeInIl2Cpp<PathProjectorController>();
         ClassInjector.RegisterTypeInIl2Cpp<TeleportAndScaleController>();
 
-        Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
-        UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
+        var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+
+        if (practiceMode)
+        {
+            harmony.PatchAll(typeof(UtilityPatches));
+        }
+        else
+        {
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
+        }
 
         // Create a persistent GameObject that survives scene transitions
         var go = new GameObject("SuperliminalTools");
@@ -79,8 +88,17 @@ public class SuperliminalToolsPlugin : BaseUnityPlugin
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded! Mode: {(practiceMode ? "Practice" : "TAS")}");
 
-        Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
-        UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
+        var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+
+        if (practiceMode)
+        {
+            harmony.PatchAll(typeof(UtilityPatches));
+        }
+        else
+        {
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
+        }
 
         // Create a persistent GameObject that survives scene transitions
         var go = new GameObject("SuperliminalTools");
