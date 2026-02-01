@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <!-- Legacy project builds two versions targeting net6.0 -->
-  <Target Name="BuildAllVersions"
+  <Target Name="BuildAllLegacyVersions"
           AfterTargets="Build"
           Condition="'$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalLegacyTools'">
     <MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.0.2019.11.12;IsRecursiveBuild=true" Targets="Build" />
@@ -41,7 +41,7 @@
   </Target>
 
   <!-- Modern project builds two versions targeting netstandard2.0 -->
-  <Target Name="BuildAllVersions"
+  <Target Name="BuildAllModernVersions"
           AfterTargets="Build"
           Condition="'$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalModernTools'">
     <MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2020.12.10;IsRecursiveBuild=true" Targets="Build" />
@@ -50,7 +50,7 @@
 
   <!-- Package legacy versions into release zips -->
   <Target Name="PackageLegacyVersions"
-          AfterTargets="BuildAllVersions"
+          AfterTargets="BuildAllLegacyVersions"
           Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalLegacyTools'">
     <MakeDir Directories="$(ReleaseOut)" />
     <ItemGroup>
@@ -65,7 +65,7 @@
 
   <!-- Package modern versions into release zips -->
   <Target Name="PackageModernVersions"
-          AfterTargets="BuildAllVersions"
+          AfterTargets="BuildAllModernVersions"
           Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalModernTools'">
     <MakeDir Directories="$(ReleaseOut)" />
     <ItemGroup>
