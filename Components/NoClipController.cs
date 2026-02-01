@@ -89,12 +89,15 @@ class NoClipController : MonoBehaviour
 
     public void ToggleNoClip()
     {
+        if (GameManager.GM.player == null)
+            return;
+
         NoClipEnabled = !NoClipEnabled;
 
         if (UseNoClipCamera)
         {
             var jumpingScript = GameManager.GM.GetComponent<LevelJumpingScript>();
-            if (GameManager.GM.player == null || jumpingScript == null) return;
+            if (jumpingScript == null) return;
 
             if (NoClipEnabled)
             {
