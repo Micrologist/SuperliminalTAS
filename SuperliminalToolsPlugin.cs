@@ -77,14 +77,12 @@ public partial class SuperliminalToolsPlugin
         else
         {
             go.AddComponent<PracticeModController>();
-            harmony.PatchAll(typeof(LerpPlayerMantlePatch));
-            harmony.PatchAll(typeof(SaveGamePatch));
             harmony.PatchAll(typeof(NormalLoadingScreensPatch));
             harmony.PatchAll(typeof(DisableAlarmSoundPatch));
+            harmony.PatchAll(typeof(DontPauseOnLostFocusPatch));
 #if HAS_WARNING_CONTROLLER
             harmony.PatchAll(typeof(DisableWarningScreenPatch));
 #endif
-            harmony.PatchAll(typeof(DontPauseOnLostFocusPatch));
 #if LEGACY
             harmony.PatchAll(typeof(LegacyResetCheckpointPatch));
             harmony.PatchAll(typeof(HotCofeeErrorPatch));
