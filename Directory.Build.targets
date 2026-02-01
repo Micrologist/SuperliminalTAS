@@ -24,22 +24,6 @@
     <None Remove="Staging\**" />
   </ItemGroup>
 
-  <!-- Shared game library references (GameLibDir is now resolved) -->
-  <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(GameLibDir)\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>$(GameLibDir)\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="Rewired_Core">
-      <HintPath>$(GameLibDir)\Rewired_Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Rewired_Windows">
-      <HintPath>$(GameLibDir)\Rewired_Windows.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
     <StagingRoot>$(RepoRoot)Staging\</StagingRoot>
