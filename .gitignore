@@ -24,7 +24,9 @@ bld/
 
 /Staging
 
-/GameLibs/Legacy/
-/GameLibs/Modern/
+/GameLibs/**
+!/GameLibs/
+!/GameLibs/*/
+!/GameLibs/**/.gitkeep
 *.dll
 *.db
