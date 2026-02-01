@@ -1,10 +1,4 @@
 <Project>
-  <!-- These depend on $(GameVersion) set in each csproj, so must be in targets (evaluated after csproj) -->
-  <PropertyGroup>
-    <OutputPath>bin\$(GameVersion)\</OutputPath>
-    <GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
-  </PropertyGroup>
-
   <!-- Exclude non-source directories (must be in targets, after SDK populates item lists) -->
   <ItemGroup>
     <Compile Remove="bin\**" />

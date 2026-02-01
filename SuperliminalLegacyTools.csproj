@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <GameVersion Condition="'$(GameVersion)' == ''">1.0.2019.11.12</GameVersion>
+    <OutputPath>bin\$(GameVersion)\</OutputPath>
+    <GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
     <AssemblyName>$(GameVersion).superliminaltools</AssemblyName>
     <Product>SuperliminalLegacyTools</Product>
     <Description>A plugin for legacy versions of Superliminal to allow the creation of tool-assisted speedruns.</Description>
