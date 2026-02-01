@@ -18,7 +18,7 @@
 		<AutoUnifyAssemblyReferences>false</AutoUnifyAssemblyReferences>
 
 		<OutputPath>bin\$(GameVersion)\</OutputPath>
-		<GameVersion Condition="'$(GameVersion)' == ''">1.10.2020.7.6</GameVersion>
+		<GameVersion Condition="'$(GameVersion)' == ''">1.0.2019.11.12</GameVersion>
 		<DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
 		<DefineConstants Condition="'$(GameVersion)' == '1.10.2020.7.6'">$(DefineConstants);HAS_LEVELINFO</DefineConstants>
 		<DefineConstants Condition="'$(GameVersion)' == '1.10.2020.7.6'">$(DefineConstants);HAS_VO_PLAYER</DefineConstants>

@@ -54,7 +54,11 @@ class ObjectScaleController : MonoBehaviour
 
         if (grabbedObject != null)
         {
+#if LEGACY
+            resizeScript.grabbedMinGrabDistance *= factor;
+#else
             resizeScript.ScaleObject(factor);
+#endif
         }
     }
 }
