@@ -1,109 +1,125 @@
 <Project>
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
-		<StagingRoot>$(RepoRoot)Staging\</StagingRoot>
-		<ReleaseOut>$(RepoRoot)Releases\</ReleaseOut>
-		<PackageVersion Condition="'$(Version)' == ''">0.0.0</PackageVersion>
-		<PackageVersion Condition="'$(Version)' != ''">$(Version)</PackageVersion>
-	</PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <Compile Remove="GameLibs\**" />
+    <Compile Remove="obj\**" />
+    <Compile Remove="Releases\**" />
+    <Compile Remove="Staging\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Remove="GameLibs\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="Releases\**" />
+    <EmbeddedResource Remove="Staging\**" />
+    <None Remove="bin\**" />
+    <None Remove="GameLibs\**" />
+    <None Remove="obj\**" />
+    <None Remove="Releases\**" />
+    <None Remove="Staging\**" />
+  </ItemGroup>
 
-	<!-- Legacy project packages net6.0 versions -->
-	<Target Name="PackageLegacyVersions"
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <StagingRoot>$(RepoRoot)Staging\</StagingRoot>
+    <ReleaseOut>$(RepoRoot)Releases\</ReleaseOut>
+    <PackageVersion Condition="'$(Version)' == ''">0.0.0</PackageVersion>
+    <PackageVersion Condition="'$(Version)' != ''">$(Version)</PackageVersion>
+  </PropertyGroup>
+
+  <!-- Package legacy versions into release zips -->
+  <Target Name="PackageLegacyVersions"
           AfterTargets="BuildAllVersions"
-          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalLegacyTools'">
-		<MakeDir Directories="$(ReleaseOut)" />
+          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalToolsLegacy'">
+    <MakeDir Directories="$(ReleaseOut)" />
 
-		<!-- Version 1.0.2019.11.12 -->
-		<PropertyGroup>
-			<V1OutDir>$(RepoRoot)bin\1.0.2019.11.12\net6.0\</V1OutDir>
-			<V1Stage>$(StagingRoot)1.0.2019.11.12\BepInEx\plugins\SuperliminalTools\</V1Stage>
-			<V1StageRoot>$(StagingRoot)1.0.2019.11.12\</V1StageRoot>
-			<V1Zip>$(ReleaseOut)1.0.2019.11.12.superliminaltools.$(PackageVersion).zip</V1Zip>
-		</PropertyGroup>
-		<MakeDir Directories="$(V1Stage)" />
-		<ItemGroup>
-			<_V1Artifacts Include="$(V1OutDir)1.0.2019.11.12.superliminaltools.dll" />
-			<_V1Artifacts Include="$(V1OutDir)1.0.2019.11.12.superliminaltools.pdb" />
-		</ItemGroup>
-		<Copy SourceFiles="@(_V1Artifacts)"
+    <!-- Version 1.0.2019.11.12 -->
+    <PropertyGroup>
+      <V1OutDir>$(RepoRoot)bin\1.0.2019.11.12\net6.0\</V1OutDir>
+      <V1Stage>$(StagingRoot)1.0.2019.11.12\BepInEx\plugins\SuperliminalTools\</V1Stage>
+      <V1StageRoot>$(StagingRoot)1.0.2019.11.12\</V1StageRoot>
+      <V1Zip>$(ReleaseOut)1.0.2019.11.12.superliminaltools.$(PackageVersion).zip</V1Zip>
+    </PropertyGroup>
+    <MakeDir Directories="$(V1Stage)" />
+    <ItemGroup>
+      <_V1Artifacts Include="$(V1OutDir)1.0.2019.11.12.superliminaltools.dll" />
+      <_V1Artifacts Include="$(V1OutDir)1.0.2019.11.12.superliminaltools.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_V1Artifacts)"
           DestinationFolder="$(V1Stage)"
           SkipUnchangedFiles="true"
-          Condition=" '@(_V1Artifacts)' != '' " />
-		<ZipDirectory SourceDirectory="$(V1StageRoot)"
+          Condition="'@(_V1Artifacts)' != ''" />
+    <ZipDirectory SourceDirectory="$(V1StageRoot)"
                   DestinationFile="$(V1Zip)"
                   Overwrite="true" />
 
-		<!-- Version 1.10.2020.7.6 -->
-		<PropertyGroup>
-			<V2OutDir>$(RepoRoot)bin\1.10.2020.7.6\net6.0\</V2OutDir>
-			<V2Stage>$(StagingRoot)1.10.2020.7.6\BepInEx\plugins\SuperliminalTools\</V2Stage>
-			<V2StageRoot>$(StagingRoot)1.10.2020.7.6\</V2StageRoot>
-			<V2Zip>$(ReleaseOut)1.10.2020.7.6.superliminaltools.$(PackageVersion).zip</V2Zip>
-		</PropertyGroup>
-		<MakeDir Directories="$(V2Stage)" />
-		<ItemGroup>
-			<_V2Artifacts Include="$(V2OutDir)1.10.2020.7.6.superliminaltools.dll" />
-			<_V2Artifacts Include="$(V2OutDir)1.10.2020.7.6.superliminaltools.pdb" />
-		</ItemGroup>
-		<Copy SourceFiles="@(_V2Artifacts)"
+    <!-- Version 1.10.2020.7.6 -->
+    <PropertyGroup>
+      <V2OutDir>$(RepoRoot)bin\1.10.2020.7.6\net6.0\</V2OutDir>
+      <V2Stage>$(StagingRoot)1.10.2020.7.6\BepInEx\plugins\SuperliminalTools\</V2Stage>
+      <V2StageRoot>$(StagingRoot)1.10.2020.7.6\</V2StageRoot>
+      <V2Zip>$(ReleaseOut)1.10.2020.7.6.superliminaltools.$(PackageVersion).zip</V2Zip>
+    </PropertyGroup>
+    <MakeDir Directories="$(V2Stage)" />
+    <ItemGroup>
+      <_V2Artifacts Include="$(V2OutDir)1.10.2020.7.6.superliminaltools.dll" />
+      <_V2Artifacts Include="$(V2OutDir)1.10.2020.7.6.superliminaltools.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_V2Artifacts)"
           DestinationFolder="$(V2Stage)"
           SkipUnchangedFiles="true"
-          Condition=" '@(_V2Artifacts)' != '' " />
-		<ZipDirectory SourceDirectory="$(V2StageRoot)"
+          Condition="'@(_V2Artifacts)' != ''" />
+    <ZipDirectory SourceDirectory="$(V2StageRoot)"
                   DestinationFile="$(V2Zip)"
                   Overwrite="true" />
 
-		<Message Importance="High"
-             Text="Packaged Legacy versions: $(V1Zip), $(V2Zip)" />
-	</Target>
+    <Message Importance="High" Text="Packaged Legacy versions: $(V1Zip), $(V2Zip)" />
+  </Target>
 
-	<!-- Modern project packages netstandard2.0 versions -->
-	<Target Name="PackageModernVersions"
+  <!-- Package modern versions into release zips -->
+  <Target Name="PackageModernVersions"
           AfterTargets="BuildAllVersions"
-          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalModernTools'">
-		<MakeDir Directories="$(ReleaseOut)" />
+          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalToolsModern'">
+    <MakeDir Directories="$(ReleaseOut)" />
 
-		<!-- Version 1.10.2020.12.10 -->
-		<PropertyGroup>
-			<V3OutDir>$(RepoRoot)bin\1.10.2020.12.10\netstandard2.0\</V3OutDir>
-			<V3Stage>$(StagingRoot)1.10.2020.12.10\BepInEx\plugins\SuperliminalTools\</V3Stage>
-			<V3StageRoot>$(StagingRoot)1.10.2020.12.10\</V3StageRoot>
-			<V3Zip>$(ReleaseOut)1.10.2020.12.10.superliminaltools.$(PackageVersion).zip</V3Zip>
-		</PropertyGroup>
-		<MakeDir Directories="$(V3Stage)" />
-		<ItemGroup>
-			<_V3Artifacts Include="$(V3OutDir)1.10.2020.12.10.superliminaltools.dll" />
-			<_V3Artifacts Include="$(V3OutDir)1.10.2020.12.10.superliminaltools.pdb" />
-		</ItemGroup>
-		<Copy SourceFiles="@(_V3Artifacts)"
+    <!-- Version 1.10.2020.12.10 -->
+    <PropertyGroup>
+      <V3OutDir>$(RepoRoot)bin\1.10.2020.12.10\netstandard2.0\</V3OutDir>
+      <V3Stage>$(StagingRoot)1.10.2020.12.10\BepInEx\plugins\SuperliminalTools\</V3Stage>
+      <V3StageRoot>$(StagingRoot)1.10.2020.12.10\</V3StageRoot>
+      <V3Zip>$(ReleaseOut)1.10.2020.12.10.superliminaltools.$(PackageVersion).zip</V3Zip>
+    </PropertyGroup>
+    <MakeDir Directories="$(V3Stage)" />
+    <ItemGroup>
+      <_V3Artifacts Include="$(V3OutDir)1.10.2020.12.10.superliminaltools.dll" />
+      <_V3Artifacts Include="$(V3OutDir)1.10.2020.12.10.superliminaltools.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_V3Artifacts)"
           DestinationFolder="$(V3Stage)"
           SkipUnchangedFiles="true"
-          Condition=" '@(_V3Artifacts)' != '' " />
-		<ZipDirectory SourceDirectory="$(V3StageRoot)"
+          Condition="'@(_V3Artifacts)' != ''" />
+    <ZipDirectory SourceDirectory="$(V3StageRoot)"
                   DestinationFile="$(V3Zip)"
                   Overwrite="true" />
 
-		<!-- Version 1.10.2023.2.17 -->
-		<PropertyGroup>
-			<V4OutDir>$(RepoRoot)bin\1.10.2023.2.17\netstandard2.0\</V4OutDir>
-			<V4Stage>$(StagingRoot)1.10.2023.2.17\BepInEx\plugins\SuperliminalTools\</V4Stage>
-			<V4StageRoot>$(StagingRoot)1.10.2023.2.17\</V4StageRoot>
-			<V4Zip>$(ReleaseOut)1.10.2023.2.17.superliminaltools.$(PackageVersion).zip</V4Zip>
-		</PropertyGroup>
-		<MakeDir Directories="$(V4Stage)" />
-		<ItemGroup>
-			<_V4Artifacts Include="$(V4OutDir)1.10.2023.2.17.superliminaltools.dll" />
-			<_V4Artifacts Include="$(V4OutDir)1.10.2023.2.17.superliminaltools.pdb" />
-		</ItemGroup>
-		<Copy SourceFiles="@(_V4Artifacts)"
+    <!-- Version 1.10.2023.2.17 -->
+    <PropertyGroup>
+      <V4OutDir>$(RepoRoot)bin\1.10.2023.2.17\netstandard2.0\</V4OutDir>
+      <V4Stage>$(StagingRoot)1.10.2023.2.17\BepInEx\plugins\SuperliminalTools\</V4Stage>
+      <V4StageRoot>$(StagingRoot)1.10.2023.2.17\</V4StageRoot>
+      <V4Zip>$(ReleaseOut)1.10.2023.2.17.superliminaltools.$(PackageVersion).zip</V4Zip>
+    </PropertyGroup>
+    <MakeDir Directories="$(V4Stage)" />
+    <ItemGroup>
+      <_V4Artifacts Include="$(V4OutDir)1.10.2023.2.17.superliminaltools.dll" />
+      <_V4Artifacts Include="$(V4OutDir)1.10.2023.2.17.superliminaltools.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_V4Artifacts)"
           DestinationFolder="$(V4Stage)"
           SkipUnchangedFiles="true"
-          Condition=" '@(_V4Artifacts)' != '' " />
-		<ZipDirectory SourceDirectory="$(V4StageRoot)"
+          Condition="'@(_V4Artifacts)' != ''" />
+    <ZipDirectory SourceDirectory="$(V4StageRoot)"
                   DestinationFile="$(V4Zip)"
                   Overwrite="true" />
 
-		<Message Importance="High"
-             Text="Packaged Modern versions: $(V3Zip), $(V4Zip)" />
-	</Target>
+    <Message Importance="High" Text="Packaged Modern versions: $(V3Zip), $(V4Zip)" />
+  </Target>
 </Project>
