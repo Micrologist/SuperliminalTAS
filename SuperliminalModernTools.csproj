@@ -3,85 +3,32 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>$(GameVersion).superliminaltools</AssemblyName>
+    <Product>SuperliminalModernTools</Product>
     <Description>A plugin for Superliminal to allow the creation of tool-assisted speedruns.</Description>
+    <OutputType>Library</OutputType>
+    <IsPublishable>True</IsPublishable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<LangVersion>latest</LangVersion>
-		<RestoreAdditionalProjectSources>
-			https://api.nuget.org/v3/index.json;
-			https://nuget.bepinex.dev/v3/index.json;
-			https://nuget.samboy.dev/v3/index.json
-		</RestoreAdditionalProjectSources>
-		<RootNamespace>SuperliminalTools</RootNamespace>
-		<OutputType>Library</OutputType>
-		<IsPublishable>True</IsPublishable>
-		<Product>SuperliminalModernTools</Product>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-		<AutoUnifyAssemblyReferences>false</AutoUnifyAssemblyReferences>
-
-		<OutputPath>bin\$(GameVersion)\</OutputPath>
-		<GameVersion Condition="'$(GameVersion)' == ''">1.10.2023.2.17</GameVersion>
-		<DefineConstants>$(DefineConstants);HAS_VO_PLAYER</DefineConstants>
-		<DefineConstants Condition="'$(GameVersion)' == '1.10.2023.2.17'">$(DefineConstants);HAS_WARNING_CONTROLLER</DefineConstants>
-
-		<GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
+    <GameVersion Condition="'$(GameVersion)' == ''">1.10.2023.2.17</GameVersion>
+    <DefineConstants>$(DefineConstants);HAS_VO_PLAYER</DefineConstants>
+    <DefineConstants Condition="'$(GameVersion)' == '1.10.2023.2.17'">$(DefineConstants);HAS_WARNING_CONTROLLER</DefineConstants>
   </PropertyGroup>
 
-	
-	<ItemGroup>
-	  <Compile Remove="bin\**" />
-	  <Compile Remove="GameLibs\**" />
-	  <Compile Remove="obj\**" />
-	  <Compile Remove="Releases\**" />
-	  <Compile Remove="Staging\**" />
-	  <EmbeddedResource Remove="bin\**" />
-	  <EmbeddedResource Remove="GameLibs\**" />
-	  <EmbeddedResource Remove="obj\**" />
-	  <EmbeddedResource Remove="Releases\**" />
-	  <EmbeddedResource Remove="Staging\**" />
-	  <None Remove="bin\**" />
-	  <None Remove="GameLibs\**" />
-	  <None Remove="obj\**" />
-	  <None Remove="Releases\**" />
-	  <None Remove="Staging\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Remove=".gitignore" />
-	</ItemGroup>
-
   <ItemGroup>
-		<PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
-		<PackageReference Include="BepInEx.Core" Version="5.*" />
-		<PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
-		<PackageReference Include="UnityEngine.Modules" Version="2019.4.35" IncludeAssets="compile" />
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+    <PackageReference Include="UnityEngine.Modules" Version="2019.4.35" IncludeAssets="compile" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(GameLibDir)\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>$(GameLibDir)\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="Rewired_Core">
-      <HintPath>$(GameLibDir)\Rewired_Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Rewired_Windows">
-      <HintPath>$(GameLibDir)\Rewired_Windows.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(GameLibDir)\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
 
-	<Target Name="BuildAllVersions" AfterTargets="Build">
-		<MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2020.12.10;IsRecursiveBuild=true" Targets="Build" />
-		<MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2023.2.17;IsRecursiveBuild=true" Targets="Build" />
-	</Target>
 </Project>

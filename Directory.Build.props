@@ -1,7 +1,57 @@
 <Project>
   <PropertyGroup>
-		<Version>0.8.2</Version>
+    <Version>0.8.2</Version>
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
     <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
+
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SuperliminalTools</RootNamespace>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AutoUnifyAssemblyReferences>false</AutoUnifyAssemblyReferences>
+
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.samboy.dev/v3/index.json
+    </RestoreAdditionalProjectSources>
+
+    <OutputPath>bin\$(GameVersion)\</OutputPath>
+    <GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
   </PropertyGroup>
+
+  <!-- Exclude non-source directories shared by both projects -->
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <Compile Remove="GameLibs\**" />
+    <Compile Remove="obj\**" />
+    <Compile Remove="Releases\**" />
+    <Compile Remove="Staging\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Remove="GameLibs\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="Releases\**" />
+    <EmbeddedResource Remove="Staging\**" />
+    <None Remove="bin\**" />
+    <None Remove="GameLibs\**" />
+    <None Remove="obj\**" />
+    <None Remove="Releases\**" />
+    <None Remove="Staging\**" />
+  </ItemGroup>
+
+  <!-- Shared game library references -->
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameLibDir)\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(GameLibDir)\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="Rewired_Core">
+      <HintPath>$(GameLibDir)\Rewired_Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Rewired_Windows">
+      <HintPath>$(GameLibDir)\Rewired_Windows.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
