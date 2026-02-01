@@ -1,4 +1,45 @@
 <Project>
+  <!-- These depend on $(GameVersion) set in each csproj, so must be in targets (evaluated after csproj) -->
+  <PropertyGroup>
+    <OutputPath>bin\$(GameVersion)\</OutputPath>
+    <GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
+  </PropertyGroup>
+
+  <!-- Exclude non-source directories (must be in targets, after SDK populates item lists) -->
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <Compile Remove="GameLibs\**" />
+    <Compile Remove="obj\**" />
+    <Compile Remove="Releases\**" />
+    <Compile Remove="Staging\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Remove="GameLibs\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="Releases\**" />
+    <EmbeddedResource Remove="Staging\**" />
+    <None Remove="bin\**" />
+    <None Remove="GameLibs\**" />
+    <None Remove="obj\**" />
+    <None Remove="Releases\**" />
+    <None Remove="Staging\**" />
+  </ItemGroup>
+
+  <!-- Shared game library references (GameLibDir is now resolved) -->
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameLibDir)\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(GameLibDir)\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="Rewired_Core">
+      <HintPath>$(GameLibDir)\Rewired_Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Rewired_Windows">
+      <HintPath>$(GameLibDir)\Rewired_Windows.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
     <StagingRoot>$(RepoRoot)Staging\</StagingRoot>
