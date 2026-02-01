@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 #endif
 
-namespace SuperliminalTAS.Patches;
+namespace SuperliminalTools.Patches;
 
 #if LEGACY
 [HarmonyPatch(typeof(PlayerLerpMantle._LerpPlayer_d__12), "MoveNext")]

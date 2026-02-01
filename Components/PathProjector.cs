@@ -30,7 +30,7 @@ public class PathProjector : MonoBehaviour
             Debug.LogWarning("PathProjector was added to a gameobject without a charactercontroller!");
         }
 
-        visualizationMaterial = SuperliminalTAS.Components.Utility.GetTransparentMaterial(hitColor);
+        visualizationMaterial = SuperliminalTools.Components.Utility.GetTransparentMaterial(hitColor);
         CreateVisualCapsule();
     }
 

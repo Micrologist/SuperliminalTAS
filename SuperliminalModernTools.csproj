@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>$(GameVersion).superliminaltas</AssemblyName>
+    <AssemblyName>$(GameVersion).superliminaltools</AssemblyName>
     <Description>A plugin for Superliminal to allow the creation of tool-assisted speedruns.</Description>
 
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -12,10 +12,10 @@
 			https://nuget.bepinex.dev/v3/index.json;
 			https://nuget.samboy.dev/v3/index.json
 		</RestoreAdditionalProjectSources>
-		<RootNamespace>SuperliminalTAS</RootNamespace>
+		<RootNamespace>SuperliminalTools</RootNamespace>
 		<OutputType>Library</OutputType>
 		<IsPublishable>True</IsPublishable>
-		<Product>SuperliminalModernTAS</Product>
+		<Product>SuperliminalModernTools</Product>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<AutoUnifyAssemblyReferences>false</AutoUnifyAssemblyReferences>

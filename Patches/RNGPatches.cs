@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using UnityEngine;
 
-namespace SuperliminalTAS.Patches;
+namespace SuperliminalTools.Patches;
 
 [HarmonyPatch(typeof(Random), nameof(Random.onUnitSphere))]
 [HarmonyPatch(MethodType.Getter)]

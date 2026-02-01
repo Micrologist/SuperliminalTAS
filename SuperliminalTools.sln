@@ -1,11 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36915.13
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperliminalLegacyTAS", "SuperliminalLegacyTAS.csproj", "{36BA12D2-4456-74D1-2CCF-8B01BC2F3DAE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperliminalLegacyTools", "SuperliminalLegacyTools.csproj", "{36BA12D2-4456-74D1-2CCF-8B01BC2F3DAE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperliminalModernTAS", "SuperliminalModernTAS.csproj", "{A1B2C3D4-5678-9ABC-DEF0-123456789ABC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperliminalModernTools", "SuperliminalModernTools.csproj", "{A1B2C3D4-5678-9ABC-DEF0-123456789ABC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>$(GameVersion).superliminaltas</AssemblyName>
-    <Product>SuperliminalLegacyTAS</Product>
+    <AssemblyName>$(GameVersion).superliminaltools</AssemblyName>
+    <Product>SuperliminalLegacyTools</Product>
 		<Description>A plugin for legacy versions of Superliminal to allow the creation of tool-assisted speedruns.</Description>
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -13,7 +13,7 @@
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <RootNamespace>SuperliminalTAS</RootNamespace>
+    <RootNamespace>SuperliminalTools</RootNamespace>
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<AutoUnifyAssemblyReferences>false</AutoUnifyAssemblyReferences>
 

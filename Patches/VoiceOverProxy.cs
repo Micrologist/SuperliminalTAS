@@ -4,7 +4,7 @@ using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SuperliminalTAS.Patches;
+namespace SuperliminalTools.Patches;
 
 /// <summary>
 /// Proxy class for making labyrinth voice lines run synced to game time.
