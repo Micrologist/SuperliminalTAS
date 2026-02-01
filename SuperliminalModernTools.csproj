@@ -1,9 +1,9 @@
-<![CDATA[<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>$(GameVersion).superliminalpractice</AssemblyName>
-    <Description>A practice plugin for Superliminal.</Description>
+    <AssemblyName>$(GameVersion).superliminaltools</AssemblyName>
+    <Description>A plugin for Superliminal to allow the creation of tool-assisted speedruns.</Description>
 
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -15,7 +15,7 @@
 		<RootNamespace>SuperliminalTAS</RootNamespace>
 		<OutputType>Library</OutputType>
 		<IsPublishable>True</IsPublishable>
-		<Product>SuperliminalModernPractice</Product>
+		<Product>SuperliminalModernTools</Product>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<AutoUnifyAssemblyReferences>false</AutoUnifyAssemblyReferences>
@@ -28,14 +28,13 @@
 		<GameLibDir>$(MSBuildProjectDirectory)\GameLibs\$(GameVersion)</GameLibDir>
   </PropertyGroup>
 
-
+	
 	<ItemGroup>
 	  <Compile Remove="bin\**" />
 	  <Compile Remove="GameLibs\**" />
 	  <Compile Remove="obj\**" />
 	  <Compile Remove="Releases\**" />
 	  <Compile Remove="Staging\**" />
-	  <Compile Remove="SuperliminalTASPlugin.cs" />
 	  <EmbeddedResource Remove="bin\**" />
 	  <EmbeddedResource Remove="GameLibs\**" />
 	  <EmbeddedResource Remove="obj\**" />
@@ -62,7 +61,7 @@
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(GameLibDir)\Assembly-CSharp.dll</HintPath>
@@ -86,4 +85,3 @@
 		<MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2023.2.17;IsRecursiveBuild=true" Targets="Build" />
 	</Target>
 </Project>
-]]>

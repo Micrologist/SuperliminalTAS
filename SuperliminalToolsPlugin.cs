@@ -2,7 +2,9 @@ using BepInEx;
 using HarmonyLib;
 using SuperliminalTAS.Demo;
 using SuperliminalTAS.Patches;
+using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using SuperliminalTAS.Components;
 using UnityEngine;
@@ -16,19 +18,24 @@ namespace SuperliminalTAS;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 #if LEGACY
-public class SuperliminalTASPlugin : BasePlugin
+public class SuperliminalToolsPlugin : BasePlugin
 {
     internal static new ManualLogSource Log;
 
     public override void Load()
     {
         Log = base.Log;
-        Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+
+        var args = Environment.GetCommandLineArgs();
+        bool practiceMode = args.Contains("--practice");
+
+        Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded! Mode: {(practiceMode ? "Practice" : "TAS")}");
 
         // Register custom MonoBehaviour types with IL2CPP before they can be used
         ClassInjector.RegisterTypeInIl2Cpp<DemoRecorder>();
         ClassInjector.RegisterTypeInIl2Cpp<DemoHUD>();
         ClassInjector.RegisterTypeInIl2Cpp<TASModController>();
+        ClassInjector.RegisterTypeInIl2Cpp<PracticeModController>();
 
         ClassInjector.RegisterTypeInIl2Cpp<PathProjector>();
 
@@ -42,36 +49,54 @@ public class SuperliminalTASPlugin : BasePlugin
         ClassInjector.RegisterTypeInIl2Cpp<PathProjectorController>();
         ClassInjector.RegisterTypeInIl2Cpp<TeleportAndScaleController>();
 
-
-
         Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
         UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
 
         // Create a persistent GameObject that survives scene transitions
-        var go = new GameObject("SuperliminalTAS");
-        Object.DontDestroyOnLoad(go);
+        var go = new GameObject("SuperliminalTools");
+        UnityEngine.Object.DontDestroyOnLoad(go);
         go.hideFlags = HideFlags.HideAndDontSave;
-        go.AddComponent<TASModController>();
-        go.AddComponent<DemoRecorder>();
-        go.AddComponent<DemoHUD>();
+
+        if (practiceMode)
+        {
+            go.AddComponent<PracticeModController>();
+        }
+        else
+        {
+            go.AddComponent<TASModController>();
+            go.AddComponent<DemoRecorder>();
+            go.AddComponent<DemoHUD>();
+        }
     }
 }
 #else
-public class SuperliminalTASPlugin : BaseUnityPlugin
+public class SuperliminalToolsPlugin : BaseUnityPlugin
 {
     private void Awake()
     {
-        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        var args = Environment.GetCommandLineArgs();
+        bool practiceMode = args.Contains("--practice");
+
+        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded! Mode: {(practiceMode ? "Practice" : "TAS")}");
+
         Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
         UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
 
         // Create a persistent GameObject that survives scene transitions
-        var go = new GameObject("SuperliminalTAS");
-        Object.DontDestroyOnLoad(go);
+        var go = new GameObject("SuperliminalTools");
+        UnityEngine.Object.DontDestroyOnLoad(go);
         go.hideFlags = HideFlags.HideAndDontSave;
-        go.AddComponent<TASModController>();
-        go.AddComponent<DemoRecorder>();
-        go.AddComponent<DemoHUD>();
+
+        if (practiceMode)
+        {
+            go.AddComponent<PracticeModController>();
+        }
+        else
+        {
+            go.AddComponent<TASModController>();
+            go.AddComponent<DemoRecorder>();
+            go.AddComponent<DemoHUD>();
+        }
     }
 }
 #endif

@@ -1,10 +1,10 @@
-<![CDATA[<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>$(GameVersion).superliminalpractice</AssemblyName>
-    <Product>SuperliminalLegacyPractice</Product>
-		<Description>A practice plugin for legacy versions of Superliminal.</Description>
+    <AssemblyName>$(GameVersion).superliminaltools</AssemblyName>
+    <Product>SuperliminalLegacyTools</Product>
+		<Description>A plugin for legacy versions of Superliminal to allow the creation of tool-assisted speedruns.</Description>
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
@@ -31,7 +31,6 @@
     <Compile Remove="obj\**" />
     <Compile Remove="Releases\**" />
     <Compile Remove="Staging\**" />
-    <Compile Remove="SuperliminalTASPlugin.cs" />
     <EmbeddedResource Remove="bin\**" />
     <EmbeddedResource Remove="GameLibs\**" />
     <EmbeddedResource Remove="obj\**" />
@@ -320,4 +319,3 @@
 		<MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2020.7.6;IsRecursiveBuild=true" Targets="Build" />
 	</Target>
 </Project>
-]]>
