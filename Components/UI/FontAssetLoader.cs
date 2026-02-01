@@ -1,14 +1,19 @@
-﻿#if LEGACY
-using System;
+﻿using System;
 using System.IO;
 using UnityEngine;
+
+#if LEGACY
+using AssetBundle = UniverseLib.AssetBundle;
+#else
+using AssetBundle = UnityEngine.AssetBundle;
+#endif
 
 namespace SuperliminalTools.Components.UI;
 
 /// <summary>
 /// Static class for loading the Noto-Mono font via UniverseLib asset loading.
 /// </summary>
-internal static class LegacyNotoMonoAssetLoader
+internal static class FontAssetLoader
 {
     private static UnityEngine.Font _cached;
 
@@ -20,7 +25,7 @@ internal static class LegacyNotoMonoAssetLoader
 
         try
         {
-            var modDir = Path.GetDirectoryName(typeof(LegacyNotoMonoAssetLoader).Assembly.Location);
+            var modDir = Path.GetDirectoryName(typeof(FontAssetLoader).Assembly.Location);
             var bundlePath = Path.Combine(modDir, "notomono");
             bundlePath = Path.GetFullPath(bundlePath);
 
@@ -30,9 +35,8 @@ internal static class LegacyNotoMonoAssetLoader
                 return GetBuiltinArial();
             }
 
-
-            // IMPORTANT: Use Il2CppUnityEngine.AssetBundle in IL2CPP mods
-            var bundle = UniverseLib.AssetBundle.LoadFromFile(bundlePath);
+           
+            var bundle = AssetBundle.LoadFromFile(bundlePath);
             if (bundle == null)
             {
                 Debug.LogError($"[Font] Failed to load bundle: {bundlePath}");
@@ -45,8 +49,11 @@ internal static class LegacyNotoMonoAssetLoader
 
             for (int i = 0; i < assets.Length; i++)
             {
-                // Try cast
+#if LEGACY
                 font = assets[i]?.TryCast<Font>();
+#else
+                font = assets[i] as Font;
+#endif
                 if (font != null && font.name == "NotoMono-Regular")
                     break;
             }
@@ -57,8 +64,6 @@ internal static class LegacyNotoMonoAssetLoader
                 bundle.Unload(false);
                 return GetBuiltinArial();
             }
-
-
 
             _cached = font;
             bundle.Unload(false);
@@ -79,4 +84,3 @@ internal static class LegacyNotoMonoAssetLoader
         return Resources.GetBuiltinResource<Font>("Arial.ttf");
     }
 }
-#endif

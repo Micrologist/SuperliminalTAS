@@ -33,15 +33,6 @@ public static class Utility
         return mat;
     }
 
-    public static Font GetNotoSansMonoFont()
-    {
-#if LEGACY
-        return Components.UI.LegacyNotoMonoAssetLoader.GetFontOrDefault();
-#else
-        return Resources.FindObjectsOfTypeAll<Font>().FirstOrDefault(f => f != null && f.name == "NotoMono-Regular");
-#endif
-    }
-
     public static Text CreateHUD(
         Transform parent,
         Font font,

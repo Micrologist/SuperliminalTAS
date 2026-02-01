@@ -64,7 +64,7 @@ class HUDController : MonoBehaviour
 
     private void Start()
     {
-        _notoMonoFont = Components.Utility.GetNotoSansMonoFont();
+        _notoMonoFont = UI.FontAssetLoader.GetFontOrDefault();
         _hudText = Components.Utility.CreateHUD(
             parent: gameObject.transform,
             font: _notoMonoFont,
