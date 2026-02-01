@@ -53,22 +53,13 @@ namespace SuperliminalTAS.Demo
         private DemoRecorder _recorder;
         private bool _showLess = true;
 
-        private void Awake()
-        {
-#if LEGACY
-            SceneManager.sceneLoaded += (UnityAction<Scene, LoadSceneMode>)OnSceneLoadEnsureStatusText;
-#else
-            SceneManager.sceneLoaded += OnSceneLoadEnsureStatusText;
-#endif
-            _notoMonoFont = GetNotoSansMonoFont();
-        }
 
-        private void OnSceneLoadEnsureStatusText(Scene _, LoadSceneMode __)
+        private void Start()
         {
-            if (_hudText != null) return;
-
-            _hudText = CreateStatusText(
+            _notoMonoFont = Components.Utility.GetNotoSansMonoFont();
+            _hudText = Components.Utility.CreateHUD(
                 parent: gameObject.transform,
+                font: _notoMonoFont,
                 fontSize: 26,
                 anchoredPosition: new Vector2(25f, -25f),
                 size: new Vector2(Screen.currentResolution.width / 3f, Screen.currentResolution.height)
@@ -176,14 +167,15 @@ namespace SuperliminalTAS.Demo
             var playerVel = player.GetComponent<CharacterController>().velocity;
             double horizontal = Math.Sqrt((playerVel.x * playerVel.x) + (playerVel.z * playerVel.z));
             output += $"V {horizontal:0.0000} {playerVel.y:0.0000}\n";
-            if (_showLess)
-                return output;
 
-
-            output += $"V {playerVel.x:0.0000} {playerVel.y:0.0000} {playerVel.z:0.0000}\n";
+            if(!_showLess)
+                output += $"V {playerVel.x:0.0000} {playerVel.y:0.0000} {playerVel.z:0.0000}\n";
 
             var playerScale = player.transform.localScale.x;
             output += $"S {playerScale:0.00000}x\n";
+
+            if (_showLess)
+                return output;
 
             var playerMotor = player.GetComponent<CharacterMotor>();
             if (playerMotor == null) return output;
@@ -236,7 +228,7 @@ namespace SuperliminalTAS.Demo
 
             if (grabbedObject != null)
             {
-                output += $"G {resizeScript.isGrabbing} {resizeScript.isReadyToGrab}\n";
+                output += $"G {(resizeScript.isGrabbing ? 1 : 0)} {(resizeScript.isReadyToGrab ? 1 : 0)}\n";
 
                 var objectDir = grabbedObject.transform.position - resizeScript.transform.position;
                 var objectDistance = objectDir.magnitude;
@@ -331,49 +323,7 @@ namespace SuperliminalTAS.Demo
             return output;
         }
 
-        private Text CreateStatusText(
-           Transform parent,
-           int fontSize,
-           Vector2 anchoredPosition,
-           Vector2 size)
-        {
-            var root = new GameObject("TASMod_HUD");
-            root.transform.SetParent(parent, worldPositionStays: false);
-            var canvas = root.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 9;
+        
 
-            var scaler = root.AddComponent<CanvasScaler>();
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-
-            var child = new GameObject("TASMod_HUD_StatusText");
-            child.transform.SetParent(root.transform);
-            child.AddComponent<CanvasGroup>().blocksRaycasts = false;
-
-            var text = child.AddComponent<Text>();
-            text.fontSize = fontSize;
-
-            text.font = _notoMonoFont;
-
-            var rect = text.GetComponent<RectTransform>();
-            rect.sizeDelta = size;
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.anchoredPosition = anchoredPosition;
-
-            return text;
-        }
-
-        public Font GetNotoSansMonoFont()
-        {
-#if LEGACY
-            return LegacyNotoMonoAssetLoader.GetFontOrDefault();
-#else
-            return Resources.FindObjectsOfTypeAll<Font>().FirstOrDefault(f => f != null && f.name == "NotoMono-Regular");
-#endif
-        }
     }
 }

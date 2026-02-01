@@ -30,6 +30,7 @@ public class PathProjector : MonoBehaviour
             Debug.LogWarning("PathProjector was added to a gameobject without a charactercontroller!");
         }
 
+        visualizationMaterial = SuperliminalTAS.Components.Utility.GetTransparentMaterial(hitColor);
         CreateVisualCapsule();
     }
 
@@ -48,25 +49,7 @@ public class PathProjector : MonoBehaviour
         // Get renderer
         capsuleRenderer = visualCapsule.GetComponent<MeshRenderer>();
 
-        // Setup material
-        if (visualizationMaterial != null)
-        {
-            capsuleRenderer.material = visualizationMaterial;
-        }
-        else
-        {
-            // Create transparent material if none provided
-            Material mat = new Material(Shader.Find("Standard"));
-            mat.SetFloat("_Mode", 3); // Transparent mode
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            mat.SetInt("_ZWrite", 0);
-            mat.DisableKeyword("_ALPHATEST_ON");
-            mat.EnableKeyword("_ALPHABLEND_ON");
-            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            mat.renderQueue = 3000;
-            capsuleRenderer.material = mat;
-        }
+        capsuleRenderer.material = visualizationMaterial;
     }
 
     void Update()
@@ -194,6 +177,22 @@ public class PathProjector : MonoBehaviour
     public RaycastHit GetHitInfo()
     {
         return lastHit;
+    }
+
+    private void OnEnable()
+    {
+        if(visualCapsule != null)
+        {
+            visualCapsule.SetActive(true);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (visualCapsule != null)
+        {
+            visualCapsule.SetActive(false);
+        }
     }
 
     void OnDestroy()

@@ -4,8 +4,9 @@ using SuperliminalTAS.Demo;
 using SuperliminalTAS.Patches;
 using System.Diagnostics;
 using System.Reflection;
-#if LEGACY
+using SuperliminalTAS.Components;
 using UnityEngine;
+#if LEGACY
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using Il2CppInterop.Runtime.Injection;
@@ -27,9 +28,21 @@ public class SuperliminalTASPlugin : BasePlugin
         // Register custom MonoBehaviour types with IL2CPP before they can be used
         ClassInjector.RegisterTypeInIl2Cpp<DemoRecorder>();
         ClassInjector.RegisterTypeInIl2Cpp<DemoHUD>();
-        ClassInjector.RegisterTypeInIl2Cpp<TASTools>();
-        ClassInjector.RegisterTypeInIl2Cpp<ColliderVisualizer>();
+        ClassInjector.RegisterTypeInIl2Cpp<TASModController>();
+
         ClassInjector.RegisterTypeInIl2Cpp<PathProjector>();
+
+        ClassInjector.RegisterTypeInIl2Cpp<RenderDistanceController>();
+        ClassInjector.RegisterTypeInIl2Cpp<NoClipController>();
+        ClassInjector.RegisterTypeInIl2Cpp<GizmoVisibilityController>();
+        ClassInjector.RegisterTypeInIl2Cpp<ColliderVisualizer>();
+        ClassInjector.RegisterTypeInIl2Cpp<ColliderVisualizerController>();
+        ClassInjector.RegisterTypeInIl2Cpp<FadeController>();
+        ClassInjector.RegisterTypeInIl2Cpp<FlashlightController>();
+        ClassInjector.RegisterTypeInIl2Cpp<PathProjectorController>();
+        ClassInjector.RegisterTypeInIl2Cpp<TeleportAndScaleController>();
+
+
 
         Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
         UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
@@ -38,7 +51,7 @@ public class SuperliminalTASPlugin : BasePlugin
         var go = new GameObject("SuperliminalTAS");
         Object.DontDestroyOnLoad(go);
         go.hideFlags = HideFlags.HideAndDontSave;
-        go.AddComponent<TASTools>();
+        go.AddComponent<TASModController>();
         go.AddComponent<DemoRecorder>();
         go.AddComponent<DemoHUD>();
     }
@@ -51,9 +64,14 @@ public class SuperliminalTASPlugin : BaseUnityPlugin
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
         UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
-        this.gameObject.AddComponent<TASTools>();
-        this.gameObject.AddComponent<DemoRecorder>();
-        this.gameObject.AddComponent<DemoHUD>();
+
+        // Create a persistent GameObject that survives scene transitions
+        var go = new GameObject("SuperliminalTAS");
+        Object.DontDestroyOnLoad(go);
+        go.hideFlags = HideFlags.HideAndDontSave;
+        go.AddComponent<TASModController>();
+        go.AddComponent<DemoRecorder>();
+        go.AddComponent<DemoHUD>();
     }
 }
 #endif

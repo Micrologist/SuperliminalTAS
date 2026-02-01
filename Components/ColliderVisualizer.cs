@@ -1,4 +1,6 @@
 using UnityEngine;
+using SuperliminalTAS.Components;
+
 #if LEGACY
 using System;
 #endif
@@ -13,6 +15,7 @@ public class ColliderVisualizer : MonoBehaviour
     public ColliderVisualizer(IntPtr ptr) : base(ptr) { }
 #endif
     private GameObject _visualObj;
+    private float _visualAlpha = 0.2f;
 
     private void Awake()
     {
@@ -175,22 +178,8 @@ public class ColliderVisualizer : MonoBehaviour
         Renderer renderer = obj.GetComponent<Renderer>();
         if (renderer != null)
         {
-            // Create a new material with transparency
-            Material mat = new Material(Shader.Find("Standard"));
-
-            // Set rendering mode to transparent
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            mat.SetInt("_ZWrite", 0);
-            mat.DisableKeyword("_ALPHATEST_ON");
-            mat.EnableKeyword("_ALPHABLEND_ON");
-            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            mat.renderQueue = 3000;
-
-            // Set the color with alpha 0.3
-            color.a = 0.25f;
-            mat.color = color;
-
+            color.a = _visualAlpha;
+            var mat = Utility.GetTransparentMaterial(color);
             renderer.material = mat;
         }
     }
@@ -223,5 +212,21 @@ public class ColliderVisualizer : MonoBehaviour
     private void OnDestroy()
     {
         DestroyVisualization();
+    }
+
+    private void OnEnable()
+    {
+        if (_visualObj != null)
+        {
+            _visualObj.SetActive(true);
+        }
+    }
+
+    private void OnDiable()
+    {
+        if (_visualObj != null)
+        {
+            _visualObj.SetActive(false);
+        }
     }
 }

@@ -333,8 +333,6 @@ public sealed class DemoRecorder : MonoBehaviour
         int targetFps = Mathf.RoundToInt(50f * multiplier);
         targetFps = Mathf.Max(1, targetFps);
         Application.targetFrameRate = targetFps;
-
-        TASTools.Instance.SetRenderDistance();
     }
 
     internal bool GetRecordedButton(string actionName) =>
@@ -679,6 +677,7 @@ public sealed class DemoRecorder : MonoBehaviour
             GameManager.GM.playerCamera.GetComponent<MouseLook>().sensitivityY = 1.0f;
         }
 
+        QualitySettings.vSyncCount = 0;
         ApplyPlaybackSpeed();
     }
 
