@@ -23,8 +23,6 @@ class TeleportAndScaleController : MonoBehaviour
     private float _storedScale = 1f;
     private int _storedMapIndex = -1;
 
-    private PathProjector _pathProjector;
-
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -64,11 +62,21 @@ class TeleportAndScaleController : MonoBehaviour
         ScalePlayer(_storedScale);
     }
 
-    public void ScalePlayer(float newScale)
+    public void ScalePlayer(float factor)
+    {
+        factor = Mathf.Clamp(factor, 0.0000001f, 999999999f);
+        if (GameManager.GM != null && GameManager.GM.player != null)
+        {
+            GameManager.GM.player.transform.localScale *= factor;
+            GameManager.GM.player.GetComponent<PlayerResizer>().Poke();
+        }
+    }
+
+    public void SetPlayerScale(float newScale)
     {
         newScale = Mathf.Clamp(newScale, 0.0000001f, 999999999f);
 
-        if(GameManager.GM != null && GameManager.GM.player != null)
+        if (GameManager.GM != null && GameManager.GM.player != null)
         {
             GameManager.GM.player.transform.localScale = new(newScale, newScale, newScale);
             GameManager.GM.player.GetComponent<PlayerResizer>().Poke();
