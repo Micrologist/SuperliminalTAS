@@ -40,7 +40,7 @@ class HUDController : MonoBehaviour
         "onGroundTime"
     );
 #endif
-    public static HUDController Instance;
+    public static HUDController Instance { get; private set; }
 
     public bool ShowLess { get; set; } = true;
     public string InfoLines { get; set; } = "";

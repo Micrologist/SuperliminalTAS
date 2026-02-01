@@ -85,7 +85,7 @@ public partial class SuperliminalToolsPlugin
 #endif
 #if LEGACY
             harmony.PatchAll(typeof(LegacyResetCheckpointPatch));
-            harmony.PatchAll(typeof(HotCofeeErrorPatch));
+            harmony.PatchAll(typeof(HotCoffeeErrorPatch));
 #endif
         }
     }

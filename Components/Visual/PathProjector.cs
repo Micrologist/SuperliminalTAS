@@ -81,7 +81,7 @@ public class PathProjector : MonoBehaviour
             dir,
             out lastHit,
             maxDistance,
-            (LayerMask)1807218687,
+            (LayerMask)0x6BB7F7FF, 
             QueryTriggerInteraction.Ignore
         );
 

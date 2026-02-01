@@ -9,7 +9,7 @@ class PathProjectorController : MonoBehaviour
     public PathProjectorController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
-    public static PathProjectorController Instance;
+    public static PathProjectorController Instance { get; private set; }
 
     public bool ProjectorEnabled { get; private set; }
 

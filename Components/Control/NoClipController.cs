@@ -13,7 +13,7 @@ class NoClipController : MonoBehaviour
     private static MethodInfo _endNoClip;
 #endif
 
-    public static NoClipController Instance;
+    public static NoClipController Instance { get; private set; }
 
     public bool NoClipEnabled { get; private set; }
 

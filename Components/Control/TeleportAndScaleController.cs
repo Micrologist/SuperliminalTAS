@@ -9,7 +9,7 @@ class TeleportAndScaleController : MonoBehaviour
     public TeleportAndScaleController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
-    public static TeleportAndScaleController Instance;
+    public static TeleportAndScaleController Instance { get; private set; }
 
     private Vector3 _storedPosition = Vector3.zero;
     private Quaternion _storedCapsuleRotation = Quaternion.identity;
@@ -53,7 +53,7 @@ class TeleportAndScaleController : MonoBehaviour
         player.transform.position = _storedPosition;
         player.transform.rotation = _storedCapsuleRotation;
         GameManager.GM.playerCamera.GetComponent<MouseLook>().SetRotationY(_storedCamRotation);
-        ScalePlayer(_storedScale);
+        SetPlayerScale(_storedScale);
     }
 
     public void ScalePlayer(float factor)
