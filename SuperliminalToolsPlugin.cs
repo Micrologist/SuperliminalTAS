@@ -53,7 +53,18 @@ public class SuperliminalToolsPlugin : BasePlugin
 
         if (practiceMode)
         {
-            harmony.PatchAll(typeof(UtilityPatches));
+            harmony.PatchAll(typeof(LerpPlayerMantlePatch));
+            harmony.PatchAll(typeof(SaveGamePatch));
+            harmony.PatchAll(typeof(NormalLoadingScreensPatch));
+            harmony.PatchAll(typeof(DisableAlarmSoundPatch));
+#if HAS_WARNING_CONTROLLER
+            harmony.PatchAll(typeof(DisableWarningScreenPatch));
+#endif
+            harmony.PatchAll(typeof(DontPauseOnLostFocusPatch));
+#if LEGACY
+            harmony.PatchAll(typeof(LegacyResetCheckpointPatch));
+            harmony.PatchAll(typeof(HotCofeeErrorPatch));
+#endif
         }
         else
         {
@@ -92,7 +103,14 @@ public class SuperliminalToolsPlugin : BaseUnityPlugin
 
         if (practiceMode)
         {
-            harmony.PatchAll(typeof(UtilityPatches));
+            harmony.PatchAll(typeof(LerpPlayerMantlePatch));
+            harmony.PatchAll(typeof(SaveGamePatch));
+            harmony.PatchAll(typeof(NormalLoadingScreensPatch));
+            harmony.PatchAll(typeof(DisableAlarmSoundPatch));
+#if HAS_WARNING_CONTROLLER
+            harmony.PatchAll(typeof(DisableWarningScreenPatch));
+#endif
+            harmony.PatchAll(typeof(DontPauseOnLostFocusPatch));
         }
         else
         {
