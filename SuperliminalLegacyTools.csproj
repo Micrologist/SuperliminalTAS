@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <GameVersion Condition="'$(GameVersion)' == ''">1.0.2019.11.12</GameVersion>
     <AssemblyName>$(GameVersion).superliminaltools</AssemblyName>
     <Product>SuperliminalLegacyTools</Product>
     <Description>A plugin for legacy versions of Superliminal to allow the creation of tool-assisted speedruns.</Description>
 
-    <GameVersion Condition="'$(GameVersion)' == ''">1.0.2019.11.12</GameVersion>
     <DefineConstants>$(DefineConstants);LEGACY</DefineConstants>
     <DefineConstants Condition="'$(GameVersion)' == '1.10.2020.7.6'">$(DefineConstants);HAS_LEVELINFO;HAS_VO_PLAYER</DefineConstants>
   </PropertyGroup>
