@@ -1,11 +1,11 @@
 using HarmonyLib;
 using Mono.Cecil.Cil;
-using SuperliminalTAS.MemUtil;
+using SuperliminalTools.MemUtil;
 using System;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace SuperliminalTAS.Patches;
+namespace SuperliminalTools.Patches;
 
 /// <summary>
 /// Patches the getter for UnityEngine.Time.time to return the time since the current level was loaded instead of the

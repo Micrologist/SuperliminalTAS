@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
-namespace SuperliminalTAS.Components;
+namespace SuperliminalTools.Components;
 
 class TeleportAndScaleController : MonoBehaviour
 {

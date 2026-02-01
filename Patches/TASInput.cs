@@ -1,8 +1,8 @@
 ﻿using HarmonyLib;
-using SuperliminalTAS.Demo;
+using SuperliminalTools.Demo;
 using System.Linq;
 
-namespace SuperliminalTAS.Patches;
+namespace SuperliminalTools.Patches;
 
 /// <summary>
 /// Static class that intercepts all game input polling and changes results via the hooked-up

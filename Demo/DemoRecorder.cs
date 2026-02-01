@@ -7,7 +7,7 @@ using Il2CppSystem.Collections.Generic;
 using System.Collections.Generic;
 #endif
 using Rewired;
-using SuperliminalTAS.Patches;
+using SuperliminalTools.Patches;
 using System;
 using System.Collections;
 
@@ -19,7 +19,7 @@ using UnityEngine.Events;
 #endif
 using UnityEngine.SceneManagement;
 
-namespace SuperliminalTAS.Demo;
+namespace SuperliminalTools.Demo;
 
 public sealed class DemoRecorder : MonoBehaviour
 {

@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using System;
+
 
 #if LEGACY
 using System;
@@ -8,7 +10,7 @@ using UnityEngine.Events;
 using System.Reflection;
 #endif
 
-namespace SuperliminalTAS.Components;
+namespace SuperliminalTools.Components;
 
 class NoClipController : MonoBehaviour
 {
@@ -140,4 +142,19 @@ class NoClipController : MonoBehaviour
             Vector4.positiveInfinity);
     }
 
+    public void ChangeSpeed(float amount)
+    {
+        if (GameManager.GM == null) return;
+
+        var jumpingScript = GameManager.GM.GetComponent<LevelJumpingScript>();
+        if (jumpingScript != null && jumpingScript.noClip)
+        {
+            var noclipinput = jumpingScript.instanceCameraNoClip.GetComponent<NoClipInputController>();
+
+            if(noclipinput != null)
+            {
+                noclipinput.moveSpeed += amount;
+            }
+        }
+    }
 }

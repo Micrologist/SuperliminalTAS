@@ -1,12 +1,12 @@
 using BepInEx;
 using HarmonyLib;
-using SuperliminalTAS.Demo;
-using SuperliminalTAS.Patches;
+using SuperliminalTools.Demo;
+using SuperliminalTools.Patches;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using SuperliminalTAS.Components;
+using SuperliminalTools.Components;
 using UnityEngine;
 #if LEGACY
 using BepInEx.Logging;
@@ -14,7 +14,7 @@ using BepInEx.Unity.IL2CPP;
 using Il2CppInterop.Runtime.Injection;
 #endif
 
-namespace SuperliminalTAS;
+namespace SuperliminalTools;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 #if LEGACY
@@ -27,45 +27,39 @@ public class SuperliminalToolsPlugin : BasePlugin
         Log = base.Log;
 
         var args = Environment.GetCommandLineArgs();
-        bool practiceMode = args.Contains("--practice");
+        bool tasMode = args.Contains("--tas");
 
-        Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded! Mode: {(practiceMode ? "Practice" : "TAS")}");
-
-        // Register custom MonoBehaviour types with IL2CPP before they can be used
-        ClassInjector.RegisterTypeInIl2Cpp<DemoRecorder>();
-        ClassInjector.RegisterTypeInIl2Cpp<DemoHUD>();
-        ClassInjector.RegisterTypeInIl2Cpp<TASModController>();
-        ClassInjector.RegisterTypeInIl2Cpp<PracticeModController>();
-
-        ClassInjector.RegisterTypeInIl2Cpp<PathProjector>();
-
-        ClassInjector.RegisterTypeInIl2Cpp<RenderDistanceController>();
-        ClassInjector.RegisterTypeInIl2Cpp<NoClipController>();
-        ClassInjector.RegisterTypeInIl2Cpp<GizmoVisibilityController>();
-        ClassInjector.RegisterTypeInIl2Cpp<ColliderVisualizer>();
-        ClassInjector.RegisterTypeInIl2Cpp<ColliderVisualizerController>();
-        ClassInjector.RegisterTypeInIl2Cpp<FadeController>();
-        ClassInjector.RegisterTypeInIl2Cpp<FlashlightController>();
-        ClassInjector.RegisterTypeInIl2Cpp<PathProjectorController>();
-        ClassInjector.RegisterTypeInIl2Cpp<TeleportAndScaleController>();
-
-        Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
-        UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
+        Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded! Mode: {(tasMode ? "TAS" : "Practice")}");
 
         // Create a persistent GameObject that survives scene transitions
         var go = new GameObject("SuperliminalTools");
         UnityEngine.Object.DontDestroyOnLoad(go);
         go.hideFlags = HideFlags.HideAndDontSave;
 
-        if (practiceMode)
+        SuperliminalTools.Components.Utility.RegisterAllIL2CPPTypes();
+        SuperliminalTools.Components.Utility.AddAllSharedComponents(go);
+        var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+
+        if (tasMode)
         {
-            go.AddComponent<PracticeModController>();
+            go.AddComponent<TASModController>();
+            UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
+            harmony.PatchAll();
         }
         else
         {
-            go.AddComponent<TASModController>();
-            go.AddComponent<DemoRecorder>();
-            go.AddComponent<DemoHUD>();
+            go.AddComponent<PracticeModController>();
+            harmony.PatchAll(typeof(LerpPlayerMantlePatch));
+            harmony.PatchAll(typeof(SaveGamePatch));
+            harmony.PatchAll(typeof(NormalLoadingScreensPatch));
+            harmony.PatchAll(typeof(DisableAlarmSoundPatch));
+#if HAS_WARNING_CONTROLLER
+            harmony.PatchAll(typeof(DisableWarningScreenPatch));
+#endif
+            harmony.PatchAll(typeof(DontPauseOnLostFocusPatch));
+            harmony.PatchAll(typeof(LegacyResetCheckpointPatch));
+            harmony.PatchAll(typeof(HotCofeeErrorPatch));
+
         }
     }
 }
@@ -75,27 +69,35 @@ public class SuperliminalToolsPlugin : BaseUnityPlugin
     private void Awake()
     {
         var args = Environment.GetCommandLineArgs();
-        bool practiceMode = args.Contains("--practice");
+        bool tasMode = args.Contains("--tas");
 
-        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded! Mode: {(practiceMode ? "Practice" : "TAS")}");
-
-        Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
-        UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
+        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded! Mode: {(tasMode ? "TAS" : "Practice")}");
 
         // Create a persistent GameObject that survives scene transitions
         var go = new GameObject("SuperliminalTools");
         UnityEngine.Object.DontDestroyOnLoad(go);
         go.hideFlags = HideFlags.HideAndDontSave;
 
-        if (practiceMode)
+        SuperliminalTools.Components.Utility.AddAllSharedComponents(go);
+        var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+
+        if (tasMode)
         {
-            go.AddComponent<PracticeModController>();
+            go.AddComponent<TASModController>();
+            UnityEngineTimePatcher.Patch(Process.GetCurrentProcess());
+            harmony.PatchAll();
         }
         else
         {
-            go.AddComponent<TASModController>();
-            go.AddComponent<DemoRecorder>();
-            go.AddComponent<DemoHUD>();
+            go.AddComponent<PracticeModController>();
+            harmony.PatchAll(typeof(LerpPlayerMantlePatch));
+            harmony.PatchAll(typeof(SaveGamePatch));
+            harmony.PatchAll(typeof(NormalLoadingScreensPatch));
+            harmony.PatchAll(typeof(DisableAlarmSoundPatch));
+#if HAS_WARNING_CONTROLLER
+            harmony.PatchAll(typeof(DisableWarningScreenPatch));
+#endif
+            harmony.PatchAll(typeof(DontPauseOnLostFocusPatch));
         }
     }
 }

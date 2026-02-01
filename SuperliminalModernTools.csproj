@@ -12,7 +12,7 @@
 			https://nuget.bepinex.dev/v3/index.json;
 			https://nuget.samboy.dev/v3/index.json
 		</RestoreAdditionalProjectSources>
-		<RootNamespace>SuperliminalTAS</RootNamespace>
+		<RootNamespace>SuperliminalTools</RootNamespace>
 		<OutputType>Library</OutputType>
 		<IsPublishable>True</IsPublishable>
 		<Product>SuperliminalModernTools</Product>

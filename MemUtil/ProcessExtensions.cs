@@ -10,7 +10,7 @@ using System.Text;
 // Note: Please be careful when modifying this because it could break existing components!
 // http://stackoverflow.com/questions/1456785/a-definitive-guide-to-api-breaking-changes-in-net
 
-namespace SuperliminalTAS.MemUtil
+namespace SuperliminalTools.MemUtil
 {
     using SizeT = UIntPtr;
 

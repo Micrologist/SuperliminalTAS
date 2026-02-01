@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SuperliminalTAS.Demo;
+namespace SuperliminalTools.Demo;
 
 internal static class DemoActions
 {
