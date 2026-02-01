@@ -100,7 +100,10 @@ public sealed class TASModController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F4) && DemoRecorder.Instance.State == PlaybackState.Stopped)
         {
-            NoClipController.Instance.ToggleNoClip();
+            if (Input.GetKey(KeyCode.LeftShift))
+                NoClipController.Instance.ToggleNoClipStyle();
+            else
+                NoClipController.Instance.ToggleNoClip();
         }
 
         if (NoClipController.Instance.NoClipEnabled)

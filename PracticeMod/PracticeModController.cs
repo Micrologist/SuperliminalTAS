@@ -35,6 +35,17 @@ public sealed class PracticeModController : MonoBehaviour
 
     private void HandleHotkeys()
     {
+        var scrollInput = Input.mouseScrollDelta.y;
+
+        if (Input.GetKey(KeyCode.RightBracket) || Input.GetKey(KeyCode.Equals))
+        {
+            scrollInput = 25 * Time.deltaTime;
+        }
+        else if (Input.GetKey(KeyCode.LeftBracket) || Input.GetKey(KeyCode.Minus))
+        {
+            scrollInput = -25 * Time.deltaTime;
+        }
+
         if (Input.GetKeyDown(KeyCode.F1))
         {
             HUDController.Instance.ShowLess = !HUDController.Instance.ShowLess;
@@ -90,7 +101,21 @@ public sealed class PracticeModController : MonoBehaviour
 
         if (NoClipController.Instance.NoClipEnabled)
         {
-            NoClipController.Instance.ChangeSpeed(Input.mouseScrollDelta.y);
+            NoClipController.Instance.ChangeSpeed(scrollInput);
+        }
+
+        if(Input.GetKey(KeyCode.LeftControl) && scrollInput != 0f)
+        {
+            if (!ObjectScaleController.Instance.ScaleHeldObject(1 + (-scrollInput * 0.02f)))
+                TeleportAndScaleController.Instance.ScalePlayer(1 + (scrollInput * 0.01f));
+        }
+
+        if((Input.GetMouseButtonDown(2) || Input.GetKeyDown(KeyCode.Return)))
+        {
+            if (Input.GetKey(KeyCode.LeftControl))
+                TeleportAndScaleController.Instance.SetPlayerScale(1.0f);
+            else if (NoClipController.Instance.NoClipEnabled)
+                NoClipController.Instance.SetSpeed(20f);
         }
     }
 
@@ -115,7 +140,12 @@ public sealed class PracticeModController : MonoBehaviour
             output += "F6  Teleport\n";
             output += "F7  Reload CP\n";
             output += "F8  Restart Map\n";
-            output += "F9  Flashlight\n";
+            output += "F9  Flashlight\n\n";
+            if (NoClipController.Instance.NoClipEnabled)
+            {
+                output += "+/- Fly Speed\n";
+            }
+            output += "Ctrl +/- Scale\n";
         }
 
         HUDController.Instance.HotkeyLines = output;

@@ -98,6 +98,7 @@ public static class Utility
         ClassInjector.RegisterTypeInIl2Cpp<FlashlightController>();
         ClassInjector.RegisterTypeInIl2Cpp<PathProjectorController>();
         ClassInjector.RegisterTypeInIl2Cpp<TeleportAndScaleController>();
+        ClassInjector.RegisterTypeInIl2Cpp<ObjectScaleController>();
     }
 #endif
 
@@ -146,6 +147,11 @@ public static class Utility
         if (TeleportAndScaleController.Instance == null)
         {
             gameObject.AddComponent<TeleportAndScaleController>();
+        }
+
+        if (ObjectScaleController.Instance == null)
+        {
+            gameObject.AddComponent<ObjectScaleController>();
         }
     }
 

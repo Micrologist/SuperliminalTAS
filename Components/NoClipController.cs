@@ -32,7 +32,7 @@ class NoClipController : MonoBehaviour
 
         Instance = this;
         NoClipEnabled = false;
-        UseNoClipCamera = true;
+        UseNoClipCamera = false;
 #if LEGACY
         SceneManager.sceneUnloaded += (UnityEngine.Events.UnityAction<Scene>)OnSceneUnload;
 #else
@@ -167,6 +167,13 @@ class NoClipController : MonoBehaviour
             inputController.motor.movement.velocity = Vector3.zero;
         }
 
+        var charController = GameManager.GM.player.GetComponent<CharacterController>();
+
+        if (charController != null)
+        {
+            charController.Move(Vector3.zero);
+        }
+
         var mouseLookP = GameManager.GM.player.GetComponent<MouseLook>();
         if (mouseLookP != null)
         {
@@ -201,9 +208,17 @@ class NoClipController : MonoBehaviour
 
     public void ChangeSpeed(float amount)
     {
+        float factor = 1f + (amount * 0.1f);
+        var newSpeed = Mathf.Clamp(_noClipSpeed * factor, 0.3f, 1000f);
+
+        SetSpeed(newSpeed);
+    }
+
+    public void SetSpeed(float speed)
+    {
         if (GameManager.GM == null) return;
 
-        _noClipSpeed = Mathf.Clamp(_noClipSpeed + amount, 0.1f, 1000f);
+        _noClipSpeed = speed;
 
         var jumpingScript = GameManager.GM.GetComponent<LevelJumpingScript>();
         if (jumpingScript != null && jumpingScript.noClip)

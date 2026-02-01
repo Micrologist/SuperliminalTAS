@@ -31,26 +31,29 @@ class ObjectScaleController : MonoBehaviour
 #endif
     }
 
-    public void ScaleHeldObject(float factor)
+    public bool ScaleHeldObject(float factor)
     {
         var playerCamera = GameManager.GM.playerCamera;
 
         var resizeScript = playerCamera != null ? playerCamera.GetComponent<ResizeScript>() : null;
         if (resizeScript == null)
-            return;
+            return false;
 #if LEGACY
         var grabbedObject = resizeScript.grabbedObject;
 #else
         var grabbedObject = (GameObject)_grabbedObjectField.GetValue(resizeScript);
 #endif
 
-        if (grabbedObject != null)
+        if (grabbedObject != null && resizeScript.isGrabbing)
         {
 #if LEGACY
             resizeScript.grabbedMinGrabDistance *= factor;
 #else
             resizeScript.ScaleObject(factor);
 #endif
+            return true;
         }
+
+        return false;
     }
 }
