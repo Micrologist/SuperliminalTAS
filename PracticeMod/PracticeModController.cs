@@ -1,4 +1,7 @@
 using SuperliminalTools.Components;
+using SuperliminalTools.Components.Control;
+using SuperliminalTools.Components.UI;
+using SuperliminalTools.Components.Visual;
 using UnityEngine;
 
 namespace SuperliminalTools.PracticeMod;

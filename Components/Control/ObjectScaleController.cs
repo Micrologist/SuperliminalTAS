@@ -2,7 +2,7 @@
 using System.Reflection;
 using UnityEngine;
 
-namespace SuperliminalTools.Components;
+namespace SuperliminalTools.Components.Control;
 
 class ObjectScaleController : MonoBehaviour
 {

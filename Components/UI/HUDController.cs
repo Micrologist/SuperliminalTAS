@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Time = UnityEngine.Time;
 
-namespace SuperliminalTools.Components;
+namespace SuperliminalTools.Components.UI;
 
 class HUDController : MonoBehaviour
 {

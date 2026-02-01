@@ -1,6 +1,9 @@
 using SuperliminalTools.TASMod.Demo;
 using UnityEngine;
 using SuperliminalTools.Components;
+using SuperliminalTools.Components.UI;
+using SuperliminalTools.Components.Visual;
+using SuperliminalTools.Components.Control;
 
 #if LEGACY
 using System;

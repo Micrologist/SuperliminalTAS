@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using UnityEngine;
 
-namespace SuperliminalTools.Components;
+namespace SuperliminalTools.Components.UI;
 
 /// <summary>
 /// Static class for loading the Noto-Mono font via UniverseLib asset loading.

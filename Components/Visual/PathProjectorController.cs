@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SuperliminalTools.Components;
+namespace SuperliminalTools.Components.Visual;
 
 class PathProjectorController : MonoBehaviour
 {

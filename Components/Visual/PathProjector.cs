@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SuperliminalTools.Components;
+namespace SuperliminalTools.Components.Visual;
 
 public class PathProjector : MonoBehaviour
 {

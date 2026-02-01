@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SuperliminalTools.Components;
+namespace SuperliminalTools.Components.UI;
 
 class FadeController : MonoBehaviour
 {

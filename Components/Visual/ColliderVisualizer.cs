@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SuperliminalTools.Components;
+namespace SuperliminalTools.Components.Visual;
 
 /// <summary>
 /// This component can be added to a game object with a box- or capsule-collider

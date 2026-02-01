@@ -3,6 +3,9 @@ using SuperliminalTools.TASMod;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using SuperliminalTools.Components.Visual;
+using SuperliminalTools.Components.Control;
+using SuperliminalTools.Components.UI;
 
 #if LEGACY
 using Il2CppInterop.Runtime.Injection;
@@ -33,7 +36,7 @@ public static class Utility
     public static Font GetNotoSansMonoFont()
     {
 #if LEGACY
-        return LegacyNotoMonoAssetLoader.GetFontOrDefault();
+        return Components.UI.LegacyNotoMonoAssetLoader.GetFontOrDefault();
 #else
         return Resources.FindObjectsOfTypeAll<Font>().FirstOrDefault(f => f != null && f.name == "NotoMono-Regular");
 #endif
@@ -85,7 +88,7 @@ public static class Utility
     {
         // Register custom MonoBehaviour types with IL2CPP before they can be used
         ClassInjector.RegisterTypeInIl2Cpp<TASMod.Demo.DemoRecorder>();
-        ClassInjector.RegisterTypeInIl2Cpp<HUDController>();
+        ClassInjector.RegisterTypeInIl2Cpp<UI.HUDController>();
         ClassInjector.RegisterTypeInIl2Cpp<TASModController>();
         ClassInjector.RegisterTypeInIl2Cpp<PracticeModController>();
         ClassInjector.RegisterTypeInIl2Cpp<PathProjector>();
