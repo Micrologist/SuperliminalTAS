@@ -29,7 +29,7 @@
   <!-- Package legacy versions into release zips -->
   <Target Name="PackageLegacyVersions"
           AfterTargets="BuildAllVersions"
-          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalLegacyTools'">
+          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalToolsLegacy'">
     <MakeDir Directories="$(ReleaseOut)" />
 
     <!-- Version 1.0.2019.11.12 -->
@@ -78,7 +78,7 @@
   <!-- Package modern versions into release zips -->
   <Target Name="PackageModernVersions"
           AfterTargets="BuildAllVersions"
-          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalModernTools'">
+          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalToolsModern'">
     <MakeDir Directories="$(ReleaseOut)" />
 
     <!-- Version 1.10.2020.12.10 -->
