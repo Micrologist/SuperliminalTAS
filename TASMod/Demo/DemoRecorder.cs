@@ -90,8 +90,11 @@ public sealed class DemoRecorder : MonoBehaviour
     private void FixedUpdate()
     {
         if (_lastUpdateWasFixed && (_recording || _playingBack))
+        {
             Debug.LogError(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
-
+            if (_playingBack) StopPlayback();
+            else if (_recording) StopRecording();
+        }
         _lastUpdateWasFixed = true;
     }
 
