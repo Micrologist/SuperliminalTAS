@@ -17,6 +17,10 @@ class NoClipController : MonoBehaviour
 
     public bool NoClipEnabled { get; private set; }
 
+    public bool UseNoClipCamera { get; private set; }
+
+    private float _noClipSpeed = 20f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -28,6 +32,7 @@ class NoClipController : MonoBehaviour
 
         Instance = this;
         NoClipEnabled = false;
+        UseNoClipCamera = true;
 #if LEGACY
         SceneManager.sceneUnloaded += (UnityEngine.Events.UnityAction<Scene>)OnSceneUnload;
 #else
@@ -47,6 +52,7 @@ class NoClipController : MonoBehaviour
 
     private void OnSceneUnload(Scene scene)
     {
+        NoClipEnabled = false;
         if (GameManager.GM == null) return;
 
         var jumpingScript = GameManager.GM.GetComponent<LevelJumpingScript>();
@@ -54,52 +60,104 @@ class NoClipController : MonoBehaviour
         {
             Destroy(jumpingScript.instanceCameraNoClip);
             jumpingScript.noClip = false;
-            NoClipEnabled = false;
+        }
+    }
+
+    private void Update()
+    {
+        if (GameManager.GM.player != null && GameManager.GM.playerCamera != null && NoClipEnabled && !UseNoClipCamera)
+        {
+            var playerMotor = GameManager.GM.player.GetComponent<CharacterMotor>();
+            var playerCam = GameManager.GM.playerCamera;
+
+            if (playerMotor == null) return;
+            playerMotor.enabled = false;
+
+            Vector3 input = new(GameManager.GM.playerInput.GetAxis("Move Horizontal"),
+                                GameManager.GM.playerInput.GetAxis("Move Vertical"),
+                                ((GameManager.GM.playerInput.GetButton("Jump") ? 1 : 0) + (Input.GetKey(KeyCode.C) ? -1 : 0)));
+
+            var dir = (playerCam.transform.right * input.x) +
+                      (playerCam.transform.forward * input.y) +
+                      (playerCam.transform.up * input.z);
+
+            if (dir.sqrMagnitude > 1f) dir.Normalize();
+
+            playerMotor.transform.Translate(dir * Time.deltaTime * _noClipSpeed, Space.World);
         }
     }
 
     public void ToggleNoClip()
     {
-        var jumpingScript = GameManager.GM.GetComponent<LevelJumpingScript>();
+        NoClipEnabled = !NoClipEnabled;
 
-        if (GameManager.GM.player == null || jumpingScript == null) return;
-
-        if (!NoClipEnabled)
+        if (UseNoClipCamera)
         {
-            NoClipController.StartNoClip(jumpingScript);
-            NoClipController.SetUpNoClipCamera(jumpingScript);
-            NoClipEnabled = true;
+            var jumpingScript = GameManager.GM.GetComponent<LevelJumpingScript>();
+            if (GameManager.GM.player == null || jumpingScript == null) return;
+
+            if (NoClipEnabled)
+            {
+                StartNoClipCamera(jumpingScript);
+            }
+            else
+            {
+                EndNoClipCamera(jumpingScript);
+            }
+
+            GameManager.GM.player.SetActive(true);
         }
         else
         {
-            NoClipController.EndNoClip(jumpingScript);
-            NoClipEnabled = false;
+            SetPlayerComponentsEnabled(true);
         }
-
-        GameManager.GM.player.SetActive(true);
-        NoClipController.SetPlayerComponents(!NoClipEnabled);
     }
 
-    private static void StartNoClip(LevelJumpingScript jumpingScript)
+
+    public void ToggleNoClipStyle()
+    {
+        UseNoClipCamera = !UseNoClipCamera;
+
+        var jumpingScript = GameManager.GM.GetComponent<LevelJumpingScript>();
+
+        if (!UseNoClipCamera && NoClipEnabled)
+        {
+            if (GameManager.GM.player != null || jumpingScript != null)
+                EndNoClipCamera(jumpingScript);
+        }
+        else if (UseNoClipCamera && NoClipEnabled)
+        {
+            if (GameManager.GM.player != null || jumpingScript != null)
+                StartNoClipCamera(jumpingScript);
+        }
+    }
+
+    private void StartNoClipCamera(LevelJumpingScript jumpingScript)
     {
 #if LEGACY
         jumpingScript.CreateNoClipCamera();
 #else
         _createNoClipCamera.Invoke(jumpingScript, null);
 #endif
+
+        SetUpNoClipCamera(jumpingScript);
+        SetPlayerComponentsEnabled(false);
     }
 
-    private static void EndNoClip(LevelJumpingScript jumpingScript)
+    private void EndNoClipCamera(LevelJumpingScript jumpingScript)
     {
 #if LEGACY
         jumpingScript.EndNoClip();
 #else
         _endNoClip.Invoke(jumpingScript, null);
 #endif
+        SetPlayerComponentsEnabled(true);
     }
 
-    private static void SetPlayerComponents(bool newActive)
+    private void SetPlayerComponentsEnabled(bool newActive)
     {
+        GameManager.GM.player.SetActive(true);
+
         var inputController = GameManager.GM.player.GetComponent<FPSInputController>();
         if (inputController != null)
         {
@@ -122,7 +180,7 @@ class NoClipController : MonoBehaviour
         }
     }
 
-    private static void SetUpNoClipCamera(LevelJumpingScript jumpingScript)
+    private void SetUpNoClipCamera(LevelJumpingScript jumpingScript)
     {
         var cam = jumpingScript.instanceCameraNoClip.GetComponentInChildren<Camera>();
         cam.backgroundColor = new Color(.1f, .1f, .1f);
@@ -132,11 +190,20 @@ class NoClipController : MonoBehaviour
             Vector4.positiveInfinity,
             Vector4.positiveInfinity,
             Vector4.positiveInfinity);
+
+        var noclipinput = jumpingScript.instanceCameraNoClip.GetComponent<NoClipInputController>();
+
+        if (noclipinput != null)
+        {
+            noclipinput.moveSpeed = _noClipSpeed;
+        }
     }
 
     public void ChangeSpeed(float amount)
     {
         if (GameManager.GM == null) return;
+
+        _noClipSpeed = Mathf.Clamp(_noClipSpeed + amount, 0.1f, 1000f);
 
         var jumpingScript = GameManager.GM.GetComponent<LevelJumpingScript>();
         if (jumpingScript != null && jumpingScript.noClip)
@@ -145,7 +212,7 @@ class NoClipController : MonoBehaviour
 
             if (noclipinput != null)
             {
-                noclipinput.moveSpeed += amount;
+                noclipinput.moveSpeed = _noClipSpeed;
             }
         }
     }

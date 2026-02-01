@@ -53,7 +53,14 @@ public sealed class PracticeModController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F4))
         {
-            NoClipController.Instance.ToggleNoClip();
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                NoClipController.Instance.ToggleNoClipStyle();
+            }
+            else
+            {
+                NoClipController.Instance.ToggleNoClip();
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.F5))
@@ -125,7 +132,7 @@ public sealed class PracticeModController : MonoBehaviour
 
         if (NoClipController.Instance.NoClipEnabled) output += "N ";
 
-        if (FlashlightController.Instance.FlashlightEnabled) output += "F ";
+        if (FlashlightController.Instance.FlashlightEnabled) output += "L ";
 
         HUDController.Instance.InfoLines = output;
     }
