@@ -22,7 +22,7 @@ internal static class VoiceOverProxy
         ["VoiceTrigger_Current_13E"] = 716, // 14.32s
     };
 
-    public static Dictionary<string, int> VoicelineEndFrames = [];
+    internal static Dictionary<string, int> VoicelineEndFrames = [];
 }
 
 [HarmonyPatch(typeof(MOSTEventVOPlayer), "StartVOandSubtitles")]

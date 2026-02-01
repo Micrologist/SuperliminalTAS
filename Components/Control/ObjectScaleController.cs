@@ -12,7 +12,7 @@ class ObjectScaleController : MonoBehaviour
     private FieldInfo _grabbedObjectField;
 #endif
 
-    public static ObjectScaleController Instance;
+    public static ObjectScaleController Instance { get; private set; }
 
 
     private void Awake()

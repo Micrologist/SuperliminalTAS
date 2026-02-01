@@ -33,6 +33,8 @@ public sealed class TASModController : MonoBehaviour
             return;
         }
 
+        Instance = this;
+
         if (DemoRecorder.Instance == null)
         {
             gameObject.AddComponent<DemoRecorder>();

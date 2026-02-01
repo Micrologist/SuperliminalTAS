@@ -10,9 +10,9 @@ namespace SuperliminalTools.TASMod;
 /// </summary>
 internal static class TASInput
 {
-    public static bool blockAllInput = false;
-    public static bool passthrough = true;
-    public static bool disablePause = false;
+    internal static bool blockAllInput = false;
+    internal static bool passthrough = true;
+    internal static bool disablePause = false;
     private static DemoRecorder recording;
 
     internal static bool GetButton(string actionName, bool originalResult)
@@ -35,7 +35,7 @@ internal static class TASInput
             : recording.GetRecordedButtonDown(actionName);
     }
 
-    public static bool GetButtonUp(string actionName, bool originalResult)
+    internal static bool GetButtonUp(string actionName, bool originalResult)
     {
         if (blockAllInput) return false;
 

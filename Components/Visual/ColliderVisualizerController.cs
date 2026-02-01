@@ -10,7 +10,7 @@ class ColliderVisualizerController : MonoBehaviour
     public ColliderVisualizerController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
-    public static ColliderVisualizerController Instance;
+    public static ColliderVisualizerController Instance { get; private set; }
 
     public bool ShowColliders { get; private set; }
 

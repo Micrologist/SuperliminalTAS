@@ -9,7 +9,7 @@ class FadeController : MonoBehaviour
     public FadeController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
-    public static FadeController Instance;
+    public static FadeController Instance { get; private set; }
 
     public bool DisableFades { get; set; }
 
@@ -33,7 +33,7 @@ class FadeController : MonoBehaviour
 #endif
     }
 
-    private void OnSceneLoaded(Scene scnee, LoadSceneMode loadSceneMode)
+    private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
     {
         if (GameManager.GM == null) return;
 

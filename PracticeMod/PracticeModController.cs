@@ -24,6 +24,8 @@ public sealed class PracticeModController : MonoBehaviour
             Debug.LogError("Duplicate PracticeModController");
             return;
         }
+
+        Instance = this;
     }
 
     private void Update()

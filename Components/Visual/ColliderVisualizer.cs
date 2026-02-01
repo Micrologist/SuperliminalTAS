@@ -219,7 +219,7 @@ public class ColliderVisualizer : MonoBehaviour
         }
     }
 
-    private void OnDiable()
+    private void OnDisable()
     {
         if (_visualObj != null)
         {

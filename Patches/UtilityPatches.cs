@@ -144,7 +144,7 @@ public class LegacyResetCheckpointPatch
 /// </summary>
 [HarmonyPatch(typeof(UnityEngine.Debug))]
 [HarmonyPatch(nameof(Debug.LogError), new[] { typeof(Il2CppSystem.Object) })]
-public class HotCofeeErrorPatch
+public class HotCoffeeErrorPatch
 {
     private const string SuppressedMessage = "No save name found for current scene.";
 

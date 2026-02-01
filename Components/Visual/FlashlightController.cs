@@ -9,7 +9,7 @@ class FlashlightController : MonoBehaviour
     public FlashlightController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
-    public static FlashlightController Instance;
+    public static FlashlightController Instance { get; private set; }
 
     public bool FlashlightEnabled { get; private set; }
 
@@ -48,6 +48,8 @@ class FlashlightController : MonoBehaviour
     {
         if (GameManager.GM.player != null)
         {
+            if (_flashlight != null)
+                Destroy(_flashlight);
             _flashlight = new GameObject("Flashlight");
             _flashlight.transform.parent = GameManager.GM.player.transform;
             _flashlight.transform.localPosition = new(0f, .85f, 0f);

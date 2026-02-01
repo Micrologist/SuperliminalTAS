@@ -79,8 +79,8 @@ public sealed class DemoRecorder : MonoBehaviour
         if (!_lastUpdateWasFixed && (_recording || _playingBack) && Time.timeSinceLevelLoad > float.Epsilon)
         {
             Debug.LogError(Time.timeSinceLevelLoad + ": Double Update() on frame " + Time.renderedFrameCount + " during recording/playback, aborting!");
-            StopPlayback();
-            StopRecording();
+            if (_playingBack) StopPlayback();
+            else if (_recording) StopRecording();
         }
         _lastUpdateWasFixed = false;
 
@@ -89,7 +89,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (_lastUpdateWasFixed && _recording && _playingBack)
+        if (_lastUpdateWasFixed && (_recording || _playingBack))
             Debug.LogError(Time.timeSinceLevelLoad + ": Double FixedUpdate() during recording/playback");
 
         _lastUpdateWasFixed = true;
@@ -177,11 +177,13 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private static void WithUnlockedCursor(Action action)
     {
+        var previousLockState = Cursor.lockState;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         try { action?.Invoke(); }
         finally
         {
+            Cursor.lockState = previousLockState;
             Cursor.visible = false;
         }
     }
@@ -405,9 +407,9 @@ public sealed class DemoRecorder : MonoBehaviour
                 StartCoroutine(ReloadFile());
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            // Silently ignore errors (file might be temporarily locked during writing)
+            // File might be temporarily locked during writing
         }
     }
 

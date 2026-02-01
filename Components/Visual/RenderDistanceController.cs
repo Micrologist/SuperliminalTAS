@@ -8,7 +8,7 @@ class RenderDistanceController : MonoBehaviour
 #if LEGACY
     public RenderDistanceController(System.IntPtr ptr) : base(ptr) { }
 #endif
-    public static RenderDistanceController Instance;
+    public static RenderDistanceController Instance { get; private set; }
 
     public float RenderDistance { get; private set; }
 
@@ -54,7 +54,7 @@ class RenderDistanceController : MonoBehaviour
         if (RenderDistance > 1000)
         {
             playerCamera.clearFlags = CameraClearFlags.SolidColor;
-            playerCamera.backgroundColor = new Color(.15f, .15f, .15f, 15f);
+            playerCamera.backgroundColor = new Color(.15f, .15f, .15f, 1f);
 
             playerCamera.cullingMatrix = new(Vector4.positiveInfinity,
                 Vector4.positiveInfinity,
