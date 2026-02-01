@@ -1,3 +1,3 @@
-# SuperliminalTAS
+# SuperliminalTools
 
-A Tool-Assisted Speedrun (TAS) tool for Superliminal that enables deterministic recording, playback, and editing of game inputs.
+A BepinEx plugin for Superliminal for speedrun practice and tool assisted speedrunning.
