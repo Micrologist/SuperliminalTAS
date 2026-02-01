@@ -56,4 +56,9 @@
 		</Reference>
   </ItemGroup>
 
+  <Target Name="BuildAllVersions" AfterTargets="Build">
+    <MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.0.2019.11.12;IsRecursiveBuild=true" Targets="Build" />
+    <MSBuild Projects="$(MSBuildProjectFile)" Properties="GameVersion=1.10.2020.7.6;IsRecursiveBuild=true" Targets="Build" />
+  </Target>
+
 </Project>
