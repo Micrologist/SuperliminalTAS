@@ -1,6 +1,5 @@
 using HarmonyLib;
-using Mono.Cecil.Cil;
-using SuperliminalTools.MemUtil;
+using SuperliminalTools.Patches.MemUtil;
 using System;
 using System.Diagnostics;
 using UnityEngine;
@@ -47,7 +46,7 @@ internal static class UnityEngineTimePatcher
         byte[] jumpBytes = [];
         byte[] caveBytes = [];
 
-        switch(unityPlayerSize)
+        switch (unityPlayerSize)
         {
             case 0x180B000: // 1.0.2019.11.12
                 injectOffset = 0x53F43C;

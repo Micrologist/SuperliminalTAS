@@ -13,7 +13,7 @@ public class LerpPlayerMantlePatch
 {
     static void Prefix(PlayerLerpMantle._LerpPlayer_d__12 __instance)
     {
-        if(__instance.__1__state == 0)
+        if (__instance.__1__state == 0)
             Debug.Log(Time.time + ": LerpPlayer()");
     }
 }

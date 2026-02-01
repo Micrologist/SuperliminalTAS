@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Events;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SuperliminalTools.Components;
@@ -12,7 +6,7 @@ namespace SuperliminalTools.Components;
 class TeleportAndScaleController : MonoBehaviour
 {
 #if LEGACY
-    public TeleportAndScaleController(IntPtr ptr) : base(ptr) { }
+    public TeleportAndScaleController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
     public static TeleportAndScaleController Instance;

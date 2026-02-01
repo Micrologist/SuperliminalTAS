@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Events;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
-
 
 namespace SuperliminalTools.Components;
 
 class PathProjectorController : MonoBehaviour
 {
 #if LEGACY
-    public PathProjectorController(IntPtr ptr) : base(ptr) { }
+    public PathProjectorController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
     public static PathProjectorController Instance;
@@ -34,7 +27,7 @@ class PathProjectorController : MonoBehaviour
         Instance = this;
         ProjectorEnabled = true;
 #if LEGACY
-        SceneManager.sceneLoaded += (UnityAction<Scene,LoadSceneMode>)OnSceneLoaded;
+        SceneManager.sceneLoaded += (UnityEngine.Events.UnityAction<Scene, LoadSceneMode>)OnSceneLoaded;
 #else
         SceneManager.sceneLoaded += OnSceneLoaded;
 #endif
@@ -44,7 +37,7 @@ class PathProjectorController : MonoBehaviour
     {
         if (GameManager.GM == null) return;
 
-        if(GameManager.GM.player != null && GameManager.GM.player.GetComponent<PathProjector>() == null)
+        if (GameManager.GM.player != null && GameManager.GM.player.GetComponent<PathProjector>() == null)
         {
             _pathProjector = GameManager.GM.player.AddComponent<PathProjector>();
             _pathProjector.enabled = ProjectorEnabled;
@@ -55,9 +48,9 @@ class PathProjectorController : MonoBehaviour
     {
         ProjectorEnabled = enabled;
 
-        if(_pathProjector != null)
+        if (_pathProjector != null)
         {
-            _pathProjector.enabled = enabled;   
+            _pathProjector.enabled = enabled;
         }
     }
 }

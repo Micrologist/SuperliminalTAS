@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Events;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SuperliminalTools.Components;
@@ -12,7 +6,7 @@ namespace SuperliminalTools.Components;
 class RenderDistanceController : MonoBehaviour
 {
 #if LEGACY
-    public RenderDistanceController(IntPtr ptr) : base(ptr) { }
+    public RenderDistanceController(System.IntPtr ptr) : base(ptr) { }
 #endif
     public static RenderDistanceController Instance;
 
@@ -20,7 +14,7 @@ class RenderDistanceController : MonoBehaviour
 
     private void Awake()
     {
-        if(Instance != null && Instance != this)
+        if (Instance != null && Instance != this)
         {
             Destroy(this);
             Debug.LogError("Duplicate RenderDistanceController");
@@ -31,7 +25,7 @@ class RenderDistanceController : MonoBehaviour
         RenderDistance = 1000f;
 
 #if LEGACY
-        SceneManager.sceneLoaded += (UnityAction<Scene, LoadSceneMode>)OnSceneLoad;
+        SceneManager.sceneLoaded += (UnityEngine.Events.UnityAction<Scene, LoadSceneMode>)OnSceneLoad;
 #else
         SceneManager.sceneLoaded += OnSceneLoad;
 #endif  
@@ -62,9 +56,9 @@ class RenderDistanceController : MonoBehaviour
             playerCamera.clearFlags = CameraClearFlags.SolidColor;
             playerCamera.backgroundColor = new Color(.15f, .15f, .15f, 15f);
 
-            playerCamera.cullingMatrix = new(Vector4.positiveInfinity, 
-                Vector4.positiveInfinity, 
-                Vector4.positiveInfinity, 
+            playerCamera.cullingMatrix = new(Vector4.positiveInfinity,
+                Vector4.positiveInfinity,
+                Vector4.positiveInfinity,
                 Vector4.positiveInfinity);
         }
         else

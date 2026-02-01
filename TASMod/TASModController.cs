@@ -1,8 +1,5 @@
-using System.Collections.Generic;
-using System.Reflection;
-using SuperliminalTools.Demo;
+using SuperliminalTools.TASMod.Demo;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using SuperliminalTools.Components;
 
 #if LEGACY
@@ -12,7 +9,7 @@ using UnityEngine.Events;
 using HarmonyLib;
 #endif
 
-namespace SuperliminalTools;
+namespace SuperliminalTools.TASMod;
 
 public sealed class TASModController : MonoBehaviour
 {
@@ -45,7 +42,7 @@ public sealed class TASModController : MonoBehaviour
         SetHotkeyText();
     }
 
-  
+
     private void SetHotkeyText()
     {
         var output = "";
@@ -79,7 +76,7 @@ public sealed class TASModController : MonoBehaviour
 
         HUDController.Instance.HotkeyLines = output;
     }
-    
+
 
     #region Hotkeys
 
@@ -106,7 +103,7 @@ public sealed class TASModController : MonoBehaviour
             NoClipController.Instance.ToggleNoClip();
         }
 
-        if(NoClipController.Instance.NoClipEnabled)
+        if (NoClipController.Instance.NoClipEnabled)
         {
             NoClipController.Instance.ChangeSpeed(Input.mouseScrollDelta.y);
         }

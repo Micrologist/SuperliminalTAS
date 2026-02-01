@@ -1,9 +1,6 @@
 using UnityEngine;
-using SuperliminalTools.Components;
 
-#if LEGACY
-using System;
-#endif
+namespace SuperliminalTools.Components;
 
 /// <summary>
 /// This component can be added to a game object with a box- or capsule-collider
@@ -12,7 +9,7 @@ using System;
 public class ColliderVisualizer : MonoBehaviour
 {
 #if LEGACY
-    public ColliderVisualizer(IntPtr ptr) : base(ptr) { }
+    public ColliderVisualizer(System.IntPtr ptr) : base(ptr) { }
 #endif
     private GameObject _visualObj;
     private float _visualAlpha = 0.2f;

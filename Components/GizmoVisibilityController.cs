@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Events;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SuperliminalTools.Components;
 
-
 class GizmoVisibilityController : MonoBehaviour
 {
 #if LEGACY
-    public GizmoVisibilityController(IntPtr ptr) : base(ptr) { }
+    public GizmoVisibilityController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
     public static GizmoVisibilityController Instance;
@@ -34,7 +27,7 @@ class GizmoVisibilityController : MonoBehaviour
         ShowGizmos = false;
 
 #if LEGACY
-        SceneManager.sceneLoaded += (UnityAction<Scene, LoadSceneMode>)OnSceneLoaded;
+        SceneManager.sceneLoaded += (UnityEngine.Events.UnityAction<Scene, LoadSceneMode>)OnSceneLoaded;
 #else
         SceneManager.sceneLoaded += OnSceneLoaded;
 #endif
@@ -57,7 +50,7 @@ class GizmoVisibilityController : MonoBehaviour
     {
         var cullingMask = ShowGizmos ? -1 : -32969;
 
-        if(GameManager.GM.playerCamera != null)
+        if (GameManager.GM.playerCamera != null)
             GameManager.GM.playerCamera.cullingMask = cullingMask;
 
         var pm = PortalInstanceTracker.instance.PortalManager;

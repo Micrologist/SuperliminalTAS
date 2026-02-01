@@ -12,14 +12,13 @@ using System;
 using System.Collections;
 
 using System.IO;
-using System.Linq;
 using UnityEngine;
 #if LEGACY
 using UnityEngine.Events;
 #endif
 using UnityEngine.SceneManagement;
 
-namespace SuperliminalTools.Demo;
+namespace SuperliminalTools.TASMod.Demo;
 
 public sealed class DemoRecorder : MonoBehaviour
 {
@@ -79,7 +78,7 @@ public sealed class DemoRecorder : MonoBehaviour
     {
         if (!_lastUpdateWasFixed && (_recording || _playingBack) && Time.timeSinceLevelLoad > float.Epsilon)
         {
-            Debug.LogError(Time.timeSinceLevelLoad + ": Double Update() on frame "+Time.renderedFrameCount+" during recording/playback, aborting!");
+            Debug.LogError(Time.timeSinceLevelLoad + ": Double Update() on frame " + Time.renderedFrameCount + " during recording/playback, aborting!");
             StopPlayback();
             StopRecording();
         }
@@ -336,7 +335,7 @@ public sealed class DemoRecorder : MonoBehaviour
     }
 
     internal bool GetRecordedButton(string actionName) =>
-        _data.GetButton(actionName, Math.Min(CurrentFrame, _data.FrameCount -1));
+        _data.GetButton(actionName, Math.Min(CurrentFrame, _data.FrameCount - 1));
 
     internal bool GetRecordedButtonDown(string actionName) =>
         _data.GetButtonDown(actionName, Math.Min(CurrentFrame, _data.FrameCount - 1));
@@ -489,7 +488,7 @@ public sealed class DemoRecorder : MonoBehaviour
         yield return null;
 
         Debug.Log($"Reloading: {_lastOpenedFile}");
-        if(LoadFile(_lastOpenedFile))
+        if (LoadFile(_lastOpenedFile))
             StartPlayback();
     }
     #endregion
@@ -542,7 +541,7 @@ public sealed class DemoRecorder : MonoBehaviour
         if (saveManager == null) return -1;
 
         if (SaveGamePatch.currentCheckpoint == null) return -1;
-        
+
         // TODO: This can probably go back to LINQ as long as we make sure to GetComponent<CheckPoint> on Legacy
 #if LEGACY
         Il2CppArrayBase<CheckPoint> il2cppArray = global::UnityEngine.GameObject.FindObjectsOfType<CheckPoint>();
@@ -582,7 +581,7 @@ public sealed class DemoRecorder : MonoBehaviour
         return -1;
     }
 
-#endregion
+    #endregion
 
     #region Scene Reset
 
@@ -666,12 +665,12 @@ public sealed class DemoRecorder : MonoBehaviour
         {
             if (_playingBack)
             {
-                Debug.LogWarning("Level was finished after "+Time.time+" on frame " + CurrentFrame + " with " + (DemoTotalFrames - CurrentFrame - 1) + " frames remaining in the demo.");
+                Debug.LogWarning("Level was finished after " + Time.time + " on frame " + CurrentFrame + " with " + (DemoTotalFrames - CurrentFrame - 1) + " frames remaining in the demo.");
                 StopPlayback();
             }
         }
 
-        if(GameManager.GM.player != null)
+        if (GameManager.GM.player != null)
         {
             GameManager.GM.player.GetComponent<MouseLook>().sensitivityX = 1.0f;
             GameManager.GM.playerCamera.GetComponent<MouseLook>().sensitivityY = 1.0f;

@@ -4,7 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace SuperliminalTools.Demo;
+namespace SuperliminalTools.TASMod.Demo;
 
 /// <summary>
 /// CSV format read/write for editing TAS inputs in Excel or other spreadsheet programs.

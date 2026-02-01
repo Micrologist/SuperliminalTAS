@@ -1,14 +1,12 @@
 using SuperliminalTools.Components;
-using SuperliminalTools.Demo;
-using System;
 using UnityEngine;
 
-namespace SuperliminalTools;
+namespace SuperliminalTools.PracticeMod;
 
 public sealed class PracticeModController : MonoBehaviour
 {
 #if LEGACY
-    public PracticeModController(IntPtr ptr) : base(ptr) { }
+    public PracticeModController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
     public static PracticeModController Instance { get; private set; }
@@ -89,6 +87,10 @@ public sealed class PracticeModController : MonoBehaviour
         }
     }
 
+    #endregion
+
+
+    #region UI
     private void SetHotkeyText()
     {
         var output = "";
@@ -111,7 +113,7 @@ public sealed class PracticeModController : MonoBehaviour
 
         HUDController.Instance.HotkeyLines = output;
     }
-    #endregion
+
 
     private void SetInfoText()
     {
@@ -127,5 +129,5 @@ public sealed class PracticeModController : MonoBehaviour
 
         HUDController.Instance.InfoLines = output;
     }
-
+    #endregion
 }

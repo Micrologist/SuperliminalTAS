@@ -1,17 +1,9 @@
-using BepInEx;
 using HarmonyLib;
-using SuperliminalTools.Demo;
+using SuperliminalTools.TASMod.Demo;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using UnityEngine;
-#if LEGACY
-using UnityEngine.Events;
-#endif
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Time = UnityEngine.Time;
 
@@ -20,7 +12,7 @@ namespace SuperliminalTools.Components;
 class HUDController : MonoBehaviour
 {
 #if LEGACY
-    public HUDController(IntPtr ptr) : base(ptr) { }
+    public HUDController(System.IntPtr ptr) : base(ptr) { }
 #else
     // Modern versions require Reflection to get some of the relevant private fields
     private static readonly Dictionary<string, FieldInfo> _mantleFields = new()
@@ -105,7 +97,7 @@ class HUDController : MonoBehaviour
         if (_recorder == null && !ShowLess)
             hudLines += GetInputLines() + "\n";
 
-        if(!String.IsNullOrEmpty(InfoLines))
+        if (!String.IsNullOrEmpty(InfoLines))
             hudLines += InfoLines + "\n\n";
 
         hudLines += HotkeyLines + "\n";
@@ -195,7 +187,7 @@ class HUDController : MonoBehaviour
         double horizontal = Math.Sqrt((playerVel.x * playerVel.x) + (playerVel.z * playerVel.z));
         output += $"V {horizontal:0.0000} {playerVel.y:0.0000}\n";
 
-        if(!ShowLess)
+        if (!ShowLess)
             output += $"V {playerVel.x:0.0000} {playerVel.y:0.0000} {playerVel.z:0.0000}\n";
 
         var playerScale = player.transform.localScale.x;

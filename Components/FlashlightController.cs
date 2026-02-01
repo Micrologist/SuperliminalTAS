@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Events;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SuperliminalTools.Components;
 
-
 class FlashlightController : MonoBehaviour
 {
 #if LEGACY
-    public FlashlightController(IntPtr ptr) : base(ptr) { }
+    public FlashlightController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
     public static FlashlightController Instance;
@@ -35,7 +28,7 @@ class FlashlightController : MonoBehaviour
         FlashlightEnabled = false;
 
 #if LEGACY
-        SceneManager.sceneLoaded += (UnityAction<Scene, LoadSceneMode>)OnSceneLoaded;
+        SceneManager.sceneLoaded += (UnityEngine.Events.UnityAction<Scene, LoadSceneMode>)OnSceneLoaded;
 #else
         SceneManager.sceneLoaded += OnSceneLoaded;
 #endif
@@ -44,8 +37,8 @@ class FlashlightController : MonoBehaviour
     public void SetEnabled(bool enabled)
     {
         FlashlightEnabled = enabled;
-        
-        if(_flashlight != null)
+
+        if (_flashlight != null)
         {
             _flashlight.SetActive(FlashlightEnabled);
         }
@@ -53,7 +46,7 @@ class FlashlightController : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
     {
-        if(GameManager.GM.player != null)
+        if (GameManager.GM.player != null)
         {
             _flashlight = new GameObject("Flashlight");
             _flashlight.transform.parent = GameManager.GM.player.transform;
@@ -62,7 +55,7 @@ class FlashlightController : MonoBehaviour
             light.range = 10000f;
             light.intensity = 0.5f;
             light.color = new(1, 1, .9f);
-            
+
             _flashlight.SetActive(FlashlightEnabled);
         }
     }

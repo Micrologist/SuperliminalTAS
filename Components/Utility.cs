@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SuperliminalTools.PracticeMod;
+using SuperliminalTools.TASMod;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-
-using SuperliminalTools.Demo;
 
 #if LEGACY
 using Il2CppInterop.Runtime.Injection;
 #endif
-
 
 namespace SuperliminalTools.Components;
 
@@ -89,7 +84,7 @@ public static class Utility
     public static void RegisterAllIL2CPPTypes()
     {
         // Register custom MonoBehaviour types with IL2CPP before they can be used
-        ClassInjector.RegisterTypeInIl2Cpp<DemoRecorder>();
+        ClassInjector.RegisterTypeInIl2Cpp<TASMod.Demo.DemoRecorder>();
         ClassInjector.RegisterTypeInIl2Cpp<HUDController>();
         ClassInjector.RegisterTypeInIl2Cpp<TASModController>();
         ClassInjector.RegisterTypeInIl2Cpp<PracticeModController>();

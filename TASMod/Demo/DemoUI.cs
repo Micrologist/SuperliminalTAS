@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 
+namespace SuperliminalTools.TASMod.Demo;
+
 #if LEGACY
 using System.Runtime.InteropServices;
 using System.Text;

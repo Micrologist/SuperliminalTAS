@@ -1,21 +1,13 @@
 ﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.SceneManagement;
 
-namespace SuperliminalTAS.Components;
-
+namespace SuperliminalTools.Components;
 
 class ObjectScaleController : MonoBehaviour
 {
 #if LEGACY
-    public ObjectScaleController(IntPtr ptr) : base(ptr) { }
+    public ObjectScaleController(System.IntPtr ptr) : base(ptr) { }
 #else
     private FieldInfo _grabbedObjectField;
 #endif

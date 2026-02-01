@@ -3,6 +3,8 @@ using System;
 using System.IO;
 using UnityEngine;
 
+namespace SuperliminalTools.Components;
+
 /// <summary>
 /// Static class for loading the Noto-Mono font via UniverseLib asset loading.
 /// </summary>
@@ -28,7 +30,7 @@ internal static class LegacyNotoMonoAssetLoader
                 return GetBuiltinArial();
             }
 
-           
+
             // IMPORTANT: Use Il2CppUnityEngine.AssetBundle in IL2CPP mods
             var bundle = UniverseLib.AssetBundle.LoadFromFile(bundlePath);
             if (bundle == null)
@@ -56,7 +58,7 @@ internal static class LegacyNotoMonoAssetLoader
                 return GetBuiltinArial();
             }
 
-            
+
 
             _cached = font;
             bundle.Unload(false);

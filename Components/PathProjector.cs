@@ -1,10 +1,11 @@
-using System;
 using UnityEngine;
+
+namespace SuperliminalTools.Components;
 
 public class PathProjector : MonoBehaviour
 {
 #if LEGACY
-    public PathProjector(IntPtr ptr) : base(ptr) { }
+    public PathProjector(System.IntPtr ptr) : base(ptr) { }
 #endif
     private float maxDistance = 100f;
     private float radiusMultiplier = 1f;
@@ -25,7 +26,7 @@ public class PathProjector : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
 
-        if(characterController == null)
+        if (characterController == null)
         {
             Debug.LogWarning("PathProjector was added to a gameobject without a charactercontroller!");
         }
@@ -181,7 +182,7 @@ public class PathProjector : MonoBehaviour
 
     private void OnEnable()
     {
-        if(visualCapsule != null)
+        if (visualCapsule != null)
         {
             visualCapsule.SetActive(true);
         }

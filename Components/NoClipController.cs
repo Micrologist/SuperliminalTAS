@@ -1,21 +1,13 @@
-﻿using UnityEngine;
+﻿using System.Reflection;
+using UnityEngine;
 using UnityEngine.SceneManagement;
-using System;
-
-
-#if LEGACY
-using System;
-using UnityEngine.Events;
-#else
-using System.Reflection;
-#endif
 
 namespace SuperliminalTools.Components;
 
 class NoClipController : MonoBehaviour
 {
 #if LEGACY
-    public NoClipController(IntPtr ptr) : base(ptr) { }
+    public NoClipController(System.IntPtr ptr) : base(ptr) { }
 #else
     private static MethodInfo _createNoClipCamera;
     private static MethodInfo _endNoClip;
@@ -37,7 +29,7 @@ class NoClipController : MonoBehaviour
         Instance = this;
         NoClipEnabled = false;
 #if LEGACY
-        SceneManager.sceneUnloaded += (UnityAction<Scene>)OnSceneUnload;
+        SceneManager.sceneUnloaded += (UnityEngine.Events.UnityAction<Scene>)OnSceneUnload;
 #else
         SceneManager.sceneUnloaded += OnSceneUnload;
 
@@ -72,7 +64,7 @@ class NoClipController : MonoBehaviour
 
         if (GameManager.GM.player == null || jumpingScript == null) return;
 
-        if(!NoClipEnabled)
+        if (!NoClipEnabled)
         {
             NoClipController.StartNoClip(jumpingScript);
             NoClipController.SetUpNoClipCamera(jumpingScript);
@@ -136,9 +128,9 @@ class NoClipController : MonoBehaviour
         cam.backgroundColor = new Color(.1f, .1f, .1f);
         cam.farClipPlane = 100000;
         cam.fieldOfView = 90;
-        cam.cullingMatrix = new Matrix4x4(Vector4.positiveInfinity, 
-            Vector4.positiveInfinity, 
-            Vector4.positiveInfinity, 
+        cam.cullingMatrix = new Matrix4x4(Vector4.positiveInfinity,
+            Vector4.positiveInfinity,
+            Vector4.positiveInfinity,
             Vector4.positiveInfinity);
     }
 
@@ -151,7 +143,7 @@ class NoClipController : MonoBehaviour
         {
             var noclipinput = jumpingScript.instanceCameraNoClip.GetComponent<NoClipInputController>();
 
-            if(noclipinput != null)
+            if (noclipinput != null)
             {
                 noclipinput.moveSpeed += amount;
             }

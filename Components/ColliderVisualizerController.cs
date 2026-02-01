@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 namespace SuperliminalTools.Components;
 
-
 class ColliderVisualizerController : MonoBehaviour
 {
 #if LEGACY
-    public ColliderVisualizerController(IntPtr ptr) : base(ptr) { }
+    public ColliderVisualizerController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
     public static ColliderVisualizerController Instance;
@@ -35,7 +29,7 @@ class ColliderVisualizerController : MonoBehaviour
         ShowColliders = true;
 
 #if LEGACY
-        SceneManager.sceneLoaded += (UnityAction<Scene,LoadSceneMode>)OnLoadScene;
+        SceneManager.sceneLoaded += (UnityEngine.Events.UnityAction<Scene, LoadSceneMode>)OnLoadScene;
 #else
         SceneManager.sceneLoaded += OnLoadScene;
 #endif

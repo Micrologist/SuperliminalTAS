@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Events;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SuperliminalTools.Components;
 
-
 class FadeController : MonoBehaviour
 {
 #if LEGACY
-    public FadeController(IntPtr ptr) : base(ptr) { }
+    public FadeController(System.IntPtr ptr) : base(ptr) { }
 #endif
 
     public static FadeController Instance;
@@ -34,7 +27,7 @@ class FadeController : MonoBehaviour
         DisableFades = true;
 
 #if LEGACY
-        SceneManager.sceneLoaded += (UnityAction<Scene, LoadSceneMode>)OnSceneLoaded;
+        SceneManager.sceneLoaded += (UnityEngine.Events.UnityAction<Scene, LoadSceneMode>)OnSceneLoaded;
 #else
         SceneManager.sceneLoaded += OnSceneLoaded;
 #endif
@@ -43,10 +36,10 @@ class FadeController : MonoBehaviour
     private void OnSceneLoaded(Scene scnee, LoadSceneMode loadSceneMode)
     {
         if (GameManager.GM == null) return;
-            
+
         var cam = GameManager.GM.guiCamera;
 
-        if(cam != null && DisableFades)
+        if (cam != null && DisableFades)
         {
             var fade = cam.transform.Find("Canvas/Fade");
 
