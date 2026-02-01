@@ -4,7 +4,7 @@ A BepInEx plugin for Superliminal for speedrun practice and tool assisted speedr
 
 ## Installation
 
-Download the release matching your game version and extract the contents into your game folder.
+Download the [release](https://github.com/Micrologist/SuperliminalTools/releases/latest) matching your game version and extract the contents into your game folder.
 
 ## Usage
 
