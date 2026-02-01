@@ -1,5 +1,4 @@
 <Project>
-  <!-- Exclude non-source directories (must be in targets, after SDK populates item lists) -->
   <ItemGroup>
     <Compile Remove="bin\**" />
     <Compile Remove="GameLibs\**" />
