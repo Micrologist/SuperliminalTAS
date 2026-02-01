@@ -106,7 +106,7 @@ class HUDController : MonoBehaviour
             hudLines += GetInputLines() + "\n";
 
         if(!String.IsNullOrEmpty(InfoLines))
-            hudLines += InfoLines + "\n";
+            hudLines += InfoLines + "\n\n";
 
         hudLines += HotkeyLines + "\n";
 

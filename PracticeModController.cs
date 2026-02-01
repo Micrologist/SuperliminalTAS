@@ -117,7 +117,7 @@ public sealed class PracticeModController : MonoBehaviour
     {
         var output = "";
 
-        if (_unlimitedRenderDistance) output += "R ";
+        if (_unlimitedRenderDistance) output += "V ";
 
         if (GizmoVisibilityController.Instance.ShowGizmos) output += "G ";
 
@@ -125,7 +125,6 @@ public sealed class PracticeModController : MonoBehaviour
 
         if (FlashlightController.Instance.FlashlightEnabled) output += "F ";
 
-        output += "\n";
         HUDController.Instance.InfoLines = output;
     }
 
