@@ -106,4 +106,104 @@
 		<Message Importance="High"
              Text="Packaged Modern versions: $(V3Zip), $(V4Zip)" />
 	</Target>
+
+	<!-- Legacy Practice project packages net6.0 versions -->
+	<Target Name="PackageLegacyPracticeVersions"
+          AfterTargets="BuildAllVersions"
+          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalLegacyPractice'">
+		<MakeDir Directories="$(ReleaseOut)" />
+
+		<!-- Version 1.0.2019.11.12 -->
+		<PropertyGroup>
+			<PV1OutDir>$(RepoRoot)bin\1.0.2019.11.12\net6.0\</PV1OutDir>
+			<PV1Stage>$(StagingRoot)1.0.2019.11.12\BepInEx\plugins\SuperliminalPractice\</PV1Stage>
+			<PV1StageRoot>$(StagingRoot)1.0.2019.11.12\</PV1StageRoot>
+			<PV1Zip>$(ReleaseOut)1.0.2019.11.12.superliminalpractice.$(PackageVersion).zip</PV1Zip>
+		</PropertyGroup>
+		<MakeDir Directories="$(PV1Stage)" />
+		<ItemGroup>
+			<_PV1Artifacts Include="$(PV1OutDir)1.0.2019.11.12.superliminalpractice.dll" />
+			<_PV1Artifacts Include="$(PV1OutDir)1.0.2019.11.12.superliminalpractice.pdb" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_PV1Artifacts)"
+          DestinationFolder="$(PV1Stage)"
+          SkipUnchangedFiles="true"
+          Condition=" '@(_PV1Artifacts)' != '' " />
+		<ZipDirectory SourceDirectory="$(PV1StageRoot)"
+                  DestinationFile="$(PV1Zip)"
+                  Overwrite="true" />
+
+		<!-- Version 1.10.2020.7.6 -->
+		<PropertyGroup>
+			<PV2OutDir>$(RepoRoot)bin\1.10.2020.7.6\net6.0\</PV2OutDir>
+			<PV2Stage>$(StagingRoot)1.10.2020.7.6\BepInEx\plugins\SuperliminalPractice\</PV2Stage>
+			<PV2StageRoot>$(StagingRoot)1.10.2020.7.6\</PV2StageRoot>
+			<PV2Zip>$(ReleaseOut)1.10.2020.7.6.superliminalpractice.$(PackageVersion).zip</PV2Zip>
+		</PropertyGroup>
+		<MakeDir Directories="$(PV2Stage)" />
+		<ItemGroup>
+			<_PV2Artifacts Include="$(PV2OutDir)1.10.2020.7.6.superliminalpractice.dll" />
+			<_PV2Artifacts Include="$(PV2OutDir)1.10.2020.7.6.superliminalpractice.pdb" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_PV2Artifacts)"
+          DestinationFolder="$(PV2Stage)"
+          SkipUnchangedFiles="true"
+          Condition=" '@(_PV2Artifacts)' != '' " />
+		<ZipDirectory SourceDirectory="$(PV2StageRoot)"
+                  DestinationFile="$(PV2Zip)"
+                  Overwrite="true" />
+
+		<Message Importance="High"
+             Text="Packaged Legacy Practice versions: $(PV1Zip), $(PV2Zip)" />
+	</Target>
+
+	<!-- Modern Practice project packages netstandard2.0 versions -->
+	<Target Name="PackageModernPracticeVersions"
+          AfterTargets="BuildAllVersions"
+          Condition="'$(Configuration)' == 'Release' AND '$(IsRecursiveBuild)' != 'true' AND '$(MSBuildProjectName)' == 'SuperliminalModernPractice'">
+		<MakeDir Directories="$(ReleaseOut)" />
+
+		<!-- Version 1.10.2020.12.10 -->
+		<PropertyGroup>
+			<PV3OutDir>$(RepoRoot)bin\1.10.2020.12.10\netstandard2.0\</PV3OutDir>
+			<PV3Stage>$(StagingRoot)1.10.2020.12.10\BepInEx\plugins\SuperliminalPractice\</PV3Stage>
+			<PV3StageRoot>$(StagingRoot)1.10.2020.12.10\</PV3StageRoot>
+			<PV3Zip>$(ReleaseOut)1.10.2020.12.10.superliminalpractice.$(PackageVersion).zip</PV3Zip>
+		</PropertyGroup>
+		<MakeDir Directories="$(PV3Stage)" />
+		<ItemGroup>
+			<_PV3Artifacts Include="$(PV3OutDir)1.10.2020.12.10.superliminalpractice.dll" />
+			<_PV3Artifacts Include="$(PV3OutDir)1.10.2020.12.10.superliminalpractice.pdb" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_PV3Artifacts)"
+          DestinationFolder="$(PV3Stage)"
+          SkipUnchangedFiles="true"
+          Condition=" '@(_PV3Artifacts)' != '' " />
+		<ZipDirectory SourceDirectory="$(PV3StageRoot)"
+                  DestinationFile="$(PV3Zip)"
+                  Overwrite="true" />
+
+		<!-- Version 1.10.2023.2.17 -->
+		<PropertyGroup>
+			<PV4OutDir>$(RepoRoot)bin\1.10.2023.2.17\netstandard2.0\</PV4OutDir>
+			<PV4Stage>$(StagingRoot)1.10.2023.2.17\BepInEx\plugins\SuperliminalPractice\</PV4Stage>
+			<PV4StageRoot>$(StagingRoot)1.10.2023.2.17\</PV4StageRoot>
+			<PV4Zip>$(ReleaseOut)1.10.2023.2.17.superliminalpractice.$(PackageVersion).zip</PV4Zip>
+		</PropertyGroup>
+		<MakeDir Directories="$(PV4Stage)" />
+		<ItemGroup>
+			<_PV4Artifacts Include="$(PV4OutDir)1.10.2023.2.17.superliminalpractice.dll" />
+			<_PV4Artifacts Include="$(PV4OutDir)1.10.2023.2.17.superliminalpractice.pdb" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_PV4Artifacts)"
+          DestinationFolder="$(PV4Stage)"
+          SkipUnchangedFiles="true"
+          Condition=" '@(_PV4Artifacts)' != '' " />
+		<ZipDirectory SourceDirectory="$(PV4StageRoot)"
+                  DestinationFile="$(PV4Zip)"
+                  Overwrite="true" />
+
+		<Message Importance="High"
+             Text="Packaged Modern Practice versions: $(PV3Zip), $(PV4Zip)" />
+	</Target>
 </Project>
