@@ -55,7 +55,7 @@ public partial class SuperliminalToolsPlugin
             return;
         }
 
-        Log.LogInfo($"{MyPluginInfo.PLUGIN_GUID} is loaded! Mode: {(tasMode ? "TAS" : "Practice")}");
+        Log.LogInfo($"{MyPluginInfo.PLUGIN_GUID} loaded! Mode: {(tasMode ? "TAS" : "Practice")}");
 
         // Create a persistent GameObject that survives scene transitions
         var go = new GameObject("SuperliminalTools");
