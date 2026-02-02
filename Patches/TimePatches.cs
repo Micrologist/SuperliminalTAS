@@ -51,22 +51,22 @@ internal static class UnityEngineTimePatcher
             case 0x180B000: // 1.0.2019.11.12
                 injectOffset = 0x53F43C;
                 jumpBytes = StrToBytes("E9 BF 10 AC FF");
-                caveBytes = StrToBytes("E8 FB F4 77 00 F2 0F 10 43 70 F2 0F 58 83 E0 00 00 00 F3 0F 5A 53 48 F2 0F 58 C2 E9 22 EF 53 00");
+                caveBytes = StrToBytes("66 0F 57 C0 F2 0F 11 83 E0 00 00 00 E8 EF F4 77 00 F2 0F 10 43 70 F3 0F 5A 53 48 F2 0F 58 C2 E9 1D EF 53 00");
                 break;
             case 0x1865000: // 1.10.2020.7.6
                 injectOffset = 0x53FAAC;
                 jumpBytes = StrToBytes("E9 4F 0A AC FF");
-                caveBytes = StrToBytes("E8 8B 13 78 00 F2 0F 10 43 70 F2 0F 58 83 E0 00 00 00 F3 0F 5A 53 48 F2 0F 58 C2 E9 91 F5 53 00");
+                caveBytes = StrToBytes("66 0F 57 C0 F2 0F 11 83 E0 00 00 00 E8 7F 13 78 00 F2 0F 10 43 70 F3 0F 5A 53 48 F2 0F 58 C2 E9 8D F5 53 00");
                 break;
             case 0x199E000: // 1.10.2020.12.10
                 injectOffset = 0x54B73D;
                 jumpBytes = StrToBytes("E9 BE 4D AB FF");
-                caveBytes = StrToBytes("E8 FB 11 7A 00 F2 0F 10 43 70 F2 0F 58 83 E8 00 00 00 F3 0F 5A 53 48 F2 0F 58 C2 E9 22 B2 54 00");
+                caveBytes = StrToBytes("66 0F 57 C0 F2 0F 11 83 E8 00 00 00 E8 EF 11 7A 00 F2 0F 10 43 70 F3 0F 5A 53 48 F2 0F 58 C2 E9 1E B2 54 00");
                 break;
             case 0x19D2000: // 1.10.2023.2.17
                 injectOffset = 0x555E6D;
                 jumpBytes = StrToBytes("E9 8E A6 AA FF");
-                caveBytes = StrToBytes("E8 0B 37 7B 00 F2 0F 10 43 70 F2 0F 58 83 E8 00 00 00 F3 0F 5A 53 48 F2 0F 58 C2 E9 52 59 55 00");
+                caveBytes = StrToBytes("66 0F 57 C0 F2 0F 11 83 E8 00 00 00 E8 FF 36 7B 00 F2 0F 10 43 70 F3 0F 5A 53 48 F2 0F 58 C2 E9 4E 59 55 00");
                 break;
             default:
                 UnityEngine.Debug.LogError($"UnityEngine TimeManager was not patched because of an unknown UnityPlayer.dll version! (0x{unityPlayerSize:X})");

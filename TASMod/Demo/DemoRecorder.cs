@@ -76,11 +76,18 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void Update()
     {
-        if (!_lastUpdateWasFixed && (_recording || _playingBack) && Time.timeSinceLevelLoad > float.Epsilon)
+        if (!_lastUpdateWasFixed && Time.timeSinceLevelLoad > float.Epsilon)
         {
-            Debug.LogError(Time.timeSinceLevelLoad + ": Double Update() on frame " + Time.renderedFrameCount + " during recording/playback, aborting!");
-            if (_playingBack) StopPlayback();
-            else if (_recording) StopRecording();
+            if (_recording || _playingBack)
+            {
+                Debug.LogError(Time.timeSinceLevelLoad + ": Double Update() on frame " + Time.renderedFrameCount + " during recording/playback, aborting!");
+                if (_playingBack) StopPlayback();
+                else if (_recording) StopRecording();
+            }
+            else if (Time.timeScale > 0f)
+            {
+                Debug.LogWarning(Time.timeSinceLevelLoad + ": Double Update() on frame " + Time.renderedFrameCount + " " + Time.smoothDeltaTime);
+            }
         }
         _lastUpdateWasFixed = false;
 
