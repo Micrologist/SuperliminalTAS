@@ -90,6 +90,11 @@ public static class DemoCSVSerializer
             currentLine++;
         }
 
+        if(String.IsNullOrEmpty(levelId))
+        {
+            UnityEngine.Debug.Log("CSV has no level information, please re-save file or manually specify level!");
+        }
+
         // Check for Checkpoint metadata
         if (currentLine < lines.Length && lines[currentLine].StartsWith("Checkpoint:", StringComparison.OrdinalIgnoreCase))
         {

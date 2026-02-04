@@ -673,7 +673,7 @@ public sealed class DemoRecorder : MonoBehaviour
 
     private void OnLoadSetup(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name != _data.LevelId)
+        if (!String.IsNullOrEmpty(_data.LevelId) && scene.name != _data.LevelId)
         {
             if (_playingBack)
             {
