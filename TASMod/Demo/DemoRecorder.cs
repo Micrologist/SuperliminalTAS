@@ -344,6 +344,16 @@ public sealed class DemoRecorder : MonoBehaviour
         int targetFps = Mathf.RoundToInt(50f * multiplier);
         targetFps = Mathf.Max(1, targetFps);
         Application.targetFrameRate = targetFps;
+
+        if(_playingBack && multiplier > 10.0f)
+        {
+            if (!Components.Visual.RenderDistanceController.Instance.DisableRendering)
+                Components.Visual.RenderDistanceController.Instance.SetRendering(false);
+        }
+        else if (Components.Visual.RenderDistanceController.Instance.DisableRendering)
+        {
+            Components.Visual.RenderDistanceController.Instance.SetRendering(true);
+        }
     }
 
     internal bool GetRecordedButton(string actionName) =>

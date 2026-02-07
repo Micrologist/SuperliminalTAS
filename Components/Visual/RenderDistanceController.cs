@@ -11,6 +11,7 @@ class RenderDistanceController : MonoBehaviour
     public static RenderDistanceController Instance { get; private set; }
 
     public float RenderDistance { get; private set; }
+    public bool DisableRendering {  get; private set; }
 
     private void Awake()
     {
@@ -23,6 +24,7 @@ class RenderDistanceController : MonoBehaviour
 
         Instance = this;
         RenderDistance = 1000f;
+        DisableRendering = false;
 
 #if LEGACY
         SceneManager.sceneLoaded += (UnityEngine.Events.UnityAction<Scene, LoadSceneMode>)OnSceneLoad;
@@ -33,25 +35,39 @@ class RenderDistanceController : MonoBehaviour
 
     private void OnSceneLoad(Scene scene, LoadSceneMode loadMode)
     {
-        ApplyRenderDistance();
+        SetRendering(!DisableRendering);
     }
 
     public void SetRenderDistance(float distance)
     {
         RenderDistance = distance;
-        ApplyRenderDistance();
+        ApplyRenderDistance(RenderDistance);
     }
 
-    private void ApplyRenderDistance()
+    public void SetRendering(bool render)
+    {
+        if (render)
+        {
+            DisableRendering = false;
+            ApplyRenderDistance(RenderDistance);
+        }
+        else
+        {
+            DisableRendering = true;
+            ApplyRenderDistance(.1f);
+        }
+    }
+
+    private void ApplyRenderDistance(float distance)
     {
         var playerCamera = GameManager.GM.playerCamera;
         if (playerCamera == null) return;
 
         playerCamera.GetComponent<CameraSettingsLayer>().enabled = false;
 
-        playerCamera.farClipPlane = RenderDistance;
+        playerCamera.farClipPlane = distance;
 
-        if (RenderDistance > 1000)
+        if (distance > 1000)
         {
             playerCamera.clearFlags = CameraClearFlags.SolidColor;
             playerCamera.backgroundColor = new Color(.15f, .15f, .15f, 1f);
@@ -60,6 +76,16 @@ class RenderDistanceController : MonoBehaviour
                 Vector4.positiveInfinity,
                 Vector4.positiveInfinity,
                 Vector4.positiveInfinity);
+        }
+        else if (distance < 1)
+        {
+            playerCamera.clearFlags = CameraClearFlags.SolidColor;
+            playerCamera.backgroundColor = new Color(.15f, .15f, .15f, 1f);
+
+            playerCamera.cullingMatrix = new(Vector4.zero,
+                Vector4.zero,
+                Vector4.zero,
+                Vector4.zero);
         }
         else
         {
